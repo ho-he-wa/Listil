@@ -17,6 +17,7 @@
     "resolveJsonModule": true, // JSONインポート許可
     "allowJs": false, // JSファイルは無効（必要なら true）
     "isolatedModules": true, // 各ファイルを独立モジュールとして扱う
+    "sourceMap": true,
     "types": [
       "chrome"
     ] // `chrome` API 型定義を読み込む
