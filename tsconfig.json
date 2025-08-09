@@ -1,44 +1,31 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    // File Layout
-    // "rootDir": "./src",
-    // "outDir": "./dist",
-
-    // Environment Settings
-    // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
-    "target": "esnext",
-    "types": [],
-    // For nodejs:
-    // "lib": ["esnext"],
-    // "types": ["node"],
-    // and npm install -D @types/node
-
-    // Other Outputs
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-
-    // Stricter Typechecking Options
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-
-    // Style Options
-    // "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
-
-    // Recommended Options
-    "strict": true,
-    "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true,
-  }
+    "target": "ES2020", // Service Worker対応のため ES2020 以上推奨
+    "lib": [
+      "DOM",
+      "ES2020"
+    ], // DOM操作とES2020のAPI使用可能
+    "module": "ESNext", // モダンなモジュールシステム
+    "moduleResolution": "Node", // Node風のモジュール解決
+    "outDir": "public/dist", // 出力先
+    "rootDir": "src", // ソースコードのルート
+    "strict": true, // 厳格な型チェック
+    "esModuleInterop": true, // CommonJSとの互換性
+    "skipLibCheck": true, // 型定義のチェックをスキップ（高速化）
+    "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字の一貫性を強制
+    "noEmitOnError": true, // エラーがあるときは出力しない
+    "resolveJsonModule": true, // JSONインポート許可
+    "allowJs": false, // JSファイルは無効（必要なら true）
+    "isolatedModules": true, // 各ファイルを独立モジュールとして扱う
+    "types": [
+      "chrome"
+    ] // `chrome` API 型定義を読み込む
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
