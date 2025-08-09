@@ -50,7 +50,10 @@ function findLists(): HTMLElement[] {
     const nodeList = container.querySelectorAll<HTMLElement>('ul, ol, table');
     const foundLists = [...Array.from(nodeList)].filter((el: HTMLElement) => {
       if (el.closest(excludeSelector)) return false;
-      if (el.tagName.toLowerCase() === 'table') {
+      if (hasExcludedAncestor(el)) return false;
+
+      const tag = el.tagName.toLowerCase();
+      if (tag === 'table' || tag === 'tbody') {
         return el.querySelectorAll('tr').length >= 10;
       } else {
         return el.querySelectorAll('li').length >= 10;
@@ -60,6 +63,26 @@ function findLists(): HTMLElement[] {
   });
 
   return [...new Set(lists)];
+}
+
+function hasExcludedAncestor(el: Element): boolean {
+  const EXCLUDE_SUFFIXES = ['menu', 'Menu', 'nav', 'Nav'];
+
+  let current: Element | null = el;
+  while (current) {
+    const id = current.id || '';
+    const classList = Array.from(current.classList);
+
+    const matches = EXCLUDE_SUFFIXES.some((suffix) => {
+      return id.endsWith(suffix) || classList.some(cls => cls.endsWith(suffix));
+    });
+
+    if (matches) return true;
+
+    current = current.parentElement;
+  }
+
+  return false;
 }
 
 // --- ハイライト適用（mark.js使用） ---
