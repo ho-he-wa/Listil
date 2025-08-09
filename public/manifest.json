@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "My TypeScript Extension",
+  "name": "listutil",
   "version": "1.0",
   "description": "A simple Chrome extension built with TypeScript.",
   "permissions": ["storage", "tabs", "scripting"],
