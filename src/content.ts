@@ -43,18 +43,14 @@ function findLists(): HTMLElement[] {
     });
   });
 
-  // [ ] add menu
   const excludeSelector = 'nav, footer, header, #nav, #footer, #header';
   const lists: HTMLElement[] = [];
 
   containers.forEach((container: Element) => {
-    // [ ] add div
-    const nodeList = container.querySelectorAll<HTMLElement>('ul, ol, table, tbody');
+    const nodeList = container.querySelectorAll<HTMLElement>('ul, ol, table');
     const foundLists = [...Array.from(nodeList)].filter((el: HTMLElement) => {
       if (el.closest(excludeSelector)) return false;
-
-      const tag = el.tagName.toLowerCase();
-      if (tag === 'table' || tag === 'tbody') {
+      if (el.tagName.toLowerCase() === 'table') {
         return el.querySelectorAll('tr').length >= 10;
       } else {
         return el.querySelectorAll('li').length >= 10;
@@ -95,10 +91,9 @@ function removeHighlights(listId: string | undefined): void {
 // --- 各項目の処理 ---
 function applyListFilters(list: HTMLElement, settings: ListSettings): void {
   const tag = list.tagName.toLowerCase();
-  const items: HTMLElement[] =
-    tag === 'ul' || tag === 'ol'
-      ? [...Array.from(list.querySelectorAll<HTMLElement>('li'))]
-      : [...Array.from(list.querySelectorAll<HTMLElement>('tr'))];
+  const items: HTMLElement[] = tag === 'table'
+    ? [...Array.from(list.querySelectorAll<HTMLElement>('tr'))]
+    : [...Array.from(list.querySelectorAll<HTMLElement>('li'))];
 
   removeHighlights(list.dataset.listTogglerId);
 
