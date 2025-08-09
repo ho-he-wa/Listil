@@ -255,7 +255,7 @@ function addTogglesToLists(): void {
 
     const toggleBtn = document.createElement('button');
     toggleBtn.type = 'button';
-    toggleBtn.textContent = 'Toggle List';
+    toggleBtn.textContent = 'Hide List';
     toggleBtn.className = 'list-toggle-button';
     toggleBtn.style.marginBottom = '6px';
 
