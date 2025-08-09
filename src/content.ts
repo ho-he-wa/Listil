@@ -30,39 +30,52 @@ function injectHighlightStyle(): void {
 
 // --- リスト要素を取得 ---
 function findLists(): HTMLElement[] {
-  const candidateSelectors: string[] = ['main', '[id*="main"]', '[id*="content"]'];
-  const seen = new Set<Element>();
-  const containers: Element[] = [];
-
-  candidateSelectors.forEach((sel: string) => {
-    document.querySelectorAll(sel).forEach((el: Element) => {
-      if (!seen.has(el)) {
-        seen.add(el);
-        containers.push(el);
-      }
-    });
-  });
-
-  const excludeSelector = 'nav, footer, header, #nav, #footer, #header';
+  const containers = findContentContainers();
   const lists: HTMLElement[] = [];
 
-  containers.forEach((container: Element) => {
-    const nodeList = container.querySelectorAll<HTMLElement>('ul, ol, table');
-    const foundLists = [...Array.from(nodeList)].filter((el: HTMLElement) => {
-      if (el.closest(excludeSelector)) return false;
-      if (hasExcludedAncestor(el)) return false;
+  containers.forEach(container => {
+    const listElements = container.querySelectorAll<HTMLElement>('ul, ol, table, tbody');
 
-      const tag = el.tagName.toLowerCase();
-      if (tag === 'table' || tag === 'tbody') {
-        return el.querySelectorAll('tr').length >= 10;
-      } else {
-        return el.querySelectorAll('li').length >= 10;
-      }
+    listElements.forEach(list => {
+      if (!isEligibleList(list)) return;
+      lists.push(list);
     });
-    lists.push(...foundLists);
   });
 
   return [...new Set(lists)];
+}
+
+function findContentContainers(): Element[] {
+  const selectors = ['main', '[id*="main"]', '[id*="content"]'];
+  const seen = new Set<Element>();
+  const result: Element[] = [];
+
+  selectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      if (!seen.has(el)) {
+        seen.add(el);
+        result.push(el);
+      }
+    });
+  });
+
+  return result;
+}
+
+function isEligibleList(el: HTMLElement): boolean {
+  const excludeSelector = 'nav, footer, header, #nav, #footer, #header';
+  const tag = el.tagName.toLowerCase();
+
+  if (el.closest(excludeSelector)) return false;
+  if (hasExcludedAncestor(el)) return false;
+
+  if (tag === 'table' || tag === 'tbody') {
+    return el.querySelectorAll('tr').length >= 10;
+  } else if (tag === 'ul' || tag === 'ol') {
+    return el.querySelectorAll('li').length >= 10;
+  }
+
+  return false;
 }
 
 function hasExcludedAncestor(el: Element): boolean {
