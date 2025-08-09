@@ -3,7 +3,11 @@
   "name": "listutil",
   "version": "1.0",
   "description": "A simple Chrome extension built with TypeScript.",
-  "permissions": ["storage", "tabs", "scripting"],
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting"
+  ],
   "background": {
     "service_worker": "dist/background.js"
   },
@@ -15,8 +19,15 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["dist/content.js"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "dist/content.js"
+      ],
+      "css": [
+        "toggle.css"
+      ]
     }
   ]
 }
