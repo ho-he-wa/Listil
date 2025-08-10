@@ -11,6 +11,7 @@ interface ListSettings {
   grayOut: boolean;
   hide: boolean;
   matchMode: MatchMode;
+  narrow: boolean;
 }
 
 // --- グローバル状態 ---
@@ -24,9 +25,15 @@ function injectHighlightStyle(): void {
       background-color: yellow;
       color: black;
     }
+    .narrow-list > li,
+    .narrow-list > tr {
+      max-height: 3.0rem;
+      overflow: hidden;
+    }
   `;
   document.head.appendChild(style);
 }
+
 
 /**
  * リストの検索処理
@@ -146,10 +153,10 @@ class ListFilter {
     items.forEach((item: HTMLElement) => {
       item.style.opacity = '';
       item.style.display = '';
+      item.style.maxHeight = ''; // ← reset
 
       const text: string = item.innerText;
       const match = this.settings.regex && this.settings.regex.test(text);
-
       const isTarget = this.settings.regex
         ? this.settings.matchMode === 'match' ? match : !match
         : false;
@@ -164,9 +171,15 @@ class ListFilter {
         if (this.settings.hide) {
           item.style.display = 'none';
         }
+        if (this.settings.narrow) {
+          item.style.maxHeight = '3.0rem';
+          item.style.overflow = 'hidden';
+        }
       }
     });
   }
+
+
 
   /**
    * ハイライトを適用
@@ -281,6 +294,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
     new ListFilter(list, settings).apply();
   }));
 
+
   // input とラジオボタンを横並びにするラッパー
   const topRow = document.createElement('div');
   topRow.style.display = 'flex';
@@ -301,10 +315,16 @@ function createRegexControls(list: HTMLElement): HTMLElement {
     new ListFilter(list, settings).apply();
   });
 
+  const narrowBox = createCheckbox('Narrow', settings.narrow, (state: boolean) => {
+    settings.narrow = state;
+    new ListFilter(list, settings).apply();
+  });
+
   const hideBox = createCheckbox('Hide', settings.hide, (state: boolean) => {
     settings.hide = state;
     new ListFilter(list, settings).apply();
   });
+
 
   const wrapper = document.createElement('div');
   wrapper.className = 'list-controls';
@@ -313,6 +333,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   wrapper.appendChild(topRow);
   wrapper.appendChild(highlightBox);
   wrapper.appendChild(grayOutBox);
+  wrapper.appendChild(narrowBox);
   wrapper.appendChild(hideBox);
 
   return wrapper;
@@ -333,6 +354,7 @@ function addTogglesToLists(): void {
       grayOut: false,
       hide: false,
       matchMode: 'match',
+      narrow: false,
     });
 
     const toggleBtn = document.createElement('button');
