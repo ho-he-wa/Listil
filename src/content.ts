@@ -28,79 +28,94 @@ function injectHighlightStyle(): void {
   document.head.appendChild(style);
 }
 
-// --- リスト要素を取得 ---
+/**
+ * リストの検索処理
+ */
+class ListFinder {
+  private excludeSelector = 'nav, footer, header, #nav, #footer, #header';
+  private excludeSuffixes = ['menu', 'Menu', 'nav', 'Nav'];
+  private contentSelectors = ['main', '[id*="main"]', '[id*="content"]'];
+
+  constructor() {
+  }
+
+  public findLists(): HTMLElement[] {
+    const containers = this.findContentContainers();
+    const lists: HTMLElement[] = [];
+
+    containers.forEach(container => {
+      const listElements = container.querySelectorAll<HTMLElement>('ul, ol, table');
+
+      listElements.forEach(list => {
+        if (!this.isEligibleList(list)) return;
+        lists.push(list);
+      });
+    });
+
+    return [...new Set(lists)];
+  }
+
+  private findContentContainers(): Element[] {
+    const seen = new Set<Element>();
+    const result: Element[] = [];
+
+    this.contentSelectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => {
+        if (!seen.has(el)) {
+          seen.add(el);
+          result.push(el);
+        }
+      });
+    });
+
+    if (result.length === 0) {
+      result.push(document.body);
+    }
+
+    return result;
+  }
+
+  private isEligibleList(el: HTMLElement): boolean {
+    const tag = el.tagName.toLowerCase();
+
+    if (el.closest(this.excludeSelector)) return false;
+    if (this.hasExcludedAncestor(el)) return false;
+
+    if (tag === 'table') {
+      return el.querySelectorAll('tr').length >= 10;
+    } else if (tag === 'ul' || tag === 'ol') {
+      return el.querySelectorAll('li').length >= 10;
+    }
+
+    return false;
+  }
+
+  private hasExcludedAncestor(el: Element): boolean {
+    let current: Element | null = el;
+    while (current) {
+      const id = current.id || '';
+      const classList = Array.from(current.classList);
+
+      const matches = this.excludeSuffixes.some(suffix =>
+        id.endsWith(suffix) || classList.some(cls => cls.endsWith(suffix))
+      );
+
+      if (matches) return true;
+
+      current = current.parentElement;
+    }
+
+    return false;
+  }
+}
+
+/**
+ * リストを検索
+ */
 function findLists(): HTMLElement[] {
-  const containers = findContentContainers();
-  const lists: HTMLElement[] = [];
-
-  containers.forEach(container => {
-    const listElements = container.querySelectorAll<HTMLElement>('ul, ol, table');
-
-    listElements.forEach(list => {
-      if (!isEligibleList(list)) return;
-      lists.push(list);
-    });
-  });
-
-  return [...new Set(lists)];
-}
-
-function findContentContainers(): Element[] {
-  const selectors = ['main', '[id*="main"]', '[id*="content"]'];
-  const seen = new Set<Element>();
-  const result: Element[] = [];
-
-  selectors.forEach(sel => {
-    document.querySelectorAll(sel).forEach(el => {
-      if (!seen.has(el)) {
-        seen.add(el);
-        result.push(el);
-      }
-    });
-  });
-
-  // 見つからなかった場合、<body> を対象にする
-  if (result.length === 0) {
-    result.push(document.body);
-  }
-
-  return result;
-}
-
-function isEligibleList(el: HTMLElement): boolean {
-  const excludeSelector = 'nav, footer, header, #nav, #footer, #header';
-  const tag = el.tagName.toLowerCase();
-
-  if (el.closest(excludeSelector)) return false;
-  if (hasExcludedAncestor(el)) return false;
-
-  if (tag === 'table') {
-    return el.querySelectorAll('tr').length >= 10;
-  } else if (tag === 'ul' || tag === 'ol') {
-    return el.querySelectorAll('li').length >= 10;
-  }
-
-  return false;
-}
-
-function hasExcludedAncestor(el: Element): boolean {
-  const EXCLUDE_SUFFIXES = ['menu', 'Menu', 'nav', 'Nav'];
-
-  let current: Element | null = el;
-  while (current) {
-    const id = current.id || '';
-    const classList = Array.from(current.classList);
-
-    const matches = EXCLUDE_SUFFIXES.some((suffix) => {
-      return id.endsWith(suffix) || classList.some(cls => cls.endsWith(suffix));
-    });
-
-    if (matches) return true;
-
-    current = current.parentElement;
-  }
-
-  return false;
+  const finder = new ListFinder();
+  const lists = finder.findLists();
+  return lists;
 }
 
 /**
