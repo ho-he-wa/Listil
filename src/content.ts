@@ -242,11 +242,14 @@ function createRadio(
   return label;
 }
 
-// --- コントロール UI 作成 ---
+/**
+ * コントロール UI 作成
+ */
 function createRegexControls(list: HTMLElement): HTMLElement {
   const id = list.dataset.listTogglerId!;
   const settings = listSettings.get(id)!;
 
+  // 正規表現入力
   const input = document.createElement('input');
   input.placeholder = '正規表現を入力...';
   input.className = 'regex-input';
@@ -262,6 +265,32 @@ function createRegexControls(list: HTMLElement): HTMLElement {
     new ListFilter(list, settings).apply();
   });
 
+  // マッチモードラジオボタン群
+  const matchModeGroup = document.createElement('div');
+  matchModeGroup.style.display = 'inline-flex';    // 横並びにする
+  matchModeGroup.style.alignItems = 'center';
+  matchModeGroup.style.gap = '8px';               // ラジオボタン間の隙間
+
+  matchModeGroup.appendChild(createRadio(`matchmode-${id}`, 'match', settings.matchMode === 'match', (val: string) => {
+    settings.matchMode = val as MatchMode;
+    new ListFilter(list, settings).apply();
+  }));
+
+  matchModeGroup.appendChild(createRadio(`matchmode-${id}`, 'not match', settings.matchMode === 'not match', (val: string) => {
+    settings.matchMode = val as MatchMode;
+    new ListFilter(list, settings).apply();
+  }));
+
+  // input とラジオボタンを横並びにするラッパー
+  const topRow = document.createElement('div');
+  topRow.style.display = 'flex';
+  topRow.style.alignItems = 'center';
+  topRow.style.marginBottom = '8px';
+
+  topRow.appendChild(input);
+  topRow.appendChild(matchModeGroup);
+
+  // 他のチェックボックスはそのまま
   const highlightBox = createCheckbox('Highlight', settings.highlight, (state: boolean) => {
     settings.highlight = state;
     new ListFilter(list, settings).apply();
@@ -277,29 +306,14 @@ function createRegexControls(list: HTMLElement): HTMLElement {
     new ListFilter(list, settings).apply();
   });
 
-  const matchModeGroup = document.createElement('div');
-  matchModeGroup.style.display = 'inline-block';
-  matchModeGroup.style.marginLeft = '10px';
-
-  matchModeGroup.appendChild(createRadio(`matchmode-${id}`, 'match', true, (val: string) => {
-    settings.matchMode = val as MatchMode;
-    new ListFilter(list, settings).apply();
-  }));
-
-  matchModeGroup.appendChild(createRadio(`matchmode-${id}`, 'not match', false, (val: string) => {
-    settings.matchMode = val as MatchMode;
-    new ListFilter(list, settings).apply();
-  }));
-
   const wrapper = document.createElement('div');
   wrapper.className = 'list-controls';
   wrapper.style.marginBottom = '10px';
 
-  wrapper.appendChild(input);
+  wrapper.appendChild(topRow);
   wrapper.appendChild(highlightBox);
   wrapper.appendChild(grayOutBox);
   wrapper.appendChild(hideBox);
-  wrapper.appendChild(matchModeGroup);
 
   return wrapper;
 }
