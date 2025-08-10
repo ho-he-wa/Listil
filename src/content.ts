@@ -2,9 +2,14 @@ import Mark from "mark.js";
 
 console.log("[DEBUG] Content script loaded (mark.js version)");
 
-// --- 型定義 ---
+/**
+ * パターンマッチのモード(マッチする、マッチしない)
+ */
 type MatchMode = 'match' | 'not match';
 
+/**
+ * リスト設定インタフェース
+ */
 interface ListSettings {
   regex: RegExp | null;
   highlight: boolean;
@@ -14,10 +19,14 @@ interface ListSettings {
   narrow: boolean;
 }
 
-// --- グローバル状態 ---
+/**
+ * マッピング(リストID -> リスト設定)
+ */
 const listSettings = new Map<string, ListSettings>(); // listId -> settings
 
-// --- スタイル追加（mark.js用） ---
+/**
+ * スタイル追加（mark.js用、表示制御用）
+ */
 function injectHighlightStyle(): void {
   const style = document.createElement('style');
   style.textContent = `
@@ -93,10 +102,14 @@ class ListFinder {
     return result;
   }
 
+  /**
+   * 処理対象のリストか
+   */
   private isEligibleList(el: HTMLElement): boolean {
     const tag = el.tagName.toLowerCase();
     console.log('[DEBUG] ' + (el.dataset.pceudotype ?? '-'));
 
+    // 対象外の要素配下か
     if (el.closest(this.excludeSelector)) return false;
     if (this.hasExcludedAncestor(el)) return false;
 
@@ -112,6 +125,9 @@ class ListFinder {
     return false;
   }
 
+  /**
+   * 対象外のサフィックスの祖先要素配下か
+   */
   private hasExcludedAncestor(el: Element): boolean {
     let current: Element | null = el;
     while (current) {
@@ -228,7 +244,9 @@ class ListFilter {
   }
 }
 
-// --- チェックボックス ---
+/**
+ * チェックボックス作成
+ */
 function createCheckbox(label: string, checked: boolean, onChange: (checked: boolean) => void): HTMLElement {
   const wrapper = document.createElement('label');
   wrapper.style.marginRight = '8px';
@@ -247,7 +265,9 @@ function createCheckbox(label: string, checked: boolean, onChange: (checked: boo
   return wrapper;
 }
 
-// --- ラジオボタン ---
+/**
+ * ラジオボタン作成
+ */
 function createRadio(
   name: string,
   value: string,
@@ -389,7 +409,9 @@ function addPceudoType(): void {
   }
 }
 
-// --- トグルボタンとUI追加 ---
+/**
+ * トグルボタンとUI追加
+ */
 function addTogglesToLists(): void {
   const timerName = '[DEBUG] addTogglesToLists';
   console.time(timerName);
