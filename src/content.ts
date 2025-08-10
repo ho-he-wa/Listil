@@ -59,6 +59,11 @@ function findContentContainers(): Element[] {
     });
   });
 
+  // 見つからなかった場合、<body> を対象にする
+  if (result.length === 0) {
+    result.push(document.body);
+  }
+
   return result;
 }
 
