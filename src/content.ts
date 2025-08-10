@@ -380,9 +380,14 @@ function addPceudoType(): void {
 
 // --- トグルボタンとUI追加 ---
 function addTogglesToLists(): void {
+  const timerName = '[DEBUG] addTogglesToLists';
+  console.time(timerName);
   injectHighlightStyle();
+  console.timeLog(timerName);
   addPceudoType();
+  console.timeLog(timerName);
   const lists = findLists();
+  console.timeLog(timerName);
 
   lists.forEach((list: HTMLElement, index: number) => {
     const id = `list-${index}`;
@@ -414,6 +419,7 @@ function addTogglesToLists(): void {
     list.parentNode!.insertBefore(controls, list);
     list.parentNode!.insertBefore(toggleBtn, controls);
   });
+  console.timeEnd(timerName);
 }
 
 // --- 実行 ---
