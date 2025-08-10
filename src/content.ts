@@ -103,64 +103,81 @@ function hasExcludedAncestor(el: Element): boolean {
   return false;
 }
 
-// --- ハイライト適用（mark.js使用） ---
-function applyHighlights(listId: string | undefined, element: HTMLElement, regex: RegExp | null): void {
-  const instance = new Mark(element);
-  instance.unmark({
-    done: () => {
-      if (regex) {
-        instance.markRegExp(regex, {
-          //separateWordSearch: false,
-          className: 'custom-mark',
-        });
+/**
+ * リストフィルター
+ */
+class ListFilter {
+  private list: HTMLElement;
+  private settings: ListSettings;
+  private listId: string | undefined;
+
+  constructor(list: HTMLElement, settings: ListSettings) {
+    this.list = list;
+    this.settings = settings;
+    this.listId = list.dataset.listTogglerId;
+  }
+
+  /**
+   * フィルターを適用
+   */
+  public apply(): void {
+    const tag = this.list.tagName.toLowerCase();
+    const items: HTMLElement[] = tag === 'table'
+      ? [...Array.from(this.list.querySelectorAll<HTMLElement>('tr'))]
+      : [...Array.from(this.list.querySelectorAll<HTMLElement>('li'))];
+
+    this.removeHighlights();
+
+    items.forEach((item: HTMLElement) => {
+      item.style.opacity = '';
+      item.style.display = '';
+
+      const text: string = item.innerText;
+      const match = this.settings.regex && this.settings.regex.test(text);
+
+      const isTarget = this.settings.regex
+        ? this.settings.matchMode === 'match' ? match : !match
+        : false;
+
+      if (isTarget) {
+        if (this.settings.highlight) {
+          this.applyHighlights(item);
+        }
+        if (this.settings.grayOut) {
+          item.style.opacity = '0.3';
+        }
+        if (this.settings.hide) {
+          item.style.display = 'none';
+        }
       }
-    }
-  });
-}
+    });
+  }
 
-// --- ハイライト除去 ---
-function removeHighlights(listId: string | undefined): void {
-  if (!listId) return;
+  /**
+   * ハイライトを適用
+   */
+  private applyHighlights(element: HTMLElement): void {
+    const instance = new Mark(element);
+    instance.unmark({
+      done: () => {
+        if (this.settings.regex) {
+          instance.markRegExp(this.settings.regex, {
+            className: 'custom-mark',
+          });
+        }
+      }
+    });
+  }
 
-  const list = document.querySelector<HTMLElement>(`[data-list-toggler-id="${listId}"]`);
-  if (list) {
-    const instance = new Mark(list);
+  /**
+   * ハイライトを削除
+   */
+  private removeHighlights(): void {
+    if (!this.listId) return;
+
+    const instance = new Mark(this.list);
     instance.unmark();
   }
-}
-
-// --- 各項目の処理 ---
-function applyListFilters(list: HTMLElement, settings: ListSettings): void {
-  const tag = list.tagName.toLowerCase();
-  const items: HTMLElement[] = tag === 'table'
-    ? [...Array.from(list.querySelectorAll<HTMLElement>('tr'))]
-    : [...Array.from(list.querySelectorAll<HTMLElement>('li'))];
-
-  removeHighlights(list.dataset.listTogglerId);
-
-  items.forEach((item: HTMLElement) => {
-    item.style.opacity = '';
-    item.style.display = '';
-
-    const text: string = item.innerText;
-    const match = settings.regex && settings.regex.test(text);
-
-    const isTarget = settings.regex
-      ? settings.matchMode === 'match' ? match : !match
-      : false;
-
-    if (isTarget) {
-      if (settings.highlight) {
-        applyHighlights(list.dataset.listTogglerId, item, settings.regex);
-      }
-      if (settings.grayOut) {
-        item.style.opacity = '0.3';
-      }
-      if (settings.hide) {
-        item.style.display = 'none';
-      }
-    }
-  });
 }
 
 // --- チェックボックス ---
@@ -227,22 +244,22 @@ function createRegexControls(list: HTMLElement): HTMLElement {
     } catch {
       settings.regex = null;
     }
-    applyListFilters(list, settings);
+    new ListFilter(list, settings).apply();
   });
 
   const highlightBox = createCheckbox('Highlight', settings.highlight, (state: boolean) => {
     settings.highlight = state;
-    applyListFilters(list, settings);
+    new ListFilter(list, settings).apply();
   });
 
   const grayOutBox = createCheckbox('GrayOut', settings.grayOut, (state: boolean) => {
     settings.grayOut = state;
-    applyListFilters(list, settings);
+    new ListFilter(list, settings).apply();
   });
 
   const hideBox = createCheckbox('Hide', settings.hide, (state: boolean) => {
     settings.hide = state;
-    applyListFilters(list, settings);
+    new ListFilter(list, settings).apply();
   });
 
   const matchModeGroup = document.createElement('div');
@@ -251,12 +268,12 @@ function createRegexControls(list: HTMLElement): HTMLElement {
 
   matchModeGroup.appendChild(createRadio(`matchmode-${id}`, 'match', true, (val: string) => {
     settings.matchMode = val as MatchMode;
-    applyListFilters(list, settings);
+    new ListFilter(list, settings).apply();
   }));
 
   matchModeGroup.appendChild(createRadio(`matchmode-${id}`, 'not match', false, (val: string) => {
     settings.matchMode = val as MatchMode;
-    applyListFilters(list, settings);
+    new ListFilter(list, settings).apply();
   }));
 
   const wrapper = document.createElement('div');
