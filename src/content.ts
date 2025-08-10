@@ -41,7 +41,7 @@ function injectHighlightStyle(): void {
 class ListFinder {
   private excludeSelector = 'nav, footer, header, #nav, #footer, #header';
   private excludeSuffixes = ['menu', 'Menu', 'nav', 'Nav'];
-  private contentSelectors = ['main', '[id="main"]', '[id="content"]'];
+  private contentSelectors = ['main', /* '[id="main"]', '[id="content"]' */];
 
   constructor() {
   }
@@ -67,12 +67,23 @@ class ListFinder {
     const result: Element[] = [];
 
     this.contentSelectors.forEach(sel => {
-      document.querySelectorAll(sel).forEach(el => {
+      // NOTE : 処理が重たいので該当するものが1つ見つかれば他はスキップ
+      if (result.length > 0) {
+        return;
+      }
+      // document.querySelectorAll(sel).forEach(el => {
+      //   if (!seen.has(el)) {
+      //     seen.add(el);
+      //     result.push(el);
+      //   }
+      // });
+      const el = document.querySelector(sel);
+      if (el) {
         if (!seen.has(el)) {
           seen.add(el);
           result.push(el);
         }
-      });
+      }
     });
 
     if (result.length === 0) {
