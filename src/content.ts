@@ -34,7 +34,7 @@ function findLists(): HTMLElement[] {
   const lists: HTMLElement[] = [];
 
   containers.forEach(container => {
-    const listElements = container.querySelectorAll<HTMLElement>('ul, ol, table, tbody');
+    const listElements = container.querySelectorAll<HTMLElement>('ul, ol, table');
 
     listElements.forEach(list => {
       if (!isEligibleList(list)) return;
@@ -69,7 +69,7 @@ function isEligibleList(el: HTMLElement): boolean {
   if (el.closest(excludeSelector)) return false;
   if (hasExcludedAncestor(el)) return false;
 
-  if (tag === 'table' || tag === 'tbody') {
+  if (tag === 'table') {
     return el.querySelectorAll('tr').length >= 10;
   } else if (tag === 'ul' || tag === 'ol') {
     return el.querySelectorAll('li').length >= 10;
