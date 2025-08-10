@@ -41,7 +41,7 @@ function injectHighlightStyle(): void {
 class ListFinder {
   private excludeSelector = 'nav, footer, header, #nav, #footer, #header';
   private excludeSuffixes = ['menu', 'Menu', 'nav', 'Nav'];
-  private contentSelectors = ['main', '[id*="main"]', '[id*="content"]'];
+  private contentSelectors = ['main', '[id="main"]', '[id="content"]'];
 
   constructor() {
   }
@@ -51,7 +51,7 @@ class ListFinder {
     const lists: HTMLElement[] = [];
 
     containers.forEach(container => {
-      const listElements = container.querySelectorAll<HTMLElement>('ul, ol, table');
+      const listElements = container.querySelectorAll<HTMLElement>('ul, ol, table, [data-pceudotype="list"]');
 
       listElements.forEach(list => {
         if (!this.isEligibleList(list)) return;
@@ -84,6 +84,7 @@ class ListFinder {
 
   private isEligibleList(el: HTMLElement): boolean {
     const tag = el.tagName.toLowerCase();
+    console.log('[DEBUG] ' + (el.dataset.pceudotype ?? '-'));
 
     if (el.closest(this.excludeSelector)) return false;
     if (this.hasExcludedAncestor(el)) return false;
@@ -92,6 +93,9 @@ class ListFinder {
       return el.querySelectorAll('tr').length >= 10;
     } else if (tag === 'ul' || tag === 'ol') {
       return el.querySelectorAll('li').length >= 10;
+    } else if (el.dataset.pceudotype === 'list') {
+      console.log('[DEBUG] pseudo listitem');
+      return el.querySelectorAll('[data-pceudotype="listitem"]').length >= 10;
     }
 
     return false;
@@ -143,17 +147,22 @@ class ListFilter {
    * フィルターを適用
    */
   public apply(): void {
-    const tag = this.list.tagName.toLowerCase();
-    const items: HTMLElement[] = tag === 'table'
-      ? [...Array.from(this.list.querySelectorAll<HTMLElement>('tr'))]
-      : [...Array.from(this.list.querySelectorAll<HTMLElement>('li'))];
+    let items: HTMLElement[];
 
+    if (this.list.matches('[data-pceudotype="list"]')) {
+      items = Array.from(this.list.querySelectorAll<HTMLElement>('[data-pceudotype="listitem"]'));
+    } else {
+      const tag = this.list.tagName.toLowerCase();
+      items = tag === 'table'
+        ? Array.from(this.list.querySelectorAll<HTMLElement>('tr'))
+        : Array.from(this.list.querySelectorAll<HTMLElement>('li'));
+    }
     this.removeHighlights();
 
     items.forEach((item: HTMLElement) => {
       item.style.opacity = '';
       item.style.display = '';
-      item.style.maxHeight = ''; // ← reset
+      item.style.maxHeight = '';
 
       const text: string = item.innerText;
       const match = this.settings.regex && this.settings.regex.test(text);
@@ -339,9 +348,40 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   return wrapper;
 }
 
+/**
+ * 事実上のリストにlist/listitemの識別タグを付加
+ */
+function addPceudoType(): void {
+  const candidateItems = Array.from(document.querySelectorAll<HTMLElement>('div[role="listitem"], p[role="listitem"]'));
+
+  const groups = new Map<HTMLElement, HTMLElement[]>();
+
+  for (const item of candidateItems) {
+    if (item.dataset.pceudotype === 'listitem') continue;
+
+    const parent = item.parentElement;
+    if (!parent) continue;
+
+    if (!groups.has(parent)) {
+      groups.set(parent, []);
+    }
+    groups.get(parent)!.push(item);
+  }
+
+  for (const [parent, items] of groups) {
+    if (items.length >= 5) {
+      parent.dataset.pceudotype = 'list';
+      for (const item of items) {
+        item.dataset.pceudotype = 'listitem';
+      }
+    }
+  }
+}
+
 // --- トグルボタンとUI追加 ---
 function addTogglesToLists(): void {
   injectHighlightStyle();
+  addPceudoType();
   const lists = findLists();
 
   lists.forEach((list: HTMLElement, index: number) => {
