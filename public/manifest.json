@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "listutil",
+  "name": "Listil",
   "version": "1.0",
-  "description": "A simple Chrome extension built with TypeScript.",
+  "description": "A utility for lists that can apply patterns to highlight, gray out, or hide entries.",
   "permissions": [
     "storage",
     "tabs",
