@@ -264,7 +264,9 @@ function createCheckbox(label: string, checked: boolean, onChange: (checked: boo
   checkbox.checked = checked;
   checkbox.style.marginRight = '4px';
 
-  checkbox.addEventListener('change', () => {
+  checkbox.addEventListener('change', (e) => {
+    e.preventDefault();
+    e.stopImmediatePropagation()
     onChange(checkbox.checked);
   });
 
@@ -292,8 +294,10 @@ function createRadio(
   radio.checked = checked;
   radio.style.marginRight = '4px';
 
-  radio.addEventListener('change', () => {
+  radio.addEventListener('change', (e) => {
     if (radio.checked) {
+      e.preventDefault();
+      e.stopImmediatePropagation()
       onChange(value);
     }
   });
@@ -316,7 +320,9 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   input.className = 'regex-input';
   input.style.marginRight = '10px';
 
-  input.addEventListener('input', () => {
+  input.addEventListener('input', (e) => {
+    e.preventDefault();
+    e.stopImmediatePropagation()
     const str = input.value;
     try {
       settings.regex = new RegExp(str, 'gi');
@@ -450,7 +456,9 @@ function addTogglesToLists(): void {
     toggleBtn.style.marginBottom = '6px';
 
     let visible = true;
-    toggleBtn.addEventListener('click', () => {
+    toggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation()
       visible = !visible;
       list.style.display = visible ? '' : 'none';
       toggleBtn.textContent = visible ? 'Hide List' : 'Show List';
