@@ -165,7 +165,7 @@ class ListFilter {
       item.style.maxHeight = '';
 
       const text: string = item.innerText;
-      const match = this.settings.regex && this.settings.regex.test(text);
+      const match = this.settings.regex && text.match(this.settings.regex) !== null;
       const isTarget = this.settings.regex
         ? this.settings.matchMode === 'match' ? match : !match
         : false;
