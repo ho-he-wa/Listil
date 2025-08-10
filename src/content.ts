@@ -187,6 +187,14 @@ class ListFilter {
     this.removeHighlights();
 
     items.forEach((item: HTMLElement) => {
+      // 元々非表示な要素は無視
+      const style = window.getComputedStyle(item);
+      if (((item.dataset.ignore ?? null) == null && style.display === 'none') || (item.dataset.ignore === 'yes')) {
+        item.dataset.ignore = 'yes';
+        return;
+      }
+      item.dataset.ignore = 'no';
+
       item.style.opacity = '';
       item.style.display = '';
       item.style.maxHeight = '';
