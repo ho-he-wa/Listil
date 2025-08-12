@@ -43,6 +43,34 @@ function injectHighlightStyle(): void {
   document.head.appendChild(style);
 }
 
+/**
+ * 深さ制限付きで指定セレクタに一致する要素を探索する関数
+ * 呼び出し時に型パラメータで戻り値の型を指定可能
+ *
+ * @param root - 探索の起点となるルート要素
+ * @param selector - CSS セレクタ文字列
+ * @param maxDepth - 探索する最大の深さ（0はルート自身）
+ * @returns 条件に一致した要素の配列（指定された型にキャスト）
+ */
+function querySelectorAllWithDepth<T extends Element>(
+  root: Element,
+  selector: string,
+  maxDepth: number = 1
+): T[] {
+  const results: T[] = [];
+  const traverse = (node: Element, depth: number): void => {
+    if (depth > maxDepth) return;
+
+    if (node.matches(selector)) {
+      results.push(node as T);  // 明示的にキャスト
+    }
+    for (const child of Array.from(node.children)) {
+      traverse(child, depth + 1);
+    }
+  };
+  traverse(root, 0);
+  return results;
+}
 
 /**
  * リストの検索処理
@@ -114,12 +142,13 @@ class ListFinder {
     if (this.hasExcludedAncestor(el)) return false;
 
     if (tag === 'table') {
-      return el.querySelectorAll('tr').length >= 10;
+      // NOTE : tbodyを挟む場合があるので深さ2を指定
+      return querySelectorAllWithDepth(el, 'tr', 2).length >= 10;
     } else if (tag === 'ul' || tag === 'ol') {
-      return el.querySelectorAll('li').length >= 10;
+      return querySelectorAllWithDepth(el, 'li', 1).length >= 10;
     } else if (el.dataset.pceudotype === 'list') {
       console.log('[DEBUG] pseudo listitem');
-      return el.querySelectorAll('[data-pceudotype="listitem"]').length >= 10;
+      return querySelectorAllWithDepth(el, '[data-pceudotype="listitem"]', 1).length >= 10;
     }
 
     return false;
@@ -177,12 +206,12 @@ class ListFilter {
     let items: HTMLElement[];
 
     if (this.list.matches('[data-pceudotype="list"]')) {
-      items = Array.from(this.list.querySelectorAll<HTMLElement>('[data-pceudotype="listitem"]'));
+      items = querySelectorAllWithDepth(this.list, '[data-pceudotype="listitem"]', 1);
     } else {
       const tag = this.list.tagName.toLowerCase();
       items = tag === 'table'
-        ? Array.from(this.list.querySelectorAll<HTMLElement>('tr'))
-        : Array.from(this.list.querySelectorAll<HTMLElement>('li'));
+        ? querySelectorAllWithDepth(this.list, 'tr', 2)
+        : querySelectorAllWithDepth(this.list, 'li', 1);
     }
     this.removeHighlights();
 
