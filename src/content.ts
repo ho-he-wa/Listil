@@ -73,21 +73,52 @@ function querySelectorAllWithDepth<T extends Element>(
 }
 
 /**
+ * コンテンツの領域を検索する
+ */
+function findContentContainers(): Element[] {
+  const seen = new Set<Element>();
+  const result: Element[] = [];
+  const contentSelectors = ['main', /* '[id="main"]', '[id="content"]' */];
+  for (const sel of contentSelectors) {
+    // NOTE : 処理が重たいので該当するものが1つ見つかれば他はスキップ
+    if (result.length > 0) {
+      break;
+    }
+    // document.querySelectorAll(sel).forEach(el => {
+    //   if (!seen.has(el)) {
+    //     seen.add(el);
+    //     result.push(el);
+    //   }
+    // });
+    const el = document.querySelector(sel);
+    if (el && !seen.has(el)) {
+      seen.add(el);
+      result.push(el);
+    }
+  }
+  if (result.length === 0) {
+    result.push(document.body);
+  }
+  return result;
+}
+
+
+/**
  * リストの検索処理
  */
 class ListFinder {
   private excludeSelector = 'nav, footer, header, #nav, #footer, #header';
   private excludeSuffixes = ['menu', 'Menu', 'nav', 'Nav'];
-  private contentSelectors = ['main', /* '[id="main"]', '[id="content"]' */];
+  private contentContainers: Element[];
 
-  constructor() {
+  constructor(contentContainers: Element[]) {
+    this.contentContainers = contentContainers;
   }
 
   public findLists(): HTMLElement[] {
-    const containers = this.findContentContainers();
     const lists: HTMLElement[] = [];
 
-    containers.forEach(container => {
+    this.contentContainers.forEach(container => {
       const listElements = container.querySelectorAll<HTMLElement>('ul, ol, table, [data-pceudotype="list"]');
 
       listElements.forEach(list => {
@@ -97,37 +128,6 @@ class ListFinder {
     });
 
     return [...new Set(lists)];
-  }
-
-  private findContentContainers(): Element[] {
-    const seen = new Set<Element>();
-    const result: Element[] = [];
-
-    this.contentSelectors.forEach(sel => {
-      // NOTE : 処理が重たいので該当するものが1つ見つかれば他はスキップ
-      if (result.length > 0) {
-        return;
-      }
-      // document.querySelectorAll(sel).forEach(el => {
-      //   if (!seen.has(el)) {
-      //     seen.add(el);
-      //     result.push(el);
-      //   }
-      // });
-      const el = document.querySelector(sel);
-      if (el) {
-        if (!seen.has(el)) {
-          seen.add(el);
-          result.push(el);
-        }
-      }
-    });
-
-    if (result.length === 0) {
-      result.push(document.body);
-    }
-
-    return result;
   }
 
   /**
@@ -180,9 +180,9 @@ class ListFinder {
  * リストを検索
  */
 function findLists(): HTMLElement[] {
-  const finder = new ListFinder();
-  const lists = finder.findLists();
-  return lists;
+  const contentContainers = findContentContainers();
+  const finder = new ListFinder(contentContainers);
+  return finder.findLists();
 }
 
 /**
