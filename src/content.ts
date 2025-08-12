@@ -424,9 +424,13 @@ function createRegexControls(list: HTMLElement): HTMLElement {
 
 /**
  * 事実上のリストにlist/listitemの識別タグを付加
+ * 
+ * @param root - 探索の起点となるルート要素（デフォルトは document.body）
  */
-function addPceudoType(): void {
-  const candidateItems = Array.from(document.querySelectorAll<HTMLElement>('div[role="listitem"], p[role="listitem"]'));
+function addPceudoType(root: Element = document.body): void {
+  const candidateItems = Array.from(
+    root.querySelectorAll<HTMLElement>('div[role="listitem"], p[role="listitem"]')
+  );
 
   const groups = new Map<HTMLElement, HTMLElement[]>();
 
@@ -460,9 +464,11 @@ function addTogglesToLists(): void {
   console.time(timerName);
   injectHighlightStyle();
   console.timeLog(timerName);
-  addPceudoType();
+  const contentContainers = findContentContainers();
+  contentContainers.forEach((container) => { addPceudoType(container); });
   console.timeLog(timerName);
-  const lists = findLists();
+  const finder = new ListFinder(contentContainers);
+  const lists = finder.findLists();
   console.timeLog(timerName);
 
   lists.forEach((list: HTMLElement, index: number) => {
