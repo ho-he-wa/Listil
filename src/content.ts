@@ -123,7 +123,7 @@ class ListFinder {
     const lists: HTMLElement[] = [];
 
     this.contentContainers.forEach(container => {
-      const listElements = container.querySelectorAll<HTMLElement>(`ul, ol, table, [data-pceudotype="${PseudoType.list}"]`);
+      const listElements = container.querySelectorAll<HTMLElement>(`ul, ol, table, [data-pseudotype="${PseudoType.list}"]`);
 
       listElements.forEach(list => {
         if (!this.isEligibleList(list)) return;
@@ -139,7 +139,7 @@ class ListFinder {
    */
   private isEligibleList(el: HTMLElement): boolean {
     const tag = el.tagName.toLowerCase();
-    console.log('[DEBUG] ' + (el.dataset.pceudotype ?? '-'));
+    console.log('[DEBUG] ' + (el.dataset.pseudotype ?? '-'));
 
     // 対象外の要素配下か
     if (el.closest(this.excludeSelector)) return false;
@@ -150,9 +150,9 @@ class ListFinder {
       return querySelectorAllWithDepth(el, 'tr', 2).length >= 10;
     } else if (tag === 'ul' || tag === 'ol') {
       return querySelectorAllWithDepth(el, 'li', 1).length >= 10;
-    } else if (el.dataset.pceudotype === PseudoType.list) {
+    } else if (el.dataset.pseudotype === PseudoType.list) {
       console.log('[DEBUG] pseudo listitem');
-      return querySelectorAllWithDepth(el, `[data-pceudotype="${PseudoType.listitem}"]`, 1).length >= 10;
+      return querySelectorAllWithDepth(el, `[data-pseudotype="${PseudoType.listitem}"]`, 1).length >= 10;
     }
 
     return false;
@@ -209,8 +209,8 @@ class ListFilter {
   public apply(): void {
     let items: HTMLElement[];
 
-    if (this.list.matches(`[data-pceudotype="${PseudoType.list}"]`)) {
-      items = querySelectorAllWithDepth(this.list, `[data-pceudotype="${PseudoType.listitem}"]`, 1);
+    if (this.list.matches(`[data-pseudotype="${PseudoType.list}"]`)) {
+      items = querySelectorAllWithDepth(this.list, `[data-pseudotype="${PseudoType.listitem}"]`, 1);
     } else {
       const tag = this.list.tagName.toLowerCase();
       items = tag === 'table'
@@ -431,7 +431,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
  * 
  * @param root - 探索の起点となるルート要素（デフォルトは document.body）
  */
-function addPceudoType(root: Element = document.body): void {
+function addPseudoType(root: Element = document.body): void {
   const candidateItems = Array.from(
     root.querySelectorAll<HTMLElement>('div[role="listitem"], p[role="listitem"]')
   );
@@ -439,7 +439,7 @@ function addPceudoType(root: Element = document.body): void {
   const groups = new Map<HTMLElement, HTMLElement[]>();
 
   for (const item of candidateItems) {
-    if (item.dataset.pceudotype === PseudoType.listitem) continue;
+    if (item.dataset.pseudotype === PseudoType.listitem) continue;
 
     const parent = item.parentElement;
     if (!parent) continue;
@@ -452,9 +452,9 @@ function addPceudoType(root: Element = document.body): void {
 
   for (const [parent, items] of groups) {
     if (items.length >= 5) {
-      parent.dataset.pceudotype = PseudoType.list;
+      parent.dataset.pseudotype = PseudoType.list;
       for (const item of items) {
-        item.dataset.pceudotype = PseudoType.listitem;
+        item.dataset.pseudotype = PseudoType.listitem;
       }
     }
   }
@@ -469,7 +469,7 @@ function addTogglesToLists(): void {
   injectHighlightStyle();
   console.timeLog(timerName);
   const contentContainers = findContentContainers();
-  contentContainers.forEach((container) => { addPceudoType(container); });
+  contentContainers.forEach((container) => { addPseudoType(container); });
   console.timeLog(timerName);
   const finder = new ListFinder(contentContainers);
   const lists = finder.findLists();
