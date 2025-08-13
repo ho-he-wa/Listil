@@ -20,7 +20,8 @@ interface ListSettings {
   highlight: boolean;
   grayOut: boolean;
   hide: boolean;
-  matchMode: MatchMode;
+  invertMatch: boolean;
+  matchMode: MatchMode; // [ ] TODO : invertMatch採用前の設定。不要であれば削除する。
   narrow: boolean;
 }
 
@@ -484,20 +485,11 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   });
 
   // マッチモードラジオボタン群
-  const matchModeGroup = document.createElement('div');
-  matchModeGroup.style.display = 'inline-flex';    // 横並びにする
-  matchModeGroup.style.alignItems = 'center';
-  matchModeGroup.style.gap = '8px';               // ラジオボタン間の隙間
-
-  matchModeGroup.appendChild(createRadio(`matchmode-${id}`, 'match', settings.matchMode === 'match', (val: string) => {
-    settings.matchMode = val as MatchMode;
+  const invertBox = createCheckbox('invert matching', settings.invertMatch, (state: boolean) => {
+    settings.invertMatch = state;
+    settings.matchMode = !state ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
     new ListFilter(list, settings).apply();
-  }));
-
-  matchModeGroup.appendChild(createRadio(`matchmode-${id}`, 'not match', settings.matchMode === 'not match', (val: string) => {
-    settings.matchMode = val as MatchMode;
-    new ListFilter(list, settings).apply();
-  }));
+  });
 
 
   // input とラジオボタンを横並びにするラッパー
@@ -505,9 +497,10 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   topRow.style.display = 'flex';
   topRow.style.alignItems = 'center';
   topRow.style.marginBottom = '8px';
+  topRow.style.gap = '12px';
 
   topRow.appendChild(input);
-  topRow.appendChild(matchModeGroup);
+  topRow.appendChild(invertBox);
 
   // 他のチェックボックスはそのまま
   const markerBox = createCheckbox('Marker', settings.marker, (state: boolean) => {
@@ -609,6 +602,7 @@ function addTogglesToLists(): void {
       highlight: false,
       grayOut: false,
       hide: false,
+      invertMatch: false,
       matchMode: 'match',
       narrow: false,
     });
