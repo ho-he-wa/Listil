@@ -319,17 +319,22 @@ class ListFilter {
         });
         match = attributeMatch;
       }
-      const isTarget = this.settings.regex
+      const isMatchedTarget = this.settings.regex
         ? this.settings.matchMode === 'match' ? match : !match
         : false;
+      const isNotMatchedTarget = this.settings.regex
+        ? this.settings.matchMode === 'match' ? !match : match
+        : false;
 
-      if (isTarget) {
+      if (isMatchedTarget) {
         if (this.settings.marker) {
           this.applyMarkers(item);
         }
         if (this.settings.highlight) {
           this.applyHighlights(item);
         }
+      }
+      if (isNotMatchedTarget) {
         if (this.settings.grayOut) {
           item.style.opacity = '0.3';
         }
@@ -513,17 +518,17 @@ function createRegexControls(list: HTMLElement): HTMLElement {
     new ListFilter(list, settings).apply();
   });
 
-  const grayOutBox = createCheckbox('GrayOut', settings.grayOut, (state: boolean) => {
+  const grayOutBox = createCheckbox('GrayOut others', settings.grayOut, (state: boolean) => {
     settings.grayOut = state;
     new ListFilter(list, settings).apply();
   });
 
-  const narrowBox = createCheckbox('Narrow', settings.narrow, (state: boolean) => {
+  const narrowBox = createCheckbox('Narrow others', settings.narrow, (state: boolean) => {
     settings.narrow = state;
     new ListFilter(list, settings).apply();
   });
 
-  const hideBox = createCheckbox('Hide', settings.hide, (state: boolean) => {
+  const hideBox = createCheckbox('Hide others', settings.hide, (state: boolean) => {
     settings.hide = state;
     new ListFilter(list, settings).apply();
   });
