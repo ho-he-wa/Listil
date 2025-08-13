@@ -270,7 +270,7 @@ class ListFilter {
     } else {
       const tag = this.list.tagName.toLowerCase();
       items = tag === 'table'
-        ? querySelectorAllWithDepth(this.list, 'tr', 2)
+        ? querySelectorAllWithDepth<HTMLElement>(this.list, 'tr', 2).filter((tr) => !this.shouldExcludeTableRow(tr))
         : querySelectorAllWithDepth(this.list, 'li', 1);
     }
     this.removeHighlights();
@@ -332,7 +332,21 @@ class ListFilter {
     });
   }
 
-
+  /**
+   * 指定された <tr> 要素が除外対象であるかを判定する
+   * 
+   * 以下の条件に該当する場合、true を返す（＝除外）：
+   * - <thead> または <tfoot> 内にある
+   * - 子要素に <td> を1つも含まない
+   * @param tr 対象の <tr> 要素
+   * @returns boolean 除外すべき場合 true、そうでなければ false
+   */
+  private shouldExcludeTableRow(tr: HTMLElement): boolean {
+    if (tr.closest('thead') || tr.closest('tfoot') || querySelectorAllWithDepth(tr, 'td', 1).length <= 0) {
+      return true;
+    }
+    return false;
+  }
 
   /**
    * ハイライトを適用
