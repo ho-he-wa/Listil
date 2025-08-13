@@ -6,6 +6,10 @@ console.log("[DEBUG] Content script loaded (mark.js version)");
  * パターンマッチのモード(マッチする、マッチしない)
  */
 type MatchMode = 'match' | 'not match';
+const PseudoType = {
+  list: 'list',
+  listitem: 'listitem',
+} as const;
 
 /**
  * リスト設定インタフェース
@@ -119,7 +123,7 @@ class ListFinder {
     const lists: HTMLElement[] = [];
 
     this.contentContainers.forEach(container => {
-      const listElements = container.querySelectorAll<HTMLElement>('ul, ol, table, [data-pceudotype="list"]');
+      const listElements = container.querySelectorAll<HTMLElement>(`ul, ol, table, [data-pceudotype="${PseudoType.list}"]`);
 
       listElements.forEach(list => {
         if (!this.isEligibleList(list)) return;
@@ -146,9 +150,9 @@ class ListFinder {
       return querySelectorAllWithDepth(el, 'tr', 2).length >= 10;
     } else if (tag === 'ul' || tag === 'ol') {
       return querySelectorAllWithDepth(el, 'li', 1).length >= 10;
-    } else if (el.dataset.pceudotype === 'list') {
+    } else if (el.dataset.pceudotype === PseudoType.list) {
       console.log('[DEBUG] pseudo listitem');
-      return querySelectorAllWithDepth(el, '[data-pceudotype="listitem"]', 1).length >= 10;
+      return querySelectorAllWithDepth(el, `[data-pceudotype="${PseudoType.listitem}"]`, 1).length >= 10;
     }
 
     return false;
@@ -205,8 +209,8 @@ class ListFilter {
   public apply(): void {
     let items: HTMLElement[];
 
-    if (this.list.matches('[data-pceudotype="list"]')) {
-      items = querySelectorAllWithDepth(this.list, '[data-pceudotype="listitem"]', 1);
+    if (this.list.matches(`[data-pceudotype="${PseudoType.list}"]`)) {
+      items = querySelectorAllWithDepth(this.list, `[data-pceudotype="${PseudoType.listitem}"]`, 1);
     } else {
       const tag = this.list.tagName.toLowerCase();
       items = tag === 'table'
@@ -435,7 +439,7 @@ function addPceudoType(root: Element = document.body): void {
   const groups = new Map<HTMLElement, HTMLElement[]>();
 
   for (const item of candidateItems) {
-    if (item.dataset.pceudotype === 'listitem') continue;
+    if (item.dataset.pceudotype === PseudoType.listitem) continue;
 
     const parent = item.parentElement;
     if (!parent) continue;
@@ -448,9 +452,9 @@ function addPceudoType(root: Element = document.body): void {
 
   for (const [parent, items] of groups) {
     if (items.length >= 5) {
-      parent.dataset.pceudotype = 'list';
+      parent.dataset.pceudotype = PseudoType.list;
       for (const item of items) {
-        item.dataset.pceudotype = 'listitem';
+        item.dataset.pceudotype = PseudoType.listitem;
       }
     }
   }
