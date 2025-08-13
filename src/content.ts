@@ -133,6 +133,37 @@ function extractValidFormElements(root: Element, withDisabled: boolean = false):
 }
 
 /**
+ * 指定要素配下の要素の data-* 属性および任意の指定属性を抽出して
+ * 属性名 → 属性値 の Map の配列を返す。
+ *
+ * - 同名がある場合は1つのみ抽出
+ * @param root - 探索対象のルート要素
+ * @param targetAttributes - 抽出対象とする追加属性（例：['href', 'src']）
+ * @returns Map<string, string>[] - 属性名をキー、属性値を値とするMapの配列
+ */
+function extractAttributeMaps(
+  root: Element,
+  targetAttributes: string[] = ['href']
+): Map<string, string>[] {
+  const result: Map<string, string>[] = [];
+  const elements = root.querySelectorAll<HTMLElement>('*');
+  elements.forEach(el => {
+    // data-* 属性と指定されたその他の属性を抽出
+    const item = new Map<string, string>();
+    Array.from(el.attributes)
+      .filter((attr) => attr.name.startsWith('data-') || targetAttributes.includes(attr.name))
+      .forEach(attr => {
+        console.log('DEBUG attribute:', attr);
+        item.set(attr.name, attr.value); // e.g., "data-role" => "admin"
+      });
+    if (item.size > 0) {
+      result.push(item);
+    }
+  });
+  return result;
+}
+
+/**
  * リストの検索処理
  */
 class ListFinder {
@@ -267,6 +298,17 @@ class ListFilter {
           return this.settings.regex && formElement.value?.match(this.settings.regex) !== null;
         });
         match = formValueMatch;
+      }
+      if (!match) {
+        const attributeMaps = extractAttributeMaps(item);
+        const attributeMatch = attributeMaps.some((attributeMap) => {
+          console.log('DEBUG', 'element attributes:', attributeMap);
+          return Array.from(attributeMap).some(([key, attribute]) => {
+            console.log('DEBUG', 'element attribute: ', { attributeName: key, value: attribute });
+            return this.settings.regex && attribute.match(this.settings.regex) !== null;
+          });
+        });
+        match = attributeMatch;
       }
       const isTarget = this.settings.regex
         ? this.settings.matchMode === 'match' ? match : !match
