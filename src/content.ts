@@ -254,6 +254,38 @@ function findLists(): HTMLElement[] {
 }
 
 /**
+ * 要素は非表示か否か
+ */
+function isInvisible(el: HTMLElement): boolean {
+  const style = window.getComputedStyle(el);
+  const size = getContentBoxSize(el);
+  const invisible = style.display === 'none' || size.height === 0 || size.height === 0;
+  return invisible;
+}
+
+/**
+ * 指定要素の高さと幅 (パディング含まない) を取得する
+ */
+function getContentBoxSize(el: HTMLElement): { width: number, height: number } {
+  const style = window.getComputedStyle(el);
+  const boxSizing = style.boxSizing;
+  let width = el.clientWidth;
+  let height = el.clientHeight;
+  // NOTE : content-box の場合は rect.width = content size なのでそのまま返す
+  if (boxSizing === 'border-box') {
+    // NOTE : clientWidth には padding は含まれるが border は含まれない
+    const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+    const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+    width -= paddingX;
+    height -= paddingY;
+  }
+  return {
+    width: Math.max(0, width),
+    height: Math.max(0, height),
+  };
+}
+
+/**
  * リストフィルター
  */
 class ListFilter {
@@ -286,8 +318,7 @@ class ListFilter {
 
     items.forEach((item: HTMLElement) => {
       // 元々非表示な要素は無視
-      const style = window.getComputedStyle(item);
-      if (((item.dataset.ignore ?? null) == null && style.display === 'none') || (item.dataset.ignore === 'yes')) {
+      if (((item.dataset.ignore ?? null) == null && isInvisible(item)) || (item.dataset.ignore === 'yes')) {
         item.dataset.ignore = 'yes';
         return;
       }
