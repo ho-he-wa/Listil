@@ -387,7 +387,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   input.className = 'regex-input';
   input.style.marginRight = '10px';
 
-  input.addEventListener('input', (e) => {
+  input.addEventListener('change', (e) => {
     e.preventDefault();
     e.stopImmediatePropagation()
     const str = input.value;
