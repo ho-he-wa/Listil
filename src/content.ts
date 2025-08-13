@@ -16,7 +16,7 @@ const PseudoType = {
  */
 interface ListSettings {
   regex: RegExp | null;
-  highlight: boolean;
+  marker: boolean;
   grayOut: boolean;
   hide: boolean;
   matchMode: MatchMode;
@@ -31,7 +31,7 @@ const listSettings = new Map<string, ListSettings>(); // listId -> settings
 /**
  * スタイル追加（mark.js用、表示制御用）
  */
-function injectHighlightStyle(): void {
+function injectMarkerStyle(): void {
   const style = document.createElement('style');
   style.textContent = `
     mark.custom-mark {
@@ -273,7 +273,7 @@ class ListFilter {
         ? querySelectorAllWithDepth<HTMLElement>(this.list, 'tr', 2).filter((tr) => !this.shouldExcludeTableRow(tr))
         : querySelectorAllWithDepth(this.list, 'li', 1);
     }
-    this.removeHighlights();
+    this.removeMarkers();
 
     items.forEach((item: HTMLElement) => {
       // 元々非表示な要素は無視
@@ -315,8 +315,8 @@ class ListFilter {
         : false;
 
       if (isTarget) {
-        if (this.settings.highlight) {
-          this.applyHighlights(item);
+        if (this.settings.marker) {
+          this.applyMarkers(item);
         }
         if (this.settings.grayOut) {
           item.style.opacity = '0.3';
@@ -349,9 +349,9 @@ class ListFilter {
   }
 
   /**
-   * ハイライトを適用
+   * マーカーを適用
    */
-  private applyHighlights(element: HTMLElement): void {
+  private applyMarkers(element: HTMLElement): void {
     const instance = new Mark(element);
     instance.unmark({
       done: () => {
@@ -365,9 +365,9 @@ class ListFilter {
   }
 
   /**
-   * ハイライトを削除
+   * マーカーを削除
    */
-  private removeHighlights(): void {
+  private removeMarkers(): void {
     if (!this.listId) return;
 
     const instance = new Mark(this.list);
@@ -482,8 +482,8 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   topRow.appendChild(matchModeGroup);
 
   // 他のチェックボックスはそのまま
-  const highlightBox = createCheckbox('Highlight', settings.highlight, (state: boolean) => {
-    settings.highlight = state;
+  const markerBox = createCheckbox('Marker', settings.marker, (state: boolean) => {
+    settings.marker = state;
     new ListFilter(list, settings).apply();
   });
 
@@ -508,7 +508,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   wrapper.style.marginBottom = '10px';
 
   wrapper.appendChild(topRow);
-  wrapper.appendChild(highlightBox);
+  wrapper.appendChild(markerBox);
   wrapper.appendChild(grayOutBox);
   wrapper.appendChild(narrowBox);
   wrapper.appendChild(hideBox);
@@ -556,7 +556,7 @@ function addPseudoType(root: Element = document.body): void {
 function addTogglesToLists(): void {
   const timerName = '[DEBUG] addTogglesToLists';
   console.time(timerName);
-  injectHighlightStyle();
+  injectMarkerStyle();
   console.timeLog(timerName);
   const contentContainers = findContentContainers();
   contentContainers.forEach((container) => { addPseudoType(container); });
@@ -571,7 +571,7 @@ function addTogglesToLists(): void {
 
     listSettings.set(id, {
       regex: null,
-      highlight: true,
+      marker: true,
       grayOut: false,
       hide: false,
       matchMode: 'match',
