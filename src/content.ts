@@ -106,6 +106,31 @@ function findContentContainers(): Element[] {
   return result;
 }
 
+/**
+ * 指定要素配下の有効なフォーム要素を抽出する
+ * 
+ * - 同名がある場合は1つのみ抽出
+ */
+function extractValidFormElements(root: Element, withDisabled: boolean = false): Map<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement> {
+  const elements = root.querySelectorAll<HTMLElement>('input, select, textarea');
+  const result = new Map<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>();
+  elements.forEach(el => {
+    if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
+      if (!withDisabled && el.disabled) {
+        return
+      };
+      if (el instanceof HTMLInputElement && (el.type === 'checkbox' || el.type === 'radio') && !el.checked) {
+        return
+      };
+      const key = el.name || el.id;
+      if (!key) {
+        return
+      };
+      result.set(key, el);
+    }
+  });
+  return result;
+}
 
 /**
  * リストの検索処理
@@ -233,7 +258,16 @@ class ListFilter {
       item.style.maxHeight = '';
 
       const text: string = item.innerText;
-      const match = this.settings.regex && text.match(this.settings.regex) !== null;
+      const textMatch = this.settings.regex && text.match(this.settings.regex) !== null;
+      let match = textMatch;
+      if (!match) {
+        const formElements = extractValidFormElements(item, true);
+        const formValueMatch = Array.from(formElements).some(([key, formElement]) => {
+          console.log('DEBUG', 'form element value: ', { name: key, value: formElement.value });
+          return this.settings.regex && formElement.value?.match(this.settings.regex) !== null;
+        });
+        match = formValueMatch;
+      }
       const isTarget = this.settings.regex
         ? this.settings.matchMode === 'match' ? match : !match
         : false;
