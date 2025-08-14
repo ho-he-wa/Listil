@@ -1018,24 +1018,44 @@ function addListilControlsToLists(): void {
     console.log(`[DEBUG]`, `Loaded settings`, restored);
     const merged = { ...defaultSettings, ...restored };
 
-    const toggleBtn = document.createElement('button');
-    toggleBtn.type = 'button';
-    toggleBtn.textContent = 'Hide List';
-    toggleBtn.className = 'listil-toggle-button';
-    toggleBtn.style.marginBottom = '6px';
+    const controls = (new ControlFactory).createFilterControls(list, merged, restoredSettingList ?? []);
+    controls.style.display = 'none';
 
-    let visible = true;
-    toggleBtn.addEventListener('click', (e) => {
+    const toggleListBtn = document.createElement('button');
+    toggleListBtn.type = 'button';
+    toggleListBtn.textContent = 'Hide List';
+    toggleListBtn.className = 'listil-toggle-button';
+    toggleListBtn.style.marginBottom = '6px';
+    let listVisible = true;
+    toggleListBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopImmediatePropagation()
-      visible = !visible;
-      list.style.display = visible ? '' : 'none';
-      toggleBtn.textContent = visible ? 'Hide List' : 'Show List';
+      listVisible = !listVisible;
+      list.style.display = listVisible ? '' : 'none';
+      toggleListBtn.textContent = listVisible ? 'Hide List' : 'Show List';
     });
 
-    const controls = (new ControlFactory).createFilterControls(list, merged, restoredSettingList ?? []);
+    const toggleControlsBtn = document.createElement('button');
+    toggleControlsBtn.type = 'button';
+    toggleControlsBtn.textContent = 'Show Controls';
+    toggleControlsBtn.className = 'listil-toggle-button';
+    toggleControlsBtn.style.marginBottom = '6px';
+    let controlsVisible = false;
+    toggleControlsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation()
+      controlsVisible = !controlsVisible;
+      controls.style.display = controlsVisible ? '' : 'none';
+      toggleControlsBtn.textContent = controlsVisible ? 'Hide Controls' : 'Show Controls';
+    });
+
+    const toggleBtnDiv = document.createElement('div');
+    toggleBtnDiv.className = 'listil-toggle-button-div';
+    toggleBtnDiv.appendChild(toggleListBtn);
+    toggleBtnDiv.appendChild(toggleControlsBtn);
+
     list.parentNode!.insertBefore(controls, list);
-    list.parentNode!.insertBefore(toggleBtn, controls);
+    list.parentNode!.insertBefore(toggleBtnDiv, controls);
 
     // リスト設定復元時はリストのフィルターを適用
     if (restored) {

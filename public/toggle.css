@@ -5,6 +5,11 @@
   gap: 12px;
 }
 
+.listil-toggle-button-div {
+  display: flex;
+  gap: 2px;
+}
+
 .listil-toggle-button {
   margin: 5px 0;
   padding: 4px 10px;
