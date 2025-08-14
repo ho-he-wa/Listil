@@ -28,7 +28,7 @@ interface ListSettingsInterface {
 /**
  * マッピング(リストID -> リスト設定)
  */
-const listSettings = new Map<string, ListSettingsInterface>(); // listId -> settings
+const listSettings = new Map<string, ListSettingsInterface>(); // listSettingId -> settings
 
 /**
  * スタイル追加（mark.js用、表示制御用）
@@ -277,12 +277,12 @@ function getContentBoxSize(el: HTMLElement): { width: number, height: number } {
 class ListFilter {
   private list: HTMLElement;
   private settings: ListSettingsInterface;
-  private listId: string | undefined;
+  private listSettingId: string | undefined;
 
   constructor(list: HTMLElement, settings: ListSettingsInterface) {
     this.list = list;
     this.settings = settings;
-    this.listId = list.dataset.listTogglerId;
+    this.listSettingId = list.dataset.listSettingId;
   }
 
   /**
@@ -402,7 +402,7 @@ class ListFilter {
    * マーカーを削除
    */
   private removeMarkers(): void {
-    if (!this.listId) return;
+    if (!this.listSettingId) return;
 
     const instance = new Mark(this.list);
     instance.unmark();
@@ -420,7 +420,7 @@ class ListFilter {
    * ハイライトを削除
    */
   private removeHighlights(): void {
-    if (!this.listId) return;
+    if (!this.listSettingId) return;
     const items = this.list.querySelectorAll('.listil-highlight-item');
     items.forEach(item => item.classList.remove('listil-highlight-item'));
   }
@@ -485,8 +485,8 @@ function createRadio(
  * コントロール UI 作成
  */
 function createRegexControls(list: HTMLElement): HTMLElement {
-  const id = list.dataset.listTogglerId!;
-  const settings = listSettings.get(id)!;
+  const listSettingId = list.dataset.listSettingId!;
+  const settings = listSettings.get(listSettingId)!;
 
   // 正規表現入力
   const input = document.createElement('input');
@@ -540,7 +540,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   saveButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();
-    saveListSettings(id, settings);
+    saveListSettings(listSettingId, settings);
   });
 
   // input とラジオボタンを横並びにするラッパー
@@ -758,8 +758,8 @@ function addTogglesToLists(): void {
   console.timeLog(timerName);
 
   lists.forEach(async (list: HTMLElement, index: number) => {
-    const id = `list-${index}`;
-    list.dataset.listTogglerId = id;
+    const listSettingId = `list-${index}`;
+    list.dataset.listSettingId = listSettingId;
 
     // 初期デフォルト設定
     const defaultSettings: ListSettingsInterface = {
@@ -774,11 +774,11 @@ function addTogglesToLists(): void {
     };
 
     // ストレージから復元
-    const restored = await restoreListSettings(id);
+    const restored = await restoreListSettings(listSettingId);
     console.log(`[DEBUG]`, `Loaded settings`, restored);
     const merged = { ...defaultSettings, ...restored };
 
-    listSettings.set(id, merged);
+    listSettings.set(listSettingId, merged);
 
     const toggleBtn = document.createElement('button');
     toggleBtn.type = 'button';
