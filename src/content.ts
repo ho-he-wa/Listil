@@ -744,8 +744,8 @@ async function restoreListSettings(listId: string): Promise<ListSettingsInterfac
 /**
  * トグルボタンとUI追加
  */
-function addTogglesToLists(): void {
-  const timerName = '[DEBUG] addTogglesToLists';
+function addListilControlsToLists(): void {
+  const timerName = '[DEBUG] addListilControlsToLists';
   console.time(timerName);
   injectStyles();
   console.timeLog(timerName);
@@ -809,7 +809,7 @@ function addTogglesToLists(): void {
 
 // --- 実行 ---
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', addTogglesToLists);
+  document.addEventListener('DOMContentLoaded', addListilControlsToLists);
 } else {
-  addTogglesToLists();
+  addListilControlsToLists();
 }
