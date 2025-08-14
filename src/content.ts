@@ -286,7 +286,7 @@ class ListFilter {
   }
 
   /**
-   * フィルターを適用
+   * リストにフィルターを適用
    */
   public apply(): void {
     let items: HTMLElement[];
@@ -303,67 +303,74 @@ class ListFilter {
     this.removeHighlights();
 
     items.forEach((item: HTMLElement) => {
-      // 元々非表示な要素は無視
-      if (((item.dataset.ignore ?? null) == null && isInvisible(item)) || (item.dataset.ignore === 'yes')) {
-        item.dataset.ignore = 'yes';
-        return;
-      }
-      item.dataset.ignore = 'no';
-
-      item.style.opacity = '';
-      item.style.display = '';
-      item.style.maxHeight = '';
-
-      const text: string = item.innerText;
-      const textMatch = this.settings.regex && text.match(this.settings.regex) !== null;
-      let match = textMatch;
-      if (!match) {
-        const formElements = extractValidFormElements(item, true);
-        const formValueMatch = Array.from(formElements).some(([key, formElement]) => {
-          console.log('DEBUG', 'form element value: ', { name: key, value: formElement.value });
-          return this.settings.regex && formElement.value?.match(this.settings.regex) !== null;
-        });
-        match = formValueMatch;
-      }
-      if (!match) {
-        const attributeMaps = extractAttributeMaps(item);
-        const attributeMatch = attributeMaps.some((attributeMap) => {
-          console.log('DEBUG', 'element attributes:', attributeMap);
-          return Array.from(attributeMap).some(([key, attribute]) => {
-            console.log('DEBUG', 'element attribute: ', { attributeName: key, value: attribute });
-            return this.settings.regex && attribute.match(this.settings.regex) !== null;
-          });
-        });
-        match = attributeMatch;
-      }
-      const isMatchedTarget = this.settings.regex
-        ? this.settings.matchMode === 'match' ? match : !match
-        : false;
-      const isNotMatchedTarget = this.settings.regex
-        ? this.settings.matchMode === 'match' ? !match : match
-        : false;
-
-      if (isMatchedTarget) {
-        if (this.settings.marker) {
-          this.applyMarkers(item);
-        }
-        if (this.settings.highlight) {
-          this.applyHighlights(item);
-        }
-      }
-      if (isNotMatchedTarget) {
-        if (this.settings.grayOut) {
-          item.style.opacity = '0.3';
-        }
-        if (this.settings.hide) {
-          item.style.display = 'none';
-        }
-        if (this.settings.narrow) {
-          item.style.maxHeight = '3.0rem';
-          item.style.overflow = 'hidden';
-        }
-      }
+      this.applyToItem(item, this.settings);
     });
+  }
+
+  /**
+   * リストの項目にフィルターを適用
+   */
+  public applyToItem(item: HTMLElement, settings: ListSettingsInterface) {
+    // 元々非表示な要素は無視
+    if (((item.dataset.ignore ?? null) == null && isInvisible(item)) || (item.dataset.ignore === 'yes')) {
+      item.dataset.ignore = 'yes';
+      return;
+    }
+    item.dataset.ignore = 'no';
+
+    item.style.opacity = '';
+    item.style.display = '';
+    item.style.maxHeight = '';
+
+    const text: string = item.innerText;
+    const textMatch = settings.regex && text.match(settings.regex) !== null;
+    let match = textMatch;
+    if (!match) {
+      const formElements = extractValidFormElements(item, true);
+      const formValueMatch = Array.from(formElements).some(([key, formElement]) => {
+        console.log('DEBUG', 'form element value: ', { name: key, value: formElement.value });
+        return settings.regex && formElement.value?.match(settings.regex) !== null;
+      });
+      match = formValueMatch;
+    }
+    if (!match) {
+      const attributeMaps = extractAttributeMaps(item);
+      const attributeMatch = attributeMaps.some((attributeMap) => {
+        console.log('DEBUG', 'element attributes:', attributeMap);
+        return Array.from(attributeMap).some(([key, attribute]) => {
+          console.log('DEBUG', 'element attribute: ', { attributeName: key, value: attribute });
+          return settings.regex && attribute.match(settings.regex) !== null;
+        });
+      });
+      match = attributeMatch;
+    }
+    const isMatchedTarget = settings.regex
+      ? settings.matchMode === 'match' ? match : !match
+      : false;
+    const isNotMatchedTarget = settings.regex
+      ? settings.matchMode === 'match' ? !match : match
+      : false;
+
+    if (isMatchedTarget) {
+      if (settings.marker) {
+        this.applyMarkers(item, settings);
+      }
+      if (settings.highlight) {
+        this.applyHighlights(item);
+      }
+    }
+    if (isNotMatchedTarget) {
+      if (settings.grayOut) {
+        item.style.opacity = '0.3';
+      }
+      if (settings.hide) {
+        item.style.display = 'none';
+      }
+      if (settings.narrow) {
+        item.style.maxHeight = '3.0rem';
+        item.style.overflow = 'hidden';
+      }
+    }
   }
 
   /**
@@ -385,12 +392,12 @@ class ListFilter {
   /**
    * マーカーを適用
    */
-  private applyMarkers(element: HTMLElement): void {
+  private applyMarkers(element: HTMLElement, settings: ListSettingsInterface): void {
     const instance = new Mark(element);
     instance.unmark({
       done: () => {
-        if (this.settings.regex) {
-          instance.markRegExp(this.settings.regex, {
+        if (settings.regex) {
+          instance.markRegExp(settings.regex, {
             className: 'listil-custom-mark',
           });
         }
