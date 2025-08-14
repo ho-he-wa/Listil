@@ -505,10 +505,7 @@ function createRadio(
 /**
  * コントロール UI 作成
  */
-function createRegexControls(list: HTMLElement): HTMLElement {
-  const listSettingId = list.dataset.listSettingId!;
-  const settings = listSettingMap.get(listSettingId)!;
-
+function createRegexControls(list: HTMLElement, settings: ListSettingsInterface): HTMLElement {
   // 正規表現入力
   const input = document.createElement('input');
   input.placeholder = '正規表現を入力...';
@@ -816,7 +813,7 @@ function addListilControlsToLists(): void {
       toggleBtn.textContent = visible ? 'Hide List' : 'Show List';
     });
 
-    const controls = createRegexControls(list);
+    const controls = createRegexControls(list, merged);
     list.parentNode!.insertBefore(controls, list);
     list.parentNode!.insertBefore(toggleBtn, controls);
 
