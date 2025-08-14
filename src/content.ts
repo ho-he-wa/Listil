@@ -614,6 +614,44 @@ function addPseudoType(root: Element = document.body): void {
 }
 
 /**
+ * idを付加する。既にidがある場合はスキップ。
+ */
+function assignIdToListElements(root: Element = document.body) {
+  const targets = root.querySelectorAll<HTMLElement>(`ul, ol, table, [data-pseudotype="${PseudoType.list}"]`);
+  const groupCounters = new Map<string, number>();
+  targets.forEach((el) => {
+    if (el.id) { return; }
+    // 最も近い id を持つ祖先要素を探す
+    const ancestor = findAncestorWithId(el);
+    const ancestorId = ancestor ? ancestor.id : undefined;
+    el.setAttribute('data-listil-group', ancestorId ?? '');
+    // group 用に連番管理
+    const groupPrefix = `listil-${ancestorId ?? ''}`;
+    const count = groupCounters.get(groupPrefix) ?? 0;
+    const newId = `${groupPrefix}-list-${count}`;
+    groupCounters.set(groupPrefix, count + 1);
+    // idを設定
+    el.id = newId;
+  });
+}
+
+/**
+ * idを持つ祖先要素を検索
+ */
+function findAncestorWithId(el: HTMLElement) {
+  let parentWithId: HTMLElement | null = el.parentElement;
+  let ancestor = null;
+  while (parentWithId) {
+    if (parentWithId.id) {
+      ancestor = parentWithId;
+      break;
+    }
+    parentWithId = parentWithId.parentElement;
+  }
+  return ancestor;
+}
+
+/**
  * トグルボタンとUI追加
  */
 function addTogglesToLists(): void {
@@ -623,6 +661,7 @@ function addTogglesToLists(): void {
   console.timeLog(timerName);
   const contentContainers = findContentContainers();
   contentContainers.forEach((container) => { addPseudoType(container); });
+  contentContainers.forEach((container) => { assignIdToListElements(container); });
   console.timeLog(timerName);
   const finder = new ListFinder(contentContainers);
   const lists = finder.findLists();
