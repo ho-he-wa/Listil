@@ -625,14 +625,19 @@ class AdvancedSettingsModal {
     topRow.appendChild(errorMessage);
     topRow.appendChild(invertCheckbox);
 
+    const fieldset = document.createElement('fieldset');
+    fieldset.className = 'listil-fieldset';
+
+    fieldset.appendChild(topRow);
+    fieldset.appendChild(markerCheckbox);
+    fieldset.appendChild(highlightCheckbox);
+    fieldset.appendChild(grayOutCheckbox);
+    fieldset.appendChild(narrowCheckbox);
+    fieldset.appendChild(hidecheckbox);
+    fieldset.appendChild(removeBtn);
+
     wrapper.appendChild(title);
-    wrapper.appendChild(topRow);
-    wrapper.appendChild(markerCheckbox);
-    wrapper.appendChild(highlightCheckbox);
-    wrapper.appendChild(grayOutCheckbox);
-    wrapper.appendChild(narrowCheckbox);
-    wrapper.appendChild(hidecheckbox);
-    wrapper.appendChild(removeBtn);
+    wrapper.appendChild(fieldset);
 
     return wrapper;
   }
@@ -819,13 +824,16 @@ class ControlFactory {
 
     const wrapper = document.createElement('div');
     wrapper.className = 'listil-controls';
+    const fieldset = document.createElement('fieldset');
+    fieldset.className = 'listil-fieldset';
 
-    wrapper.appendChild(topRow);
-    wrapper.appendChild(markerBox);
-    wrapper.appendChild(highlightBox);
-    wrapper.appendChild(grayOutBox);
-    wrapper.appendChild(narrowBox);
-    wrapper.appendChild(hideBox);
+    fieldset.appendChild(topRow);
+    fieldset.appendChild(markerBox);
+    fieldset.appendChild(highlightBox);
+    fieldset.appendChild(grayOutBox);
+    fieldset.appendChild(narrowBox);
+    fieldset.appendChild(hideBox);
+    wrapper.appendChild(fieldset);
     wrapper.appendChild(advancedBtn);
 
     return wrapper;
