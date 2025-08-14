@@ -507,6 +507,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   input.placeholder = '正規表現を入力...';
   input.className = 'regex-input';
   input.style.marginRight = '10px';
+  input.value = settings.regex?.source ?? '';
 
   input.addEventListener('change', (e) => {
     e.preventDefault();
@@ -527,6 +528,15 @@ function createRegexControls(list: HTMLElement): HTMLElement {
     new ListFilter(list, settings).apply();
   });
 
+  const saveButton = document.createElement('button');
+  saveButton.textContent = 'Save';
+  saveButton.type = 'button';
+  saveButton.style.marginLeft = '10px';
+  saveButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    saveListSettings(id, settings);
+  });
 
   // input とラジオボタンを横並びにするラッパー
   const topRow = document.createElement('div');
@@ -537,6 +547,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
 
   topRow.appendChild(input);
   topRow.appendChild(invertBox);
+  topRow.appendChild(saveButton);
 
   // 他のチェックボックスはそのまま
   const markerBox = createCheckbox('Marker', settings.marker, (state: boolean) => {
@@ -652,6 +663,83 @@ function findAncestorWithId(el: HTMLElement) {
 }
 
 /**
+ * 保存キー生成
+ */
+function generateStorageKey(listId: string, url: string = location.href): string {
+  const wkUrl = location.href.replace(/^https?:\/\//, '').replace(/[#?].*$/, '');
+  return `${wkUrl}#${listId}`;
+}
+
+/**
+ * リスト設定のシリアライズ
+ */
+function serializeSettings(settings: ListSettings): object {
+  return {
+    regexSource: settings.regex ? settings.regex.source : null,
+    regexFlags: settings.regex ? settings.regex.flags : null,
+    marker: settings.marker,
+    highlight: settings.highlight,
+    grayOut: settings.grayOut,
+    hide: settings.hide,
+    invertMatch: settings.invertMatch,
+    matchMode: settings.matchMode,
+    narrow: settings.narrow,
+  };
+}
+
+/**
+ * リスト設定のデシリアライズ
+ */
+function deserializeSettings(serialized: any): ListSettings {
+  let regex: RegExp | null = null;
+  try {
+    if (serialized.regexSource && serialized.regexFlags !== null) {
+      regex = new RegExp(serialized.regexSource, serialized.regexFlags);
+    }
+  } catch (e) {
+    console.warn('[listil] 正規表現の復元に失敗しました', e);
+  }
+
+  return {
+    regex,
+    marker: serialized.marker,
+    highlight: serialized.highlight,
+    grayOut: serialized.grayOut,
+    hide: serialized.hide,
+    invertMatch: serialized.invertMatch,
+    matchMode: serialized.matchMode,
+    narrow: serialized.narrow,
+  };
+}
+
+/**
+ * 保存
+ */
+function saveListSettings(listId: string, settings: ListSettings): void {
+  const key = generateStorageKey(listId);
+  const serialized = serializeSettings(settings);
+  chrome.storage.local.set({ [key]: serialized }, () => {
+    console.log(`[listil] Saved settings for ${key}`);
+  });
+}
+
+/**
+ * 復元
+ */
+async function restoreListSettings(listId: string): Promise<ListSettings | null> {
+  const key = generateStorageKey(listId);
+  return new Promise((resolve) => {
+    chrome.storage.local.get([key], (result) => {
+      if (result[key]) {
+        resolve(deserializeSettings(result[key]));
+      } else {
+        resolve(null);
+      }
+    });
+  });
+}
+
+/**
  * トグルボタンとUI追加
  */
 function addTogglesToLists(): void {
@@ -667,11 +755,12 @@ function addTogglesToLists(): void {
   const lists = finder.findLists();
   console.timeLog(timerName);
 
-  lists.forEach((list: HTMLElement, index: number) => {
+  lists.forEach(async (list: HTMLElement, index: number) => {
     const id = `list-${index}`;
     list.dataset.listTogglerId = id;
 
-    listSettings.set(id, {
+    // 初期デフォルト設定
+    const defaultSettings: ListSettings = {
       regex: null,
       marker: true,
       highlight: false,
@@ -680,7 +769,14 @@ function addTogglesToLists(): void {
       invertMatch: false,
       matchMode: 'match',
       narrow: false,
-    });
+    };
+
+    // ストレージから復元
+    const restored = await restoreListSettings(id);
+    console.log(`[DEBUG]`, `Loaded settings`, restored);
+    const merged = { ...defaultSettings, ...restored };
+
+    listSettings.set(id, merged);
 
     const toggleBtn = document.createElement('button');
     toggleBtn.type = 'button';
