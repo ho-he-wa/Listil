@@ -535,16 +535,35 @@ class AdvancedSettingsModal {
     title.textContent = `#${index + 1}`;
     title.className = 'listil-modal-setting-no';
 
-    const regexInput = (new ControlFactory).createRegexInput(settings.regex);
-    regexInput.className = 'listil-modal-setting-input';
+    const input = (new ControlFactory).createRegexInput(settings.regex);
+    input.className = 'listil-modal-setting-input';
 
-    regexInput.addEventListener('input', () => {
-      try {
-        settings.regex = new RegExp(regexInput.value, 'gi');
-        regexInput.style.borderColor = '';
-      } catch (e) {
+    // エラーメッセージ表示用
+    const errorMessage = document.createElement('span');
+    errorMessage.classList.add('listil-validation-error');
+    errorMessage.style.display = 'none';
+    errorMessage.textContent = '無効な正規表現です';
+
+    input.addEventListener('input', (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const str = input.value.trim();
+      if (str === '') {
         settings.regex = null;
-        regexInput.style.borderColor = 'red';
+        input.style.borderColor = ''; // 通常の枠に戻す
+        errorMessage.style.display = 'none';
+        return;
+      }
+      try {
+        settings.regex = new RegExp(str, 'gi');
+        // 正常な場合：装飾をリセット
+        input.style.borderColor = '';
+        errorMessage.style.display = 'none';
+      } catch (err) {
+        // エラーの場合：赤枠＋エラーメッセージ
+        settings.regex = null;
+        input.style.borderColor = 'red';
+        errorMessage.style.display = 'inline';
       }
     });
 
@@ -579,7 +598,8 @@ class AdvancedSettingsModal {
     });
 
     wrapper.appendChild(title);
-    wrapper.appendChild(regexInput);
+    wrapper.appendChild(input);
+    wrapper.appendChild(errorMessage);
     wrapper.appendChild(invertCheckbox);
     wrapper.appendChild(markerCheckbox);
     wrapper.appendChild(highlightCheckbox);
