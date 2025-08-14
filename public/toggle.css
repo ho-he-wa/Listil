@@ -24,3 +24,9 @@
 .list-controls button {
   margin-left: 4px;
 }
+
+.validation-error {
+  color: red;
+  font-size: 0.9em;
+  margin-left: 2px;
+}

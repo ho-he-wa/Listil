@@ -509,16 +509,35 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   input.style.marginRight = '10px';
   input.value = settings.regex?.source ?? '';
 
-  input.addEventListener('change', (e) => {
+  // エラーメッセージ表示用
+  const errorMessage = document.createElement('span');
+  errorMessage.classList.add('validation-error');
+  errorMessage.style.display = 'none'; // 初期状態は非表示
+  errorMessage.textContent = '無効な正規表現です';
+
+  input.addEventListener('input', (e) => {
     e.preventDefault();
-    e.stopImmediatePropagation()
-    const str = input.value;
+    e.stopImmediatePropagation();
+    const str = input.value.trim();
+    if (str === '') {
+      settings.regex = null;
+      input.style.borderColor = ''; // 通常の枠に戻す
+      errorMessage.style.display = 'none';
+      new ListFilter(list, settings).apply();
+      return;
+    }
     try {
       settings.regex = new RegExp(str, 'gi');
-    } catch {
+      // 正常な場合：装飾をリセット
+      input.style.borderColor = '';
+      errorMessage.style.display = 'none';
+      new ListFilter(list, settings).apply();
+    } catch (err) {
+      // エラーの場合：赤枠＋エラーメッセージ
       settings.regex = null;
+      input.style.borderColor = 'red';
+      errorMessage.style.display = 'inline';
     }
-    new ListFilter(list, settings).apply();
   });
 
   // マッチモードラジオボタン群
@@ -546,6 +565,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   topRow.style.gap = '12px';
 
   topRow.appendChild(input);
+  topRow.appendChild(errorMessage); // input, invertBox, saveButton の行に追加
   topRow.appendChild(invertBox);
   topRow.appendChild(saveButton);
 
