@@ -603,10 +603,14 @@ class AdvancedSettingsModal {
       this.open();
     });
 
+    const topRow = document.createElement('div');
+    topRow.style.width = '100%';
+    topRow.appendChild(input);
+    topRow.appendChild(errorMessage);
+    topRow.appendChild(invertCheckbox);
+
     wrapper.appendChild(title);
-    wrapper.appendChild(input);
-    wrapper.appendChild(errorMessage);
-    wrapper.appendChild(invertCheckbox);
+    wrapper.appendChild(topRow);
     wrapper.appendChild(markerCheckbox);
     wrapper.appendChild(highlightCheckbox);
     wrapper.appendChild(grayOutCheckbox);
