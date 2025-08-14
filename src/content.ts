@@ -14,7 +14,7 @@ const PseudoType = {
 /**
  * リスト設定インタフェース
  */
-interface ListSettings {
+interface ListSettingsInterface {
   regex: RegExp | null;
   marker: boolean;
   highlight: boolean;
@@ -28,7 +28,7 @@ interface ListSettings {
 /**
  * マッピング(リストID -> リスト設定)
  */
-const listSettings = new Map<string, ListSettings>(); // listId -> settings
+const listSettings = new Map<string, ListSettingsInterface>(); // listId -> settings
 
 /**
  * スタイル追加（mark.js用、表示制御用）
@@ -290,10 +290,10 @@ function getContentBoxSize(el: HTMLElement): { width: number, height: number } {
  */
 class ListFilter {
   private list: HTMLElement;
-  private settings: ListSettings;
+  private settings: ListSettingsInterface;
   private listId: string | undefined;
 
-  constructor(list: HTMLElement, settings: ListSettings) {
+  constructor(list: HTMLElement, settings: ListSettingsInterface) {
     this.list = list;
     this.settings = settings;
     this.listId = list.dataset.listTogglerId;
@@ -673,7 +673,7 @@ function generateStorageKey(listId: string, url: string = location.href): string
 /**
  * リスト設定のシリアライズ
  */
-function serializeSettings(settings: ListSettings): object {
+function serializeSettings(settings: ListSettingsInterface): object {
   return {
     regexSource: settings.regex ? settings.regex.source : null,
     regexFlags: settings.regex ? settings.regex.flags : null,
@@ -690,7 +690,7 @@ function serializeSettings(settings: ListSettings): object {
 /**
  * リスト設定のデシリアライズ
  */
-function deserializeSettings(serialized: any): ListSettings {
+function deserializeSettings(serialized: any): ListSettingsInterface {
   let regex: RegExp | null = null;
   try {
     if (serialized.regexSource && serialized.regexFlags !== null) {
@@ -715,7 +715,7 @@ function deserializeSettings(serialized: any): ListSettings {
 /**
  * 保存
  */
-function saveListSettings(listId: string, settings: ListSettings): void {
+function saveListSettings(listId: string, settings: ListSettingsInterface): void {
   const key = generateStorageKey(listId);
   const serialized = serializeSettings(settings);
   chrome.storage.local.set({ [key]: serialized }, () => {
@@ -726,7 +726,7 @@ function saveListSettings(listId: string, settings: ListSettings): void {
 /**
  * 復元
  */
-async function restoreListSettings(listId: string): Promise<ListSettings | null> {
+async function restoreListSettings(listId: string): Promise<ListSettingsInterface | null> {
   const key = generateStorageKey(listId);
   return new Promise((resolve) => {
     chrome.storage.local.get([key], (result) => {
@@ -760,7 +760,7 @@ function addTogglesToLists(): void {
     list.dataset.listTogglerId = id;
 
     // 初期デフォルト設定
-    const defaultSettings: ListSettings = {
+    const defaultSettings: ListSettingsInterface = {
       regex: null,
       marker: true,
       highlight: false,
