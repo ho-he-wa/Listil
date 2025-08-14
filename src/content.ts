@@ -454,6 +454,163 @@ class ListFilter {
   }
 }
 
+/**
+ * アドバンスド設定モーダル
+ */
+class AdvancedSettingsModal {
+  private list: HTMLElement;
+  private settingsArray: ListSettingsInterface[];
+  private modal: HTMLDivElement;
+
+  constructor(list: HTMLElement, settingsArray: ListSettingsInterface[]) {
+    this.list = list;
+    this.settingsArray = settingsArray;
+    this.modal = this.createModal();
+  }
+
+  public open(): void {
+    document.body.appendChild(this.modal);
+  }
+
+  private createModal(): HTMLDivElement {
+    const modal = document.createElement('div');
+    modal.className = 'listil-modal';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'listil-overlay';
+    overlay.addEventListener('click', () => this.close());
+
+    const content = document.createElement('div');
+    content.className = 'listil-modal-content';
+
+    const title = document.createElement('h3');
+    title.textContent = 'Advanced Filter Settings';
+    title.className = 'listil-modal-title';
+
+    const listWrapper = document.createElement('div');
+    listWrapper.className = 'listil-setting-list';
+
+    this.settingsArray.forEach((settings, index) => {
+      const item = this.createSettingsEditor(settings, index);
+      listWrapper.appendChild(item);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.textContent = '＋ Add Filter';
+    addBtn.addEventListener('click', () => {
+      const newSetting = { ...defaultSettings };
+      this.settingsArray.push(newSetting);
+      const item = this.createSettingsEditor(newSetting, this.settingsArray.length - 1);
+      listWrapper.appendChild(item);
+    });
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = '💾 Save';
+    saveBtn.addEventListener('click', () => {
+      new ListSettingsRepository().save(this.list.id, this.settingsArray);
+      new ListFilter(this.list, this.settingsArray).apply();
+      this.close();
+    });
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✖ Close';
+    closeBtn.addEventListener('click', () => this.close());
+
+    content.appendChild(title);
+    content.appendChild(listWrapper);
+    content.appendChild(addBtn);
+    content.appendChild(saveBtn);
+    content.appendChild(closeBtn);
+    modal.appendChild(overlay);
+    modal.appendChild(content);
+
+    return modal;
+  }
+
+  private createSettingsEditor(settings: ListSettingsInterface, index: number): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'listil-setting-editor';
+
+    const title = document.createElement('h4');
+    title.textContent = `#${index + 1}`;
+    title.className = 'listil-modal-setting-no';
+
+    const regexInput = document.createElement('input');
+    regexInput.type = 'text';
+    regexInput.placeholder = 'RegExp (e.g. "foo|bar")';
+    regexInput.value = settings.regex?.source ?? '';
+    regexInput.className = 'listil-modal-setting-input';
+
+    regexInput.addEventListener('input', () => {
+      try {
+        settings.regex = new RegExp(regexInput.value, 'gi');
+        regexInput.style.borderColor = '';
+      } catch (e) {
+        settings.regex = null;
+        regexInput.style.borderColor = 'red';
+      }
+    });
+
+    const createCheckbox = (
+      labelText: string,
+      settingKey: keyof Pick<ListSettingsInterface, 'marker' | 'highlight' | 'grayOut' | 'hide' | 'invertMatch' | 'narrow'>,
+      title: string
+    ): HTMLElement => {
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = settings[settingKey] ?? false;
+      checkbox.title = title;
+
+      checkbox.addEventListener('change', () => {
+        settings[settingKey] = checkbox.checked;
+        if (settingKey === 'invertMatch') {
+          settings.matchMode = !checkbox.checked ? 'match' : 'not match';
+        }
+      });
+
+      const label = document.createElement('label');
+      label.textContent = labelText;
+      label.appendChild(checkbox);
+      label.style.marginRight = '10px';
+
+      return label;
+    };
+
+    const invertLabel = createCheckbox('Invert', 'invertMatch', 'Invert Matching');
+    const markerLabel = createCheckbox('Marker', 'marker', 'Show marker');
+    const highlightLabel = createCheckbox('Highlight', 'highlight', 'Highlight matched text');
+    const grayOutLabel = createCheckbox('GrayOut other', 'grayOut', 'Gray out non-matching');
+    const narrowLabel = createCheckbox('Narrow other ', 'narrow', 'Reduce height of non-matching');
+    const hideLabel = createCheckbox('Hide other', 'hide', 'Hide matched items');
+
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = '🗑';
+    removeBtn.title = 'Remove this filter';
+    removeBtn.addEventListener('click', () => {
+      this.settingsArray.splice(index, 1);
+      this.modal.remove(); // 再生成
+      this.modal = this.createModal();
+      this.open();
+    });
+
+    wrapper.appendChild(title);
+    wrapper.appendChild(regexInput);
+    wrapper.appendChild(invertLabel);
+    wrapper.appendChild(markerLabel);
+    wrapper.appendChild(highlightLabel);
+    wrapper.appendChild(grayOutLabel);
+    wrapper.appendChild(narrowLabel);
+    wrapper.appendChild(hideLabel);
+    wrapper.appendChild(removeBtn);
+
+    return wrapper;
+  }
+
+  private close(): void {
+    this.modal.remove();
+  }
+}
+
 class ControlFactory {
   /**
    * チェックボックス作成
@@ -512,8 +669,13 @@ class ControlFactory {
 
   /**
    * コントロール UI 作成
+   * 
+   * @param list 
+   * @param settings 
+   * @param settingsList アドホック。settingsと
    */
-  public createRegexControls(list: HTMLElement, settings: ListSettingsInterface): HTMLElement {
+  public createRegexControls(list: HTMLElement, settings: ListSettingsInterface, settingsList: ListSettingsInterface[]): HTMLElement {
+    // [ ] TODO : settingsとsettingsListの2つあるのは冗長なので整理する
     // 正規表現入力
     const input = document.createElement('input');
     input.placeholder = '正規表現を入力...';
@@ -604,6 +766,16 @@ class ControlFactory {
       new ListFilter(list, [settings]).apply();
     });
 
+    const advancedBtn = document.createElement('button');
+    advancedBtn.textContent = 'Advanced';
+    advancedBtn.type = 'button';
+    advancedBtn.style.marginLeft = '10px';
+    advancedBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      new AdvancedSettingsModal(list, settingsList).open();
+    });
+
     const wrapper = document.createElement('div');
     wrapper.className = 'listil-controls';
 
@@ -613,6 +785,7 @@ class ControlFactory {
     wrapper.appendChild(grayOutBox);
     wrapper.appendChild(narrowBox);
     wrapper.appendChild(hideBox);
+    wrapper.appendChild(advancedBtn);
 
     return wrapper;
   }
@@ -811,7 +984,7 @@ function addListilControlsToLists(): void {
       toggleBtn.textContent = visible ? 'Hide List' : 'Show List';
     });
 
-    const controls = (new ControlFactory).createRegexControls(list, merged);
+    const controls = (new ControlFactory).createRegexControls(list, merged, restoredSettingList ?? []);
     list.parentNode!.insertBefore(controls, list);
     list.parentNode!.insertBefore(toggleBtn, controls);
 
