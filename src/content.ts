@@ -565,7 +565,7 @@ function createRegexControls(list: HTMLElement, settings: ListSettingsInterface)
   saveButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();
-    saveListSettings(list.id, settings);
+    saveListSettings(list.id, [settings]);
   });
 
   // input とラジオボタンを横並びにするラッパー
@@ -742,23 +742,24 @@ function deserializeSettings(serialized: any): ListSettingsInterface {
 /**
  * 保存
  */
-function saveListSettings(listId: string, settings: ListSettingsInterface): void {
+function saveListSettings(listId: string, settingsArray: ListSettingsInterface[]): void {
   const key = generateStorageKey(listId);
-  const serialized = serializeSettings(settings);
+  const serialized = settingsArray.map(serializeSettings);
   chrome.storage.local.set({ [key]: serialized }, () => {
-    console.log(`[listil] Saved settings for ${key}`);
+    console.log(`[listil] Saved settings array for ${key}`);
   });
 }
 
 /**
  * 復元
  */
-async function restoreListSettings(listId: string): Promise<ListSettingsInterface | null> {
+async function restoreListSettings(listId: string): Promise<ListSettingsInterface[] | null> {
   const key = generateStorageKey(listId);
   return new Promise((resolve) => {
     chrome.storage.local.get([key], (result) => {
-      if (result[key]) {
-        resolve(deserializeSettings(result[key]));
+      if (result[key] && Array.isArray(result[key])) {
+        const deserialized = result[key].map(deserializeSettings);
+        resolve(deserialized);
       } else {
         resolve(null);
       }
@@ -787,7 +788,8 @@ function addListilControlsToLists(): void {
     list.dataset.listSettingId = listSettingId;
 
     // ストレージから復元
-    const restored = await restoreListSettings(list.id);
+    const restoredSettingList = await restoreListSettings(list.id);
+    const restored = (restoredSettingList && restoredSettingList.length > 0) ? restoredSettingList[0] : undefined;
     console.log(`[DEBUG]`, `Loaded settings`, restored);
     const merged = { ...defaultSettings, ...restored };
 
