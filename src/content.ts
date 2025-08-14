@@ -540,7 +540,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   saveButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();
-    saveListSettings(listSettingId, settings);
+    saveListSettings(list.id, settings);
   });
 
   // input とラジオボタンを横並びにするラッパー
@@ -774,7 +774,7 @@ function addTogglesToLists(): void {
     };
 
     // ストレージから復元
-    const restored = await restoreListSettings(listSettingId);
+    const restored = await restoreListSettings(list.id);
     console.log(`[DEBUG]`, `Loaded settings`, restored);
     const merged = { ...defaultSettings, ...restored };
 
