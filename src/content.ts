@@ -566,6 +566,7 @@ class AdvancedSettingsModal {
         settings.regex = null;
         input.style.borderColor = ''; // 通常の枠に戻す
         errorMessage.style.display = 'none';
+        new ListFilter(this.list, this.settingsArray).apply();
         return;
       }
       try {
@@ -573,6 +574,7 @@ class AdvancedSettingsModal {
         // 正常な場合：装飾をリセット
         input.style.borderColor = '';
         errorMessage.style.display = 'none';
+        new ListFilter(this.list, this.settingsArray).apply();
       } catch (err) {
         // エラーの場合：赤枠＋エラーメッセージ
         settings.regex = null;
@@ -584,21 +586,27 @@ class AdvancedSettingsModal {
     const invertCheckbox = (new ControlFactory).createCheckbox('Invert', settings.invertMatch ?? false, (checked) => {
       settings.invertMatch = checked;
       settings.matchMode = !checked ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
+      new ListFilter(this.list, this.settingsArray).apply();
     });
     const markerCheckbox = (new ControlFactory).createCheckbox('Marker', settings.marker ?? false, (checked) => {
       settings.marker = checked;
+      new ListFilter(this.list, this.settingsArray).apply();
     });
     const highlightCheckbox = (new ControlFactory).createCheckbox('Highlight', settings.highlight ?? false, (checked) => {
       settings.highlight = checked;
+      new ListFilter(this.list, this.settingsArray).apply();
     });
     const grayOutCheckbox = (new ControlFactory).createCheckbox('GrayOut other', settings.grayOut ?? false, (checked) => {
       settings.grayOut = checked;
+      new ListFilter(this.list, this.settingsArray).apply();
     });
     const narrowCheckbox = (new ControlFactory).createCheckbox('Narrow other', settings.narrow ?? false, (checked) => {
       settings.narrow = checked;
+      new ListFilter(this.list, this.settingsArray).apply();
     });
     const hidecheckbox = (new ControlFactory).createCheckbox('Hide other', settings.hide ?? false, (checked) => {
       settings.hide = checked;
+      new ListFilter(this.list, this.settingsArray).apply();
     });
 
     const removeBtn = document.createElement('button');
