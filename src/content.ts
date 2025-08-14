@@ -551,37 +551,25 @@ class AdvancedSettingsModal {
       }
     });
 
-    const createCheckbox = (
-      labelText: string,
-      settingKey: keyof Pick<ListSettingsInterface, 'marker' | 'highlight' | 'grayOut' | 'hide' | 'invertMatch' | 'narrow'>,
-      title: string
-    ): HTMLElement => {
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = settings[settingKey] ?? false;
-      checkbox.title = title;
-
-      checkbox.addEventListener('change', () => {
-        settings[settingKey] = checkbox.checked;
-        if (settingKey === 'invertMatch') {
-          settings.matchMode = !checkbox.checked ? 'match' : 'not match';
-        }
-      });
-
-      const label = document.createElement('label');
-      label.textContent = labelText;
-      label.appendChild(checkbox);
-      label.style.marginRight = '10px';
-
-      return label;
-    };
-
-    const invertLabel = createCheckbox('Invert', 'invertMatch', 'Invert Matching');
-    const markerLabel = createCheckbox('Marker', 'marker', 'Show marker');
-    const highlightLabel = createCheckbox('Highlight', 'highlight', 'Highlight matched text');
-    const grayOutLabel = createCheckbox('GrayOut other', 'grayOut', 'Gray out non-matching');
-    const narrowLabel = createCheckbox('Narrow other ', 'narrow', 'Reduce height of non-matching');
-    const hideLabel = createCheckbox('Hide other', 'hide', 'Hide matched items');
+    const invertCheckbox = (new ControlFactory).createCheckbox('Invert', settings.invertMatch ?? false, (checked) => {
+      settings.invertMatch = checked;
+      settings.matchMode = !checked ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
+    });
+    const markerCheckbox = (new ControlFactory).createCheckbox('Marker', settings.marker ?? false, (checked) => {
+      settings.marker = checked;
+    });
+    const highlightCheckbox = (new ControlFactory).createCheckbox('Highlight', settings.highlight ?? false, (checked) => {
+      settings.highlight = checked;
+    });
+    const grayOutCheckbox = (new ControlFactory).createCheckbox('GrayOut other', settings.grayOut ?? false, (checked) => {
+      settings.grayOut = checked;
+    });
+    const narrowCheckbox = (new ControlFactory).createCheckbox('Narrow other', settings.narrow ?? false, (checked) => {
+      settings.narrow = checked;
+    });
+    const hidecheckbox = (new ControlFactory).createCheckbox('Hide other', settings.hide ?? false, (checked) => {
+      settings.hide = checked;
+    });
 
     const removeBtn = document.createElement('button');
     removeBtn.textContent = '🗑';
@@ -595,12 +583,12 @@ class AdvancedSettingsModal {
 
     wrapper.appendChild(title);
     wrapper.appendChild(regexInput);
-    wrapper.appendChild(invertLabel);
-    wrapper.appendChild(markerLabel);
-    wrapper.appendChild(highlightLabel);
-    wrapper.appendChild(grayOutLabel);
-    wrapper.appendChild(narrowLabel);
-    wrapper.appendChild(hideLabel);
+    wrapper.appendChild(invertCheckbox);
+    wrapper.appendChild(markerCheckbox);
+    wrapper.appendChild(highlightCheckbox);
+    wrapper.appendChild(grayOutCheckbox);
+    wrapper.appendChild(narrowCheckbox);
+    wrapper.appendChild(hidecheckbox);
     wrapper.appendChild(removeBtn);
 
     return wrapper;
