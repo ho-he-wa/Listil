@@ -276,12 +276,17 @@ function getContentBoxSize(el: HTMLElement): { width: number, height: number } {
  */
 class ListFilter {
   private list: HTMLElement;
-  private settings: ListSettingsInterface;
+  private settingsList: ListSettingsInterface[];
   private listSettingId: string | undefined;
 
-  constructor(list: HTMLElement, settings: ListSettingsInterface) {
+  /**
+   * 
+   * @param list 対象リスト
+   * @param settingsList リスト設定の配列
+   */
+  constructor(list: HTMLElement, settingsList: ListSettingsInterface[]) {
     this.list = list;
-    this.settings = settings;
+    this.settingsList = settingsList;
     this.listSettingId = list.dataset.listSettingId;
   }
 
@@ -294,7 +299,9 @@ class ListFilter {
     this.removeHighlights();
 
     items.forEach((item: HTMLElement) => {
-      this.applyToItem(item, this.settings);
+      this.settingsList.forEach((settings) => {
+        this.applyToItem(item, settings);
+      });
     });
   }
 
@@ -523,7 +530,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
       settings.regex = null;
       input.style.borderColor = ''; // 通常の枠に戻す
       errorMessage.style.display = 'none';
-      new ListFilter(list, settings).apply();
+      new ListFilter(list, [settings]).apply();
       return;
     }
     try {
@@ -531,7 +538,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
       // 正常な場合：装飾をリセット
       input.style.borderColor = '';
       errorMessage.style.display = 'none';
-      new ListFilter(list, settings).apply();
+      new ListFilter(list, [settings]).apply();
     } catch (err) {
       // エラーの場合：赤枠＋エラーメッセージ
       settings.regex = null;
@@ -544,7 +551,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   const invertBox = createCheckbox('invert matching', settings.invertMatch, (state: boolean) => {
     settings.invertMatch = state;
     settings.matchMode = !state ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
-    new ListFilter(list, settings).apply();
+    new ListFilter(list, [settings]).apply();
   });
 
   const saveButton = document.createElement('button');
@@ -569,27 +576,27 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   // 他のチェックボックスはそのまま
   const markerBox = createCheckbox('Marker', settings.marker, (state: boolean) => {
     settings.marker = state;
-    new ListFilter(list, settings).apply();
+    new ListFilter(list, [settings]).apply();
   });
 
   const highlightBox = createCheckbox('Highlight', settings.highlight, (state: boolean) => {
     settings.highlight = state;
-    new ListFilter(list, settings).apply();
+    new ListFilter(list, [settings]).apply();
   });
 
   const grayOutBox = createCheckbox('GrayOut others', settings.grayOut, (state: boolean) => {
     settings.grayOut = state;
-    new ListFilter(list, settings).apply();
+    new ListFilter(list, [settings]).apply();
   });
 
   const narrowBox = createCheckbox('Narrow others', settings.narrow, (state: boolean) => {
     settings.narrow = state;
-    new ListFilter(list, settings).apply();
+    new ListFilter(list, [settings]).apply();
   });
 
   const hideBox = createCheckbox('Hide others', settings.hide, (state: boolean) => {
     settings.hide = state;
-    new ListFilter(list, settings).apply();
+    new ListFilter(list, [settings]).apply();
   });
 
 
@@ -815,7 +822,7 @@ function addListilControlsToLists(): void {
 
     // リスト設定復元時はリストのフィルターを適用
     if (restored) {
-      new ListFilter(list, merged).apply();
+      new ListFilter(list, [merged]).apply();
     }
   });
   console.timeEnd(timerName);
