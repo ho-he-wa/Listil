@@ -454,167 +454,168 @@ class ListFilter {
   }
 }
 
-/**
- * チェックボックス作成
- */
-function createCheckbox(label: string, checked: boolean, onChange: (checked: boolean) => void): HTMLElement {
-  const wrapper = document.createElement('label');
-  wrapper.style.marginRight = '8px';
+class ControlFactory {
+  /**
+   * チェックボックス作成
+   */
+  public createCheckbox(label: string, checked: boolean, onChange: (checked: boolean) => void): HTMLElement {
+    const wrapper = document.createElement('label');
+    wrapper.style.marginRight = '8px';
 
-  const checkbox = document.createElement('input');
-  checkbox.type = 'checkbox';
-  checkbox.checked = checked;
-  checkbox.style.marginRight = '4px';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = checked;
+    checkbox.style.marginRight = '4px';
 
-  checkbox.addEventListener('change', (e) => {
-    e.preventDefault();
-    e.stopImmediatePropagation()
-    onChange(checkbox.checked);
-  });
-
-  wrapper.appendChild(checkbox);
-  wrapper.appendChild(document.createTextNode(label));
-  return wrapper;
-}
-
-/**
- * ラジオボタン作成
- */
-function createRadio(
-  name: string,
-  value: string,
-  checked: boolean,
-  onChange: (value: string) => void
-): HTMLElement {
-  const label = document.createElement('label');
-  label.style.marginRight = '8px';
-
-  const radio = document.createElement('input');
-  radio.type = 'radio';
-  radio.name = name;
-  radio.value = value;
-  radio.checked = checked;
-  radio.style.marginRight = '4px';
-
-  radio.addEventListener('change', (e) => {
-    if (radio.checked) {
+    checkbox.addEventListener('change', (e) => {
       e.preventDefault();
       e.stopImmediatePropagation()
-      onChange(value);
-    }
-  });
+      onChange(checkbox.checked);
+    });
 
-  label.appendChild(radio);
-  label.appendChild(document.createTextNode(value));
-  return label;
-}
+    wrapper.appendChild(checkbox);
+    wrapper.appendChild(document.createTextNode(label));
+    return wrapper;
+  }
 
-/**
- * コントロール UI 作成
- */
-function createRegexControls(list: HTMLElement, settings: ListSettingsInterface): HTMLElement {
-  // 正規表現入力
-  const input = document.createElement('input');
-  input.placeholder = '正規表現を入力...';
-  input.className = 'listil-regex-input';
-  input.style.marginRight = '10px';
-  input.value = settings.regex?.source ?? '';
+  /**
+   * ラジオボタン作成
+   */
+  public createRadio(
+    name: string,
+    value: string,
+    checked: boolean,
+    onChange: (value: string) => void
+  ): HTMLElement {
+    const label = document.createElement('label');
+    label.style.marginRight = '8px';
 
-  // エラーメッセージ表示用
-  const errorMessage = document.createElement('span');
-  errorMessage.classList.add('listil-validation-error');
-  errorMessage.style.display = 'none'; // 初期状態は非表示
-  errorMessage.textContent = '無効な正規表現です';
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = name;
+    radio.value = value;
+    radio.checked = checked;
+    radio.style.marginRight = '4px';
 
-  input.addEventListener('input', (e) => {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    const str = input.value.trim();
-    if (str === '') {
-      settings.regex = null;
-      input.style.borderColor = ''; // 通常の枠に戻す
-      errorMessage.style.display = 'none';
+    radio.addEventListener('change', (e) => {
+      if (radio.checked) {
+        e.preventDefault();
+        e.stopImmediatePropagation()
+        onChange(value);
+      }
+    });
+
+    label.appendChild(radio);
+    label.appendChild(document.createTextNode(value));
+    return label;
+  }
+
+  /**
+   * コントロール UI 作成
+   */
+  public createRegexControls(list: HTMLElement, settings: ListSettingsInterface): HTMLElement {
+    // 正規表現入力
+    const input = document.createElement('input');
+    input.placeholder = '正規表現を入力...';
+    input.className = 'listil-regex-input';
+    input.style.marginRight = '10px';
+    input.value = settings.regex?.source ?? '';
+
+    // エラーメッセージ表示用
+    const errorMessage = document.createElement('span');
+    errorMessage.classList.add('listil-validation-error');
+    errorMessage.style.display = 'none'; // 初期状態は非表示
+    errorMessage.textContent = '無効な正規表現です';
+
+    input.addEventListener('input', (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const str = input.value.trim();
+      if (str === '') {
+        settings.regex = null;
+        input.style.borderColor = ''; // 通常の枠に戻す
+        errorMessage.style.display = 'none';
+        new ListFilter(list, [settings]).apply();
+        return;
+      }
+      try {
+        settings.regex = new RegExp(str, 'gi');
+        // 正常な場合：装飾をリセット
+        input.style.borderColor = '';
+        errorMessage.style.display = 'none';
+        new ListFilter(list, [settings]).apply();
+      } catch (err) {
+        // エラーの場合：赤枠＋エラーメッセージ
+        settings.regex = null;
+        input.style.borderColor = 'red';
+        errorMessage.style.display = 'inline';
+      }
+    });
+
+    // マッチモードラジオボタン群
+    const invertBox = this.createCheckbox('invert matching', settings.invertMatch, (state: boolean) => {
+      settings.invertMatch = state;
+      settings.matchMode = !state ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
       new ListFilter(list, [settings]).apply();
-      return;
-    }
-    try {
-      settings.regex = new RegExp(str, 'gi');
-      // 正常な場合：装飾をリセット
-      input.style.borderColor = '';
-      errorMessage.style.display = 'none';
+    });
+
+    const saveButton = document.createElement('button');
+    saveButton.textContent = 'Save';
+    saveButton.type = 'button';
+    saveButton.style.marginLeft = '10px';
+    saveButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      (new ListSettingsRepository).save(list.id, [settings]);
+    });
+
+    // input とラジオボタンを横並びにするラッパー
+    const topRow = document.createElement('div');
+    topRow.classList.add('listil-top-row');
+
+    topRow.appendChild(input);
+    topRow.appendChild(errorMessage); // input, invertBox, saveButton の行に追加
+    topRow.appendChild(invertBox);
+    topRow.appendChild(saveButton);
+
+    // 他のチェックボックスはそのまま
+    const markerBox = this.createCheckbox('Marker', settings.marker, (state: boolean) => {
+      settings.marker = state;
       new ListFilter(list, [settings]).apply();
-    } catch (err) {
-      // エラーの場合：赤枠＋エラーメッセージ
-      settings.regex = null;
-      input.style.borderColor = 'red';
-      errorMessage.style.display = 'inline';
-    }
-  });
+    });
 
-  // マッチモードラジオボタン群
-  const invertBox = createCheckbox('invert matching', settings.invertMatch, (state: boolean) => {
-    settings.invertMatch = state;
-    settings.matchMode = !state ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
-    new ListFilter(list, [settings]).apply();
-  });
+    const highlightBox = this.createCheckbox('Highlight', settings.highlight, (state: boolean) => {
+      settings.highlight = state;
+      new ListFilter(list, [settings]).apply();
+    });
 
-  const saveButton = document.createElement('button');
-  saveButton.textContent = 'Save';
-  saveButton.type = 'button';
-  saveButton.style.marginLeft = '10px';
-  saveButton.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    (new ListSettingsRepository).save(list.id, [settings]);
-  });
+    const grayOutBox = this.createCheckbox('GrayOut others', settings.grayOut, (state: boolean) => {
+      settings.grayOut = state;
+      new ListFilter(list, [settings]).apply();
+    });
 
-  // input とラジオボタンを横並びにするラッパー
-  const topRow = document.createElement('div');
-  topRow.classList.add('listil-top-row');
+    const narrowBox = this.createCheckbox('Narrow others', settings.narrow, (state: boolean) => {
+      settings.narrow = state;
+      new ListFilter(list, [settings]).apply();
+    });
 
-  topRow.appendChild(input);
-  topRow.appendChild(errorMessage); // input, invertBox, saveButton の行に追加
-  topRow.appendChild(invertBox);
-  topRow.appendChild(saveButton);
+    const hideBox = this.createCheckbox('Hide others', settings.hide, (state: boolean) => {
+      settings.hide = state;
+      new ListFilter(list, [settings]).apply();
+    });
 
-  // 他のチェックボックスはそのまま
-  const markerBox = createCheckbox('Marker', settings.marker, (state: boolean) => {
-    settings.marker = state;
-    new ListFilter(list, [settings]).apply();
-  });
+    const wrapper = document.createElement('div');
+    wrapper.className = 'listil-controls';
 
-  const highlightBox = createCheckbox('Highlight', settings.highlight, (state: boolean) => {
-    settings.highlight = state;
-    new ListFilter(list, [settings]).apply();
-  });
+    wrapper.appendChild(topRow);
+    wrapper.appendChild(markerBox);
+    wrapper.appendChild(highlightBox);
+    wrapper.appendChild(grayOutBox);
+    wrapper.appendChild(narrowBox);
+    wrapper.appendChild(hideBox);
 
-  const grayOutBox = createCheckbox('GrayOut others', settings.grayOut, (state: boolean) => {
-    settings.grayOut = state;
-    new ListFilter(list, [settings]).apply();
-  });
-
-  const narrowBox = createCheckbox('Narrow others', settings.narrow, (state: boolean) => {
-    settings.narrow = state;
-    new ListFilter(list, [settings]).apply();
-  });
-
-  const hideBox = createCheckbox('Hide others', settings.hide, (state: boolean) => {
-    settings.hide = state;
-    new ListFilter(list, [settings]).apply();
-  });
-
-
-  const wrapper = document.createElement('div');
-  wrapper.className = 'listil-controls';
-
-  wrapper.appendChild(topRow);
-  wrapper.appendChild(markerBox);
-  wrapper.appendChild(highlightBox);
-  wrapper.appendChild(grayOutBox);
-  wrapper.appendChild(narrowBox);
-  wrapper.appendChild(hideBox);
-
-  return wrapper;
+    return wrapper;
+  }
 }
 
 /**
@@ -810,7 +811,7 @@ function addListilControlsToLists(): void {
       toggleBtn.textContent = visible ? 'Hide List' : 'Show List';
     });
 
-    const controls = createRegexControls(list, merged);
+    const controls = (new ControlFactory).createRegexControls(list, merged);
     list.parentNode!.insertBefore(controls, list);
     list.parentNode!.insertBefore(toggleBtn, controls);
 
