@@ -796,6 +796,11 @@ function addTogglesToLists(): void {
     const controls = createRegexControls(list);
     list.parentNode!.insertBefore(controls, list);
     list.parentNode!.insertBefore(toggleBtn, controls);
+
+    // リスト設定復元時はリストのフィルターを適用
+    if (restored) {
+      new ListFilter(list, merged).apply();
+    }
   });
   console.timeEnd(timerName);
 }
