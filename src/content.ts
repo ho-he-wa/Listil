@@ -388,16 +388,50 @@ class ListFilter {
         item.classList.add('listil-hide');
       }
       if (settings.narrow) {
-        item.classList.add('listil-narrow');
+        this.applyNarrow(item);
       }
     }
   }
+
   public resetItem(item: HTMLElement) {
     item.classList.remove(
       'listil-grayout',
       'listil-hide',
       'listil-narrow'
     );
+    // trの高さ制限用ラッパーを削除
+    if (item.tagName.toLowerCase() === 'tr') {
+      item.querySelectorAll('.listil-td-inner').forEach(tdInner => {
+        const parent = tdInner.parentNode;
+        if (!parent) {
+          return;
+        }
+        while (tdInner.firstChild) {
+          parent.insertBefore(tdInner.firstChild, tdInner);
+        }
+        parent.removeChild(tdInner);
+      });
+    }
+  }
+
+  /**
+   * 高さ制限を適用
+   */
+  private applyNarrow(item: HTMLElement) {
+    item.classList.add('listil-narrow');
+    // trの高さ制限
+    if (item.tagName.toLowerCase() === 'tr') {
+      Array.from(item.children).forEach(trChild => {
+        if (trChild.tagName.toLowerCase() !== 'td') { return; }
+        if (trChild.classList.contains('listil-td-inner')) { return; }
+        const tdInner = document.createElement("div");
+        tdInner.className = 'listil-td-inner';
+        while (trChild.firstChild) {
+          tdInner.appendChild(trChild.firstChild);
+        }
+        trChild.appendChild(tdInner);
+      });
+    }
   }
 
   /**
