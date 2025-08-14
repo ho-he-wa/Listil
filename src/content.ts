@@ -25,6 +25,18 @@ interface ListSettingsInterface {
   narrow: boolean;
 }
 
+// 初期デフォルト設定
+const defaultSettings: ListSettingsInterface = {
+  regex: null,
+  marker: true,
+  highlight: false,
+  grayOut: false,
+  hide: false,
+  invertMatch: false,
+  matchMode: 'match',
+  narrow: false,
+};
+
 /**
  * マッピング(リストID -> リスト設定)
  */
@@ -778,18 +790,6 @@ function addListilControlsToLists(): void {
   lists.forEach(async (list: HTMLElement, index: number) => {
     const listSettingId = `list-${index}`;
     list.dataset.listSettingId = listSettingId;
-
-    // 初期デフォルト設定
-    const defaultSettings: ListSettingsInterface = {
-      regex: null,
-      marker: true,
-      highlight: false,
-      grayOut: false,
-      hide: false,
-      invertMatch: false,
-      matchMode: 'match',
-      narrow: false,
-    };
 
     // ストレージから復元
     const restored = await restoreListSettings(list.id);
