@@ -559,10 +559,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
 
   // input とラジオボタンを横並びにするラッパー
   const topRow = document.createElement('div');
-  topRow.style.display = 'flex';
-  topRow.style.alignItems = 'center';
-  topRow.style.marginBottom = '8px';
-  topRow.style.gap = '12px';
+  topRow.classList.add('listil-top-row');
 
   topRow.appendChild(input);
   topRow.appendChild(errorMessage); // input, invertBox, saveButton の行に追加
@@ -598,7 +595,6 @@ function createRegexControls(list: HTMLElement): HTMLElement {
 
   const wrapper = document.createElement('div');
   wrapper.className = 'list-controls';
-  wrapper.style.marginBottom = '10px';
 
   wrapper.appendChild(topRow);
   wrapper.appendChild(markerBox);

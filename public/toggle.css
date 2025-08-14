@@ -1,3 +1,10 @@
+.listil-top-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
 .list-toggle-button {
   margin: 5px 0;
   padding: 4px 10px;
@@ -19,6 +26,10 @@
   font-size: 12px;
   width: 200px;
   margin-right: 8px;
+}
+
+.list-controls {
+  margin-bottom: 10px;
 }
 
 .list-controls button {
