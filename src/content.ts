@@ -245,7 +245,7 @@ function findLists(): HTMLElement[] {
 function isInvisible(el: HTMLElement): boolean {
   const style = window.getComputedStyle(el);
   const size = getContentBoxSize(el);
-  const invisible = style.display === 'none' || size.height === 0 || size.height === 0;
+  const invisible = style.display === 'none' || size.width === 0 || size.height === 0;
   return invisible;
 }
 
