@@ -60,6 +60,19 @@ mark.listil-custom-mark {
   overflow: hidden;
 }
 
+.listil-grayout {
+  opacity: 0.3;
+}
+
+.listil-hide {
+  display: none;
+}
+
+.listil-narrow {
+  max-height: 3.0rem;
+  overflow: hidden;
+}
+
 
 /**
  * 設定モーダル

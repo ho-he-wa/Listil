@@ -306,8 +306,8 @@ class ListFilter {
     this.removeHighlights();
 
     items.forEach((item: HTMLElement) => {
-      this.settingsList.forEach((settings) => {
-        this.applyToItem(item, settings);
+      this.settingsList.forEach((settings, index) => {
+        this.applyToItem(item, settings, index === 0);
       });
     });
   }
@@ -331,17 +331,17 @@ class ListFilter {
   /**
    * リストの項目にフィルターを適用
    */
-  public applyToItem(item: HTMLElement, settings: ListSettingsInterface) {
+  public applyToItem(item: HTMLElement, settings: ListSettingsInterface, reset: boolean = true) {
     // 元々非表示な要素は無視
-    if (((item.dataset.ignore ?? null) == null && isInvisible(item)) || (item.dataset.ignore === 'yes')) {
+    const originallyHidden = (item.dataset.ignore ?? null) == null && isInvisible(item);
+    if (originallyHidden || (item.dataset.ignore === 'yes')) {
       item.dataset.ignore = 'yes';
       return;
     }
     item.dataset.ignore = 'no';
 
-    item.style.opacity = '';
-    item.style.display = '';
-    item.style.maxHeight = '';
+    // 表示リセット
+    reset && this.resetItem(item);
 
     const text: string = item.innerText;
     const textMatch = settings.regex && text.match(settings.regex) !== null;
@@ -382,16 +382,22 @@ class ListFilter {
     }
     if (isNotMatchedTarget) {
       if (settings.grayOut) {
-        item.style.opacity = '0.3';
+        item.classList.add('listil-grayout');
       }
       if (settings.hide) {
-        item.style.display = 'none';
+        item.classList.add('listil-hide');
       }
       if (settings.narrow) {
-        item.style.maxHeight = '3.0rem';
-        item.style.overflow = 'hidden';
+        item.classList.add('listil-narrow');
       }
     }
+  }
+  public resetItem(item: HTMLElement) {
+    item.classList.remove(
+      'listil-grayout',
+      'listil-hide',
+      'listil-narrow'
+    );
   }
 
   /**
