@@ -28,7 +28,7 @@ interface ListSettingsInterface {
 /**
  * マッピング(リストID -> リスト設定)
  */
-const listSettings = new Map<string, ListSettingsInterface>(); // listSettingId -> settings
+const listSettingMap = new Map<string, ListSettingsInterface>(); // listSettingId -> settings
 
 /**
  * スタイル追加（mark.js用、表示制御用）
@@ -486,7 +486,7 @@ function createRadio(
  */
 function createRegexControls(list: HTMLElement): HTMLElement {
   const listSettingId = list.dataset.listSettingId!;
-  const settings = listSettings.get(listSettingId)!;
+  const settings = listSettingMap.get(listSettingId)!;
 
   // 正規表現入力
   const input = document.createElement('input');
@@ -778,7 +778,7 @@ function addListilControlsToLists(): void {
     console.log(`[DEBUG]`, `Loaded settings`, restored);
     const merged = { ...defaultSettings, ...restored };
 
-    listSettings.set(listSettingId, merged);
+    listSettingMap.set(listSettingId, merged);
 
     const toggleBtn = document.createElement('button');
     toggleBtn.type = 'button';
