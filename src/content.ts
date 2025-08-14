@@ -38,11 +38,6 @@ const defaultSettings: ListSettingsInterface = {
 };
 
 /**
- * マッピング(リストID -> リスト設定)
- */
-const listSettingMap = new Map<string, ListSettingsInterface>(); // listSettingId -> settings
-
-/**
  * スタイル追加（mark.js用、表示制御用）
  */
 function injectStyles(): void {
@@ -795,8 +790,6 @@ function addListilControlsToLists(): void {
     const restored = await restoreListSettings(list.id);
     console.log(`[DEBUG]`, `Loaded settings`, restored);
     const merged = { ...defaultSettings, ...restored };
-
-    listSettingMap.set(listSettingId, merged);
 
     const toggleBtn = document.createElement('button');
     toggleBtn.type = 'button';
