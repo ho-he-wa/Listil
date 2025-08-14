@@ -662,7 +662,7 @@ class ControlFactory {
    * @param settings 
    * @param settingsList アドホック。settingsと
    */
-  public createRegexControls(list: HTMLElement, settings: ListSettingsInterface, settingsList: ListSettingsInterface[]): HTMLElement {
+  public createFilterControls(list: HTMLElement, settings: ListSettingsInterface, settingsList: ListSettingsInterface[]): HTMLElement {
     // [ ] TODO : settingsとsettingsListの2つあるのは冗長なので整理する
     // 正規表現入力
     const input = document.createElement('input');
@@ -972,7 +972,7 @@ function addListilControlsToLists(): void {
       toggleBtn.textContent = visible ? 'Hide List' : 'Show List';
     });
 
-    const controls = (new ControlFactory).createRegexControls(list, merged, restoredSettingList ?? []);
+    const controls = (new ControlFactory).createFilterControls(list, merged, restoredSettingList ?? []);
     list.parentNode!.insertBefore(controls, list);
     list.parentNode!.insertBefore(toggleBtn, controls);
 
