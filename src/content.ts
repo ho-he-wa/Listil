@@ -35,22 +35,8 @@ const listSettings = new Map<string, ListSettingsInterface>(); // listId -> sett
  */
 function injectStyles(): void {
   const style = document.createElement('style');
+  // NOTE : 基本的にcssファイルにスタイルを設定
   style.textContent = `
-    mark.listil-custom-mark {
-      background-color: yellow;
-      color: black;
-    }
-    .listil-highlight-item {
-      outline: 3px solid orange;
-      outline-offset: -2px;
-      border-radius: 4px;
-      padding: 2px;
-    }
-    .listil-narrow-list > li,
-    .listil-narrow-list > tr {
-      max-height: 3.0rem;
-      overflow: hidden;
-    }
   `;
   document.head.appendChild(style);
 }
