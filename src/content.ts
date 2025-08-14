@@ -535,10 +535,7 @@ class AdvancedSettingsModal {
     title.textContent = `#${index + 1}`;
     title.className = 'listil-modal-setting-no';
 
-    const regexInput = document.createElement('input');
-    regexInput.type = 'text';
-    regexInput.placeholder = 'RegExp (e.g. "foo|bar")';
-    regexInput.value = settings.regex?.source ?? '';
+    const regexInput = (new ControlFactory).createRegexInput(settings.regex);
     regexInput.className = 'listil-modal-setting-input';
 
     regexInput.addEventListener('input', () => {
@@ -655,6 +652,18 @@ class ControlFactory {
     return label;
   }
 
+  public createInput(value: string): HTMLInputElement {
+    const input = document.createElement('input');
+    input.value = value;
+    return input;
+  }
+
+  public createRegexInput(regex: RegExp | null) {
+    const input = this.createInput(regex?.source ?? '');
+    input.placeholder = '正規表現を入力...';
+    return input;
+  }
+
   /**
    * コントロール UI 作成
    * 
@@ -665,11 +674,9 @@ class ControlFactory {
   public createFilterControls(list: HTMLElement, settings: ListSettingsInterface, settingsList: ListSettingsInterface[]): HTMLElement {
     // [ ] TODO : settingsとsettingsListの2つあるのは冗長なので整理する
     // 正規表現入力
-    const input = document.createElement('input');
-    input.placeholder = '正規表現を入力...';
+    const input = this.createRegexInput(settings.regex);
     input.className = 'listil-regex-input';
     input.style.marginRight = '10px';
-    input.value = settings.regex?.source ?? '';
 
     // エラーメッセージ表示用
     const errorMessage = document.createElement('span');
