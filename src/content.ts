@@ -565,7 +565,7 @@ function createRegexControls(list: HTMLElement, settings: ListSettingsInterface)
   saveButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();
-    saveListSettings(list.id, [settings]);
+    (new ListSettingsRepository).save(list.id, [settings]);
   });
 
   // input とラジオボタンを横並びにするラッパー
@@ -689,82 +689,84 @@ function findAncestorWithId(el: HTMLElement) {
   return ancestor;
 }
 
-/**
- * 保存キー生成
- */
-function generateStorageKey(listId: string, url: string = location.href): string {
-  const wkUrl = location.href.replace(/^https?:\/\//, '').replace(/[#?].*$/, '');
-  return `${wkUrl}#${listId}`;
-}
-
-/**
- * リスト設定のシリアライズ
- */
-function serializeSettings(settings: ListSettingsInterface): object {
-  return {
-    regexSource: settings.regex ? settings.regex.source : null,
-    regexFlags: settings.regex ? settings.regex.flags : null,
-    marker: settings.marker,
-    highlight: settings.highlight,
-    grayOut: settings.grayOut,
-    hide: settings.hide,
-    invertMatch: settings.invertMatch,
-    matchMode: settings.matchMode,
-    narrow: settings.narrow,
-  };
-}
-
-/**
- * リスト設定のデシリアライズ
- */
-function deserializeSettings(serialized: any): ListSettingsInterface {
-  let regex: RegExp | null = null;
-  try {
-    if (serialized.regexSource && serialized.regexFlags !== null) {
-      regex = new RegExp(serialized.regexSource, serialized.regexFlags);
-    }
-  } catch (e) {
-    console.warn('[listil] 正規表現の復元に失敗しました', e);
+class ListSettingsRepository {
+  /**
+   * 保存
+   */
+  public save(listId: string, settingsArray: ListSettingsInterface[]): void {
+    const key = this.generateStorageKey(listId);
+    const serialized = settingsArray.map(this.serializeSettings);
+    chrome.storage.local.set({ [key]: serialized }, () => {
+      console.log(`[listil] Saved settings array for ${key}`);
+    });
   }
 
-  return {
-    regex,
-    marker: serialized.marker,
-    highlight: serialized.highlight,
-    grayOut: serialized.grayOut,
-    hide: serialized.hide,
-    invertMatch: serialized.invertMatch,
-    matchMode: serialized.matchMode,
-    narrow: serialized.narrow,
-  };
-}
-
-/**
- * 保存
- */
-function saveListSettings(listId: string, settingsArray: ListSettingsInterface[]): void {
-  const key = generateStorageKey(listId);
-  const serialized = settingsArray.map(serializeSettings);
-  chrome.storage.local.set({ [key]: serialized }, () => {
-    console.log(`[listil] Saved settings array for ${key}`);
-  });
-}
-
-/**
- * 復元
- */
-async function restoreListSettings(listId: string): Promise<ListSettingsInterface[] | null> {
-  const key = generateStorageKey(listId);
-  return new Promise((resolve) => {
-    chrome.storage.local.get([key], (result) => {
-      if (result[key] && Array.isArray(result[key])) {
-        const deserialized = result[key].map(deserializeSettings);
-        resolve(deserialized);
-      } else {
-        resolve(null);
-      }
+  /**
+   * 復元
+   */
+  public async restore(listId: string): Promise<ListSettingsInterface[] | null> {
+    const key = this.generateStorageKey(listId);
+    return new Promise((resolve) => {
+      chrome.storage.local.get([key], (result) => {
+        if (result[key] && Array.isArray(result[key])) {
+          const deserialized = result[key].map(this.deserializeSettings);
+          resolve(deserialized);
+        } else {
+          resolve(null);
+        }
+      });
     });
-  });
+  }
+
+  /**
+   * 保存キー生成
+   */
+  private generateStorageKey(listId: string, url: string = location.href): string {
+    const wkUrl = location.href.replace(/^https?:\/\//, '').replace(/[#?].*$/, '');
+    return `${wkUrl}#${listId}`;
+  }
+
+  /**
+   * リスト設定のシリアライズ
+   */
+  private serializeSettings(settings: ListSettingsInterface): object {
+    return {
+      regexSource: settings.regex ? settings.regex.source : null,
+      regexFlags: settings.regex ? settings.regex.flags : null,
+      marker: settings.marker,
+      highlight: settings.highlight,
+      grayOut: settings.grayOut,
+      hide: settings.hide,
+      invertMatch: settings.invertMatch,
+      matchMode: settings.matchMode,
+      narrow: settings.narrow,
+    };
+  }
+
+  /**
+   * リスト設定のデシリアライズ
+   */
+  private deserializeSettings(serialized: any): ListSettingsInterface {
+    let regex: RegExp | null = null;
+    try {
+      if (serialized.regexSource && serialized.regexFlags !== null) {
+        regex = new RegExp(serialized.regexSource, serialized.regexFlags);
+      }
+    } catch (e) {
+      console.warn('[listil] 正規表現の復元に失敗しました', e);
+    }
+
+    return {
+      regex,
+      marker: serialized.marker,
+      highlight: serialized.highlight,
+      grayOut: serialized.grayOut,
+      hide: serialized.hide,
+      invertMatch: serialized.invertMatch,
+      matchMode: serialized.matchMode,
+      narrow: serialized.narrow,
+    };
+  }
 }
 
 /**
@@ -788,7 +790,7 @@ function addListilControlsToLists(): void {
     list.dataset.listSettingId = listSettingId;
 
     // ストレージから復元
-    const restoredSettingList = await restoreListSettings(list.id);
+    const restoredSettingList = await (new ListSettingsRepository).restore(list.id);
     const restored = (restoredSettingList && restoredSettingList.length > 0) ? restoredSettingList[0] : undefined;
     console.log(`[DEBUG]`, `Loaded settings`, restored);
     const merged = { ...defaultSettings, ...restored };
