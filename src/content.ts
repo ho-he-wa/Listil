@@ -289,8 +289,20 @@ class ListFilter {
    * リストにフィルターを適用
    */
   public apply(): void {
-    let items: HTMLElement[];
+    const items = this.findListItems();
+    this.removeMarkers();
+    this.removeHighlights();
 
+    items.forEach((item: HTMLElement) => {
+      this.applyToItem(item, this.settings);
+    });
+  }
+
+  /**
+   * リスト項目を抽出する
+   */
+  private findListItems() {
+    let items: HTMLElement[];
     if (this.list.matches(`[data-pseudotype="${PseudoType.list}"]`)) {
       items = querySelectorAllWithDepth(this.list, `[data-pseudotype="${PseudoType.listitem}"]`, 1);
     } else {
@@ -299,12 +311,7 @@ class ListFilter {
         ? querySelectorAllWithDepth<HTMLElement>(this.list, 'tr', 2).filter((tr) => !this.shouldExcludeTableRow(tr))
         : querySelectorAllWithDepth(this.list, 'li', 1);
     }
-    this.removeMarkers();
-    this.removeHighlights();
-
-    items.forEach((item: HTMLElement) => {
-      this.applyToItem(item, this.settings);
-    });
+    return items;
   }
 
   /**
