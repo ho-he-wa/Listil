@@ -36,18 +36,18 @@ const listSettings = new Map<string, ListSettingsInterface>(); // listId -> sett
 function injectStyles(): void {
   const style = document.createElement('style');
   style.textContent = `
-    mark.custom-mark {
+    mark.listil-custom-mark {
       background-color: yellow;
       color: black;
     }
-    .highlight-item {
+    .listil-highlight-item {
       outline: 3px solid orange;
       outline-offset: -2px;
       border-radius: 4px;
       padding: 2px;
     }
-    .narrow-list > li,
-    .narrow-list > tr {
+    .listil-narrow-list > li,
+    .listil-narrow-list > tr {
       max-height: 3.0rem;
       overflow: hidden;
     }
@@ -405,7 +405,7 @@ class ListFilter {
       done: () => {
         if (this.settings.regex) {
           instance.markRegExp(this.settings.regex, {
-            className: 'custom-mark',
+            className: 'listil-custom-mark',
           });
         }
       }
@@ -427,7 +427,7 @@ class ListFilter {
    */
   private applyHighlights(element: HTMLElement): void {
     // 枠線を追加
-    element.classList.add('highlight-item');
+    element.classList.add('listil-highlight-item');
   }
 
   /**
@@ -435,8 +435,8 @@ class ListFilter {
    */
   private removeHighlights(): void {
     if (!this.listId) return;
-    const items = this.list.querySelectorAll('.highlight-item');
-    items.forEach(item => item.classList.remove('highlight-item'));
+    const items = this.list.querySelectorAll('.listil-highlight-item');
+    items.forEach(item => item.classList.remove('listil-highlight-item'));
   }
 }
 
@@ -505,13 +505,13 @@ function createRegexControls(list: HTMLElement): HTMLElement {
   // 正規表現入力
   const input = document.createElement('input');
   input.placeholder = '正規表現を入力...';
-  input.className = 'regex-input';
+  input.className = 'listil-regex-input';
   input.style.marginRight = '10px';
   input.value = settings.regex?.source ?? '';
 
   // エラーメッセージ表示用
   const errorMessage = document.createElement('span');
-  errorMessage.classList.add('validation-error');
+  errorMessage.classList.add('listil-validation-error');
   errorMessage.style.display = 'none'; // 初期状態は非表示
   errorMessage.textContent = '無効な正規表現です';
 
@@ -594,7 +594,7 @@ function createRegexControls(list: HTMLElement): HTMLElement {
 
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'list-controls';
+  wrapper.className = 'listil-controls';
 
   wrapper.appendChild(topRow);
   wrapper.appendChild(markerBox);
@@ -797,7 +797,7 @@ function addTogglesToLists(): void {
     const toggleBtn = document.createElement('button');
     toggleBtn.type = 'button';
     toggleBtn.textContent = 'Hide List';
-    toggleBtn.className = 'list-toggle-button';
+    toggleBtn.className = 'listil-toggle-button';
     toggleBtn.style.marginBottom = '6px';
 
     let visible = true;
