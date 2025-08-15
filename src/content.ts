@@ -651,6 +651,7 @@ class AdvancedSettingsModal {
     removeBtn.title = 'Remove this filter';
     removeBtn.addEventListener('click', () => {
       this.settingsList.splice(index, 1);
+      this.onchange();
       this.modal.remove(); // 再生成
       this.modal = this.createModal();
       this.open();
