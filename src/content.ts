@@ -501,11 +501,13 @@ class AdvancedSettingsModal {
   private list: HTMLElement;
   private settingsList: ListSettingsInterface[];
   private modal: HTMLDivElement;
+  private onchange: () => void;
 
-  constructor(list: HTMLElement, settingsList: ListSettingsInterface[]) {
+  constructor(list: HTMLElement, settingsList: ListSettingsInterface[], onchange: () => void) {
     this.list = list;
     this.settingsList = settingsList;
     this.modal = this.createModal();
+    this.onchange = onchange;
   }
 
   public open(): void {
@@ -548,6 +550,7 @@ class AdvancedSettingsModal {
     applyBtn.textContent = '🪄 Apply';
     applyBtn.addEventListener('click', () => {
       new ListFilter(this.list, this.settingsList).apply();
+      this.onchange();
       this.close();
     });
 
@@ -555,7 +558,7 @@ class AdvancedSettingsModal {
     saveBtn.textContent = '💾 Apply & Save';
     saveBtn.addEventListener('click', () => {
       new ListSettingsRepository().save(this.list.id, this.settingsList);
-      new ListFilter(this.list, this.settingsList).apply();
+      this.onchange();
       this.close();
     });
 
@@ -600,7 +603,7 @@ class AdvancedSettingsModal {
         settings.regex = null;
         input.style.borderColor = ''; // 通常の枠に戻す
         errorMessage.style.display = 'none';
-        new ListFilter(this.list, this.settingsList).apply();
+        this.onchange();
         return;
       }
       try {
@@ -608,7 +611,7 @@ class AdvancedSettingsModal {
         // 正常な場合：装飾をリセット
         input.style.borderColor = '';
         errorMessage.style.display = 'none';
-        new ListFilter(this.list, this.settingsList).apply();
+        this.onchange();
       } catch (err) {
         // エラーの場合：赤枠＋エラーメッセージ
         settings.regex = null;
@@ -620,27 +623,27 @@ class AdvancedSettingsModal {
     const invertCheckbox = (new ControlFactory).createCheckbox('Invert', settings.invertMatch ?? false, (checked) => {
       settings.invertMatch = checked;
       settings.matchMode = !checked ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
-      new ListFilter(this.list, this.settingsList).apply();
+      this.onchange();
     });
     const markerCheckbox = (new ControlFactory).createCheckbox('Marker', settings.marker ?? false, (checked) => {
       settings.marker = checked;
-      new ListFilter(this.list, this.settingsList).apply();
+      this.onchange();
     });
     const highlightCheckbox = (new ControlFactory).createCheckbox('Highlight', settings.highlight ?? false, (checked) => {
       settings.highlight = checked;
-      new ListFilter(this.list, this.settingsList).apply();
+      this.onchange();
     });
     const grayOutCheckbox = (new ControlFactory).createCheckbox('GrayOut other', settings.grayOut ?? false, (checked) => {
       settings.grayOut = checked;
-      new ListFilter(this.list, this.settingsList).apply();
+      this.onchange();
     });
     const narrowCheckbox = (new ControlFactory).createCheckbox('Narrow other', settings.narrow ?? false, (checked) => {
       settings.narrow = checked;
-      new ListFilter(this.list, this.settingsList).apply();
+      this.onchange();
     });
     const hidecheckbox = (new ControlFactory).createCheckbox('Hide other', settings.hide ?? false, (checked) => {
       settings.hide = checked;
-      new ListFilter(this.list, this.settingsList).apply();
+      this.onchange();
     });
 
     const removeBtn = document.createElement('button');
@@ -857,7 +860,9 @@ class ControlFactory {
     advancedBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      new AdvancedSettingsModal(list, settingsList).open();
+      new AdvancedSettingsModal(list, settingsList, () => {
+        new ListFilter(list, settingsList).apply();
+      }).open();
     });
 
     const wrapper = document.createElement('div');
