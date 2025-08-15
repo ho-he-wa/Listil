@@ -867,6 +867,18 @@ class ControlFactory {
       e.stopImmediatePropagation();
       new AdvancedSettingsModal(list, settingsList, () => {
         new ListFilter(list, settingsList).apply();
+        if (settingsList.length <= 0) {
+          throw new Error('Violation. The settingsList is Empty.');
+        }
+        // 基本コントロールの状態を更新
+        const firstSettings = settingsList[0];
+        input.value = firstSettings.regex?.source ?? '';
+        (invertBox.firstChild as HTMLInputElement).checked = firstSettings.invertMatch;
+        (markerBox.firstChild as HTMLInputElement).checked = firstSettings.marker;
+        (highlightBox.firstChild as HTMLInputElement).checked = firstSettings.highlight;
+        (grayOutBox.firstChild as HTMLInputElement).checked = firstSettings.grayOut;
+        (narrowBox.firstChild as HTMLInputElement).checked = firstSettings.narrow;
+        (hideBox.firstChild as HTMLInputElement).checked = firstSettings.hide;
       }).open();
     });
 
