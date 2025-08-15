@@ -498,13 +498,11 @@ class ListFilter {
  * アドバンスド設定モーダル
  */
 class AdvancedSettingsModal {
-  private list: HTMLElement;
   private settingsList: ListSettingsInterface[];
   private modal: HTMLDivElement;
   private onchange: () => void;
 
-  constructor(list: HTMLElement, settingsList: ListSettingsInterface[], onchange: () => void) {
-    this.list = list;
+  constructor(settingsList: ListSettingsInterface[], onchange: () => void) {
     this.settingsList = settingsList;
     this.modal = this.createModal();
     this.onchange = onchange;
@@ -847,7 +845,7 @@ class ControlFactory {
     advancedBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      new AdvancedSettingsModal(list, settingsList, () => {
+      new AdvancedSettingsModal(settingsList, () => {
         new ListFilter(list, settingsList).apply();
         if (settingsList.length <= 0) {
           throw new Error('Violation. The settingsList is Empty.');
