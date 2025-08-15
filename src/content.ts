@@ -499,12 +499,12 @@ class ListFilter {
  */
 class AdvancedSettingsModal {
   private list: HTMLElement;
-  private settingsArray: ListSettingsInterface[];
+  private settingsList: ListSettingsInterface[];
   private modal: HTMLDivElement;
 
-  constructor(list: HTMLElement, settingsArray: ListSettingsInterface[]) {
+  constructor(list: HTMLElement, settingsList: ListSettingsInterface[]) {
     this.list = list;
-    this.settingsArray = settingsArray;
+    this.settingsList = settingsList;
     this.modal = this.createModal();
   }
 
@@ -530,7 +530,7 @@ class AdvancedSettingsModal {
     const listWrapper = document.createElement('div');
     listWrapper.className = 'listil-setting-list';
 
-    this.settingsArray.forEach((settings, index) => {
+    this.settingsList.forEach((settings, index) => {
       const item = this.createSettingsEditor(settings, index);
       listWrapper.appendChild(item);
     });
@@ -539,23 +539,23 @@ class AdvancedSettingsModal {
     addBtn.textContent = '＋ Add Filter';
     addBtn.addEventListener('click', () => {
       const newSetting = { ...defaultSettings };
-      this.settingsArray.push(newSetting);
-      const item = this.createSettingsEditor(newSetting, this.settingsArray.length - 1);
+      this.settingsList.push(newSetting);
+      const item = this.createSettingsEditor(newSetting, this.settingsList.length - 1);
       listWrapper.appendChild(item);
     });
 
     const applyBtn = document.createElement('button');
     applyBtn.textContent = '🪄 Apply';
     applyBtn.addEventListener('click', () => {
-      new ListFilter(this.list, this.settingsArray).apply();
+      new ListFilter(this.list, this.settingsList).apply();
       this.close();
     });
 
     const saveBtn = document.createElement('button');
     saveBtn.textContent = '💾 Apply & Save';
     saveBtn.addEventListener('click', () => {
-      new ListSettingsRepository().save(this.list.id, this.settingsArray);
-      new ListFilter(this.list, this.settingsArray).apply();
+      new ListSettingsRepository().save(this.list.id, this.settingsList);
+      new ListFilter(this.list, this.settingsList).apply();
       this.close();
     });
 
@@ -600,7 +600,7 @@ class AdvancedSettingsModal {
         settings.regex = null;
         input.style.borderColor = ''; // 通常の枠に戻す
         errorMessage.style.display = 'none';
-        new ListFilter(this.list, this.settingsArray).apply();
+        new ListFilter(this.list, this.settingsList).apply();
         return;
       }
       try {
@@ -608,7 +608,7 @@ class AdvancedSettingsModal {
         // 正常な場合：装飾をリセット
         input.style.borderColor = '';
         errorMessage.style.display = 'none';
-        new ListFilter(this.list, this.settingsArray).apply();
+        new ListFilter(this.list, this.settingsList).apply();
       } catch (err) {
         // エラーの場合：赤枠＋エラーメッセージ
         settings.regex = null;
@@ -620,34 +620,34 @@ class AdvancedSettingsModal {
     const invertCheckbox = (new ControlFactory).createCheckbox('Invert', settings.invertMatch ?? false, (checked) => {
       settings.invertMatch = checked;
       settings.matchMode = !checked ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
-      new ListFilter(this.list, this.settingsArray).apply();
+      new ListFilter(this.list, this.settingsList).apply();
     });
     const markerCheckbox = (new ControlFactory).createCheckbox('Marker', settings.marker ?? false, (checked) => {
       settings.marker = checked;
-      new ListFilter(this.list, this.settingsArray).apply();
+      new ListFilter(this.list, this.settingsList).apply();
     });
     const highlightCheckbox = (new ControlFactory).createCheckbox('Highlight', settings.highlight ?? false, (checked) => {
       settings.highlight = checked;
-      new ListFilter(this.list, this.settingsArray).apply();
+      new ListFilter(this.list, this.settingsList).apply();
     });
     const grayOutCheckbox = (new ControlFactory).createCheckbox('GrayOut other', settings.grayOut ?? false, (checked) => {
       settings.grayOut = checked;
-      new ListFilter(this.list, this.settingsArray).apply();
+      new ListFilter(this.list, this.settingsList).apply();
     });
     const narrowCheckbox = (new ControlFactory).createCheckbox('Narrow other', settings.narrow ?? false, (checked) => {
       settings.narrow = checked;
-      new ListFilter(this.list, this.settingsArray).apply();
+      new ListFilter(this.list, this.settingsList).apply();
     });
     const hidecheckbox = (new ControlFactory).createCheckbox('Hide other', settings.hide ?? false, (checked) => {
       settings.hide = checked;
-      new ListFilter(this.list, this.settingsArray).apply();
+      new ListFilter(this.list, this.settingsList).apply();
     });
 
     const removeBtn = document.createElement('button');
     removeBtn.textContent = '🗑';
     removeBtn.title = 'Remove this filter';
     removeBtn.addEventListener('click', () => {
-      this.settingsArray.splice(index, 1);
+      this.settingsList.splice(index, 1);
       this.modal.remove(); // 再生成
       this.modal = this.createModal();
       this.open();
@@ -954,9 +954,9 @@ class ListSettingsRepository {
   /**
    * 保存
    */
-  public save(listId: string, settingsArray: ListSettingsInterface[]): void {
+  public save(listId: string, settingsList: ListSettingsInterface[]): void {
     const key = this.generateStorageKey(listId);
-    const serialized = settingsArray.map(this.serializeSettings);
+    const serialized = settingsList.map(this.serializeSettings);
     chrome.storage.local.set({ [key]: serialized }, () => {
       console.log(`[listil] Saved settings array for ${key}`);
     });
