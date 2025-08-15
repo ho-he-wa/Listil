@@ -650,6 +650,10 @@ class AdvancedSettingsModal {
     removeBtn.textContent = '🗑';
     removeBtn.title = 'Remove this filter';
     removeBtn.addEventListener('click', () => {
+      if (this.settingsList.length <= 1) {
+        alert('2件以上ある場合のみ削除できます。');
+        return;
+      }
       this.settingsList.splice(index, 1);
       this.onchange();
       this.modal.remove(); // 再生成
