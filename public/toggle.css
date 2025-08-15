@@ -1,3 +1,37 @@
+/**
+ * reset
+ */
+
+.listil-root *,
+.listil-root *::before,
+.listil-root *::after {
+  all: initial;
+  display: revert;
+  box-sizing: border-box;
+  font-size: 12px;
+}
+
+.listil-root label,
+.listil-root button,
+.listil-root input,
+.listil-root textarea,
+.listil-root select {
+  all: revert;
+  display: revert;
+  box-sizing: border-box;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.listil-root input,
+.listil-root textarea {
+  cursor: text;
+}
+
+/**
+ * 個々の要素
+ */
+
 .listil-top-row {
   display: flex;
   align-items: center;
@@ -10,25 +44,23 @@
   gap: 2px;
 }
 
-.listil-toggle-button {
+.listil-root input.listil-checkbox,
+.listil-root input.listil-radio {
+  all: revert;
+}
+
+button.listil-toggle-button {
   margin: 5px 0;
   padding: 4px 10px;
-  font-size: 12px;
   background-color: #4CAF50;
   color: white;
   border: none;
-  cursor: pointer;
 }
 
-.listil-toggle-button:hover {
-  background-color: #45a049;
-}
-
-.listil-regex-input {
+input.listil-regex-input {
   display: block;
   margin: 5px 0 10px;
   padding: 4px 10px;
-  font-size: 12px;
   width: 200px;
   margin-right: 8px;
 }
@@ -117,7 +149,6 @@ mark.listil-custom-mark {
 }
 
 .listil-setting-editor {
-  all: initial;
   display: flex;
   align-items: center;
   margin-bottom: 8px;
@@ -127,14 +158,12 @@ mark.listil-custom-mark {
 }
 
 .listil-modal-title {
-  all: initial;
   font-weight: 700;
   font-size: 18px;
   line-height: 24px;
 }
 
 .listil-modal-setting-no {
-  all: initial;
   margin-right: 2px;
 }
 

@@ -514,7 +514,7 @@ class AdvancedSettingsModal {
 
   private createModal(): HTMLDivElement {
     const modal = document.createElement('div');
-    modal.className = 'listil-modal';
+    modal.className = 'listil-modal listil-root';
 
     const overlay = document.createElement('div');
     overlay.className = 'listil-overlay';
@@ -679,6 +679,7 @@ class ControlFactory {
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
+    checkbox.className = 'listil-checkbox';
     checkbox.checked = checked;
     checkbox.style.marginRight = '4px';
 
@@ -707,6 +708,7 @@ class ControlFactory {
 
     const radio = document.createElement('input');
     radio.type = 'radio';
+    radio.className = 'listil-radio';
     radio.name = name;
     radio.value = value;
     radio.checked = checked;
@@ -863,7 +865,7 @@ class ControlFactory {
     });
 
     const wrapper = document.createElement('div');
-    wrapper.className = 'listil-controls';
+    wrapper.className = 'listil-controls listil-root';
     const fieldset = document.createElement('fieldset');
     fieldset.className = 'listil-fieldset';
 
@@ -1092,7 +1094,7 @@ function addListilControlsToLists(): void {
     });
 
     const toggleBtnDiv = document.createElement('div');
-    toggleBtnDiv.className = 'listil-toggle-button-div';
+    toggleBtnDiv.className = 'listil-toggle-button-div listil-root';
     toggleBtnDiv.appendChild(toggleListBtn);
     toggleBtnDiv.appendChild(toggleControlsBtn);
 
