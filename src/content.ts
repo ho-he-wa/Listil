@@ -753,11 +753,15 @@ class ControlFactory {
    * コントロール UI 作成
    * 
    * @param list 
-   * @param settings 
-   * @param settingsList アドホック。settingsと
+   * @param settingsList
    */
-  public createFilterControls(list: HTMLElement, settings: ListSettingsInterface, settingsList: ListSettingsInterface[]): HTMLElement {
-    // [ ] TODO : settingsとsettingsListの2つあるのは冗長なので整理する
+  public createFilterControls(list: HTMLElement, settingsList: ListSettingsInterface[]): HTMLElement {
+    // [x] TODO : settingsとsettingsListの2つあるのは冗長なので整理する
+    if (settingsList.length <= 0) {
+      throw new Error('Violation. The settingsList is Empty.');
+    }
+    const settings = settingsList[0];
+
     // 正規表現入力
     const input = this.createRegexInput(settings.regex);
     input.className = 'listil-regex-input';
@@ -777,7 +781,7 @@ class ControlFactory {
         settings.regex = null;
         input.style.borderColor = ''; // 通常の枠に戻す
         errorMessage.style.display = 'none';
-        new ListFilter(list, [settings]).apply();
+        new ListFilter(list, settingsList).apply();
         return;
       }
       try {
@@ -785,7 +789,7 @@ class ControlFactory {
         // 正常な場合：装飾をリセット
         input.style.borderColor = '';
         errorMessage.style.display = 'none';
-        new ListFilter(list, [settings]).apply();
+        new ListFilter(list, settingsList).apply();
       } catch (err) {
         // エラーの場合：赤枠＋エラーメッセージ
         settings.regex = null;
@@ -798,7 +802,7 @@ class ControlFactory {
     const invertBox = this.createCheckbox('invert matching', settings.invertMatch, (state: boolean) => {
       settings.invertMatch = state;
       settings.matchMode = !state ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
-      new ListFilter(list, [settings]).apply();
+      new ListFilter(list, settingsList).apply();
     });
 
     const saveButton = document.createElement('button');
@@ -808,7 +812,7 @@ class ControlFactory {
     saveButton.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      (new ListSettingsRepository).save(list.id, [settings]);
+      (new ListSettingsRepository).save(list.id, settingsList);
     });
 
     // input とラジオボタンを横並びにするラッパー
@@ -823,27 +827,27 @@ class ControlFactory {
     // 他のチェックボックスはそのまま
     const markerBox = this.createCheckbox('Marker', settings.marker, (state: boolean) => {
       settings.marker = state;
-      new ListFilter(list, [settings]).apply();
+      new ListFilter(list, settingsList).apply();
     });
 
     const highlightBox = this.createCheckbox('Highlight', settings.highlight, (state: boolean) => {
       settings.highlight = state;
-      new ListFilter(list, [settings]).apply();
+      new ListFilter(list, settingsList).apply();
     });
 
     const grayOutBox = this.createCheckbox('GrayOut others', settings.grayOut, (state: boolean) => {
       settings.grayOut = state;
-      new ListFilter(list, [settings]).apply();
+      new ListFilter(list, settingsList).apply();
     });
 
     const narrowBox = this.createCheckbox('Narrow others', settings.narrow, (state: boolean) => {
       settings.narrow = state;
-      new ListFilter(list, [settings]).apply();
+      new ListFilter(list, settingsList).apply();
     });
 
     const hideBox = this.createCheckbox('Hide others', settings.hide, (state: boolean) => {
       settings.hide = state;
-      new ListFilter(list, [settings]).apply();
+      new ListFilter(list, settingsList).apply();
     });
 
     const advancedBtn = document.createElement('button');
@@ -1046,13 +1050,15 @@ function addListilControlsToLists(): void {
     const listSettingId = `list-${index}`;
     list.dataset.listSettingId = listSettingId;
 
-    // ストレージから復元
-    const restoredSettingList = await (new ListSettingsRepository).restore(list.id);
-    const restored = (restoredSettingList && restoredSettingList.length > 0) ? restoredSettingList[0] : undefined;
-    console.log(`[DEBUG]`, `Loaded settings`, restored);
-    const merged = { ...defaultSettings, ...restored };
+    // ストレージから復元。0件であればデフォルト設定を使う。
+    const restoredSettingList = await (new ListSettingsRepository).restore(list.id) ?? [];
+    const settingsList = (restoredSettingList.length > 0 ? restoredSettingList : [defaultSettings]).map((settings) => {
+      // データ仕様変更を考慮してデフォルト設定とマージ
+      return { ...defaultSettings, ...settings };
+    });
+    console.log(`[DEBUG]`, `Loaded settings`, settingsList);
 
-    const controls = (new ControlFactory).createFilterControls(list, merged, restoredSettingList ?? []);
+    const controls = (new ControlFactory).createFilterControls(list, settingsList);
     controls.style.display = 'none';
 
     const toggleListBtn = document.createElement('button');
@@ -1092,8 +1098,8 @@ function addListilControlsToLists(): void {
     list.parentNode!.insertBefore(toggleBtnDiv, controls);
 
     // リスト設定復元時はリストのフィルターを適用
-    if (restored) {
-      new ListFilter(list, [merged]).apply();
+    if (restoredSettingList.length > 0) {
+      new ListFilter(list, settingsList).apply();
     }
   });
   console.timeEnd(timerName);
