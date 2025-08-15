@@ -546,19 +546,10 @@ class AdvancedSettingsModal {
       listWrapper.appendChild(item);
     });
 
-    const applyBtn = document.createElement('button');
-    applyBtn.textContent = '🪄 Apply';
-    applyBtn.addEventListener('click', () => {
-      new ListFilter(this.list, this.settingsList).apply();
-      this.onchange();
-      this.close();
-    });
-
     const saveBtn = document.createElement('button');
-    saveBtn.textContent = '💾 Apply & Save';
+    saveBtn.textContent = '💾 Save';
     saveBtn.addEventListener('click', () => {
       new ListSettingsRepository().save(this.list.id, this.settingsList);
-      this.onchange();
       this.close();
     });
 
@@ -569,7 +560,6 @@ class AdvancedSettingsModal {
     content.appendChild(title);
     content.appendChild(listWrapper);
     content.appendChild(addBtn);
-    content.appendChild(applyBtn);
     content.appendChild(saveBtn);
     content.appendChild(closeBtn);
     modal.appendChild(overlay);
