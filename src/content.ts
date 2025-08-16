@@ -455,15 +455,11 @@ class ListFilter {
    */
   private applyMarkers(element: HTMLElement, settings: ListSettingsInterface): void {
     const instance = new Mark(element);
-    instance.unmark({
-      done: () => {
-        if (settings.regex) {
-          instance.markRegExp(settings.regex, {
-            className: 'listil-custom-mark',
-          });
-        }
-      }
-    });
+    if (settings.regex) {
+      instance.markRegExp(settings.regex, {
+        className: 'listil-custom-mark',
+      });
+    }
   }
 
   /**
