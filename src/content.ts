@@ -802,7 +802,7 @@ class ControlFactory {
     saveButton.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      (new ListSettingsRepository).save(list.id, settingsList);
+      (new ListSettingsRepository).save(createStorageKey(list.id), settingsList);
     });
 
     // input とラジオボタンを横並びにするラッパー
@@ -954,12 +954,19 @@ function findAncestorWithId(el: HTMLElement) {
   return ancestor;
 }
 
+/**
+ * 保存キー生成
+ */
+function createStorageKey(listId: string, url: string = location.href): string {
+  const wkUrl = location.href.replace(/^https?:\/\//, '').replace(/[#?].*$/, '');
+  return `${wkUrl}#${listId}`;
+}
+
 class ListSettingsRepository {
   /**
    * 保存
    */
-  public save(listId: string, settingsList: ListSettingsInterface[]): void {
-    const key = this.generateStorageKey(listId);
+  public save(key: string, settingsList: ListSettingsInterface[]): void {
     const serialized = settingsList.map(this.serializeSettings);
     chrome.storage.local.set({ [key]: serialized }, () => {
       console.log(`[listil] Saved settings array for ${key}`);
@@ -969,8 +976,7 @@ class ListSettingsRepository {
   /**
    * 復元
    */
-  public async restore(listId: string): Promise<ListSettingsInterface[] | null> {
-    const key = this.generateStorageKey(listId);
+  public async restore(key: string): Promise<ListSettingsInterface[] | null> {
     return new Promise((resolve) => {
       chrome.storage.local.get([key], (result) => {
         if (result[key] && Array.isArray(result[key])) {
@@ -981,14 +987,6 @@ class ListSettingsRepository {
         }
       });
     });
-  }
-
-  /**
-   * 保存キー生成
-   */
-  private generateStorageKey(listId: string, url: string = location.href): string {
-    const wkUrl = location.href.replace(/^https?:\/\//, '').replace(/[#?].*$/, '');
-    return `${wkUrl}#${listId}`;
   }
 
   /**
@@ -1055,7 +1053,7 @@ function addListilControlsToLists(): void {
     list.dataset.listSettingId = listSettingId;
 
     // ストレージから復元。0件であればデフォルト設定を使う。
-    const restoredSettingList = await (new ListSettingsRepository).restore(list.id) ?? [];
+    const restoredSettingList = await (new ListSettingsRepository).restore(createStorageKey(list.id)) ?? [];
     const settingsList = (restoredSettingList.length > 0 ? restoredSettingList : [defaultSettings]).map((settings) => {
       // データ仕様変更を考慮してデフォルト設定とマージ
       return { ...defaultSettings, ...settings };
