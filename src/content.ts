@@ -170,14 +170,6 @@ class ListFinder {
   }
 }
 
-/**
- * リストを検索
- */
-function findLists(): HTMLElement[] {
-  const contentContainers = findContentContainers();
-  const finder = new ListFinder(contentContainers);
-  return finder.findLists();
-}
 
 /**
  * 要素は非表示か否か
@@ -869,7 +861,7 @@ const SavePrefix = {
 /**
  * 保存キー生成
  */
-function createStorageKey(listId: string, url: string = location.href): string {
+function createStorageKey(listId: string, _url: string = location.href): string {
   const wkUrl = SavePrefix.listSettings + location.href.replace(/[#?].*$/, '');
   return `${wkUrl}#${listId}`;
 } class ListSettingRepository {
