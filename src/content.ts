@@ -417,14 +417,20 @@ class ListFilter {
  * アドバンスド設定モーダル
  */
 class AdvancedSettingsModal {
-  private settingList: FilterSettingList;
+  private listSetting: ListSettingInterface;
+  private currentKey: string;
   private modal: HTMLDivElement;
-  private onchange: () => void;
+  private onchange: (settingList: FilterSettingList, currentKey: string) => void;
 
-  constructor(settingList: FilterSettingList, onchange: () => void) {
-    this.settingList = settingList;
+  constructor(listSetting: ListSettingInterface, currentKey: string, onchange: (settingList: FilterSettingList, currentKey: string) => void) {
+    this.listSetting = listSetting;
+    this.currentKey = currentKey;
     this.modal = this.createModal();
     this.onchange = onchange;
+  }
+
+  private currentSettingList(): FilterSettingList {
+    return this.listSetting.filterSettingSet[this.currentKey];
   }
 
   public open(): void {
@@ -446,10 +452,63 @@ class AdvancedSettingsModal {
     title.textContent = 'Advanced Filter Settings';
     title.className = 'listil-modal-title';
 
+    const switchSetting = document.createElement('div');
+    // ▼ 設定切り替え用セレクトボックス
+    const settingSelect = document.createElement('select');
+    for (const key in this.listSetting.filterSettingSet) {
+      const option = document.createElement('option');
+      option.value = key;
+      option.text = this.listSetting.filterSettingSet[key].name ?? '';
+      settingSelect.appendChild(option);
+    }
+    settingSelect.value = this.currentKey;
+    settingSelect.addEventListener('change', () => {
+      this.currentKey = settingSelect.value;
+      const newModal = this.createModal();
+      this.modal.replaceWith(newModal);
+      this.modal = newModal;
+      this.onchange(this.currentSettingList(), this.currentKey);
+    });
+    switchSetting.appendChild(settingSelect);
+
+    // ▼ 設定名の変更フィールド
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.value = this.currentSettingList().name ?? '';
+    nameInput.placeholder = '設定名';
+    nameInput.addEventListener('change', (e) => {
+      this.currentSettingList().name = nameInput.value;
+      const newModal = this.createModal();
+      this.modal.replaceWith(newModal);
+      this.modal = newModal;
+      this.onchange(this.currentSettingList(), this.currentKey);
+    });
+    switchSetting.appendChild(nameInput);
+
+    // ▼ 追加ボタン
+    const addButton = document.createElement('button');
+    addButton.textContent = '＋設定をコピー';
+    addButton.addEventListener('click', () => {
+      const newKey = `setting_${Date.now()}`;
+      const newFilterSettingList: FilterSettingList = {
+        name: (this.currentSettingList().name ?? '') + ' (Copy)',
+        list: this.currentSettingList().list.map((filterSetting) => {
+          return Object.assign({}, filterSetting);
+        }),
+      };
+      this.listSetting.filterSettingSet[newKey] = newFilterSettingList;
+      this.currentKey = newKey;
+      const newModal = this.createModal();
+      this.modal.replaceWith(newModal);
+      this.modal = newModal;
+      this.onchange(this.currentSettingList(), this.currentKey);
+    });
+    switchSetting.appendChild(addButton);
+
     const listWrapper = document.createElement('div');
     listWrapper.className = 'listil-setting-list';
 
-    this.settingList.list.forEach((setting, index) => {
+    this.currentSettingList().list.forEach((setting, index) => {
       const item = this.createSettingEditor(setting, index);
       listWrapper.appendChild(item);
     });
@@ -458,8 +517,8 @@ class AdvancedSettingsModal {
     addBtn.textContent = '＋ Add Filter';
     addBtn.addEventListener('click', () => {
       const newSetting = { ...defaultSetting };
-      this.settingList.list.push(newSetting);
-      const item = this.createSettingEditor(newSetting, this.settingList.list.length - 1);
+      this.currentSettingList().list.push(newSetting);
+      const item = this.createSettingEditor(newSetting, this.currentSettingList().list.length - 1);
       listWrapper.appendChild(item);
     });
 
@@ -468,6 +527,7 @@ class AdvancedSettingsModal {
     closeBtn.addEventListener('click', () => this.close());
 
     content.appendChild(title);
+    content.appendChild(switchSetting);
     content.appendChild(listWrapper);
     content.appendChild(addBtn);
     content.appendChild(closeBtn);
@@ -502,7 +562,7 @@ class AdvancedSettingsModal {
         setting.regex = null;
         input.style.borderColor = ''; // 通常の枠に戻す
         errorMessage.style.display = 'none';
-        this.onchange();
+        this.onchange(this.currentSettingList(), this.currentKey);
         return;
       }
       try {
@@ -510,7 +570,7 @@ class AdvancedSettingsModal {
         // 正常な場合：装飾をリセット
         input.style.borderColor = '';
         errorMessage.style.display = 'none';
-        this.onchange();
+        this.onchange(this.currentSettingList(), this.currentKey);
       } catch (err) {
         // エラーの場合：赤枠＋エラーメッセージ
         setting.regex = null;
@@ -522,39 +582,39 @@ class AdvancedSettingsModal {
     const invertCheckbox = (new ControlFactory).createCheckbox('Invert', setting.invertMatch ?? false, (checked) => {
       setting.invertMatch = checked;
       setting.matchMode = !checked ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
-      this.onchange();
+      this.onchange(this.currentSettingList(), this.currentKey);
     });
     const markerCheckbox = (new ControlFactory).createCheckbox('Marker', setting.marker ?? false, (checked) => {
       setting.marker = checked;
-      this.onchange();
+      this.onchange(this.currentSettingList(), this.currentKey);
     });
     const highlightCheckbox = (new ControlFactory).createCheckbox('Highlight', setting.highlight ?? false, (checked) => {
       setting.highlight = checked;
-      this.onchange();
+      this.onchange(this.currentSettingList(), this.currentKey);
     });
     const grayOutCheckbox = (new ControlFactory).createCheckbox('GrayOut other', setting.grayOut ?? false, (checked) => {
       setting.grayOut = checked;
-      this.onchange();
+      this.onchange(this.currentSettingList(), this.currentKey);
     });
     const narrowCheckbox = (new ControlFactory).createCheckbox('Narrow other', setting.narrow ?? false, (checked) => {
       setting.narrow = checked;
-      this.onchange();
+      this.onchange(this.currentSettingList(), this.currentKey);
     });
     const hidecheckbox = (new ControlFactory).createCheckbox('Hide other', setting.hide ?? false, (checked) => {
       setting.hide = checked;
-      this.onchange();
+      this.onchange(this.currentSettingList(), this.currentKey);
     });
 
     const removeBtn = document.createElement('button');
     removeBtn.textContent = '🗑';
     removeBtn.title = 'Remove this filter';
     removeBtn.addEventListener('click', () => {
-      if (this.settingList.list.length <= 1) {
+      if (this.currentSettingList().list.length <= 1) {
         alert('2件以上ある場合のみ削除できます。');
         return;
       }
-      this.settingList.list.splice(index, 1);
-      this.onchange();
+      this.currentSettingList().list.splice(index, 1);
+      this.onchange(this.currentSettingList(), this.currentKey);
       this.modal.remove(); // 再生成
       this.modal = this.createModal();
       this.open();
@@ -664,12 +724,13 @@ class ControlFactory {
    * @param list 
    * @param settingList
    */
-  public createFilterControls(list: HTMLElement, settingList: FilterSettingList): HTMLElement {
+  public createFilterControls(list: HTMLElement, listSetting: ListSettingInterface<FilterSettingInterface>): HTMLElement {
+    let currentKey = 'setting1';
     // [x] TODO : settingとsettingListの2つあるのは冗長なので整理する
-    if (settingList.list.length <= 0) {
+    if (listSetting.filterSettingSet[currentKey].list.length <= 0) {
       throw new Error('Violation. The settingList is Empty.');
     }
-    const setting = settingList.list[0];
+    const setting = listSetting.filterSettingSet[currentKey].list[0];
 
     // 正規表現入力
     const input = this.createRegexInput(setting.regex);
@@ -687,21 +748,21 @@ class ControlFactory {
       e.stopImmediatePropagation();
       const str = input.value.trim();
       if (str === '') {
-        setting.regex = null;
+        currentFirstSetting().regex = null;
         input.style.borderColor = ''; // 通常の枠に戻す
         errorMessage.style.display = 'none';
-        new ListFilter(list, settingList).apply();
+        new ListFilter(list, currentSetting()).apply();
         return;
       }
       try {
-        setting.regex = new RegExp(str, 'gi');
+        currentFirstSetting().regex = new RegExp(str, 'gi');
         // 正常な場合：装飾をリセット
         input.style.borderColor = '';
         errorMessage.style.display = 'none';
-        new ListFilter(list, settingList).apply();
+        new ListFilter(list, currentSetting()).apply();
       } catch (err) {
         // エラーの場合：赤枠＋エラーメッセージ
-        setting.regex = null;
+        currentFirstSetting().regex = null;
         input.style.borderColor = 'red';
         errorMessage.style.display = 'inline';
       }
@@ -709,9 +770,9 @@ class ControlFactory {
 
     // マッチモードラジオボタン群
     const invertBox = this.createCheckbox('invert matching', setting.invertMatch, (state: boolean) => {
-      setting.invertMatch = state;
-      setting.matchMode = !state ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
-      new ListFilter(list, settingList).apply();
+      currentFirstSetting().invertMatch = state;
+      currentFirstSetting().matchMode = !state ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
+      new ListFilter(list, currentSetting()).apply();
     });
 
     const saveButton = document.createElement('button');
@@ -721,8 +782,30 @@ class ControlFactory {
     saveButton.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      (new ListSettingRepository).save(createStorageKey(list.id), { filterSettingSet: { setting1: settingList } });
+      (new ListSettingRepository).save(createStorageKey(list.id), listSetting);
     });
+
+    const settingSelect = document.createElement('select');
+    for (const key in listSetting.filterSettingSet) {
+      const option = document.createElement('option');
+      option.value = key;
+      option.text = listSetting.filterSettingSet[key].name || key;
+      settingSelect.appendChild(option);
+    }
+    settingSelect.value = currentKey;
+    settingSelect.addEventListener('change', () => {
+      currentKey = settingSelect.value;
+      const newSetting = listSetting.filterSettingSet[currentKey];
+      console.log('DEBUG', currentKey, newSetting);
+      new ListFilter(list, newSetting).apply();
+      refreshBasicControls(newSetting.list[0], currentKey);
+    });
+    const currentSetting = () => {
+      return listSetting.filterSettingSet[settingSelect.value];
+    };
+    const currentFirstSetting = () => {
+      return currentSetting().list[0];
+    }
 
     // input とラジオボタンを横並びにするラッパー
     const topRow = document.createElement('div');
@@ -732,31 +815,32 @@ class ControlFactory {
     topRow.appendChild(errorMessage); // input, invertBox, saveButton の行に追加
     topRow.appendChild(invertBox);
     topRow.appendChild(saveButton);
+    topRow.appendChild(settingSelect);
 
     // 他のチェックボックスはそのまま
     const markerBox = this.createCheckbox('Marker', setting.marker, (state: boolean) => {
-      setting.marker = state;
-      new ListFilter(list, settingList).apply();
+      currentFirstSetting().marker = state;
+      new ListFilter(list, currentSetting()).apply();
     });
 
     const highlightBox = this.createCheckbox('Highlight', setting.highlight, (state: boolean) => {
-      setting.highlight = state;
-      new ListFilter(list, settingList).apply();
+      currentFirstSetting().highlight = state;
+      new ListFilter(list, currentSetting()).apply();
     });
 
     const grayOutBox = this.createCheckbox('GrayOut others', setting.grayOut, (state: boolean) => {
-      setting.grayOut = state;
-      new ListFilter(list, settingList).apply();
+      currentFirstSetting().grayOut = state;
+      new ListFilter(list, currentSetting()).apply();
     });
 
     const narrowBox = this.createCheckbox('Narrow others', setting.narrow, (state: boolean) => {
-      setting.narrow = state;
-      new ListFilter(list, settingList).apply();
+      currentFirstSetting().narrow = state;
+      new ListFilter(list, currentSetting()).apply();
     });
 
     const hideBox = this.createCheckbox('Hide others', setting.hide, (state: boolean) => {
-      setting.hide = state;
-      new ListFilter(list, settingList).apply();
+      currentFirstSetting().hide = state;
+      new ListFilter(list, currentSetting()).apply();
     });
 
     const advancedBtn = document.createElement('button');
@@ -766,20 +850,13 @@ class ControlFactory {
     advancedBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      new AdvancedSettingsModal(settingList, () => {
-        new ListFilter(list, settingList).apply();
-        if (settingList.list.length <= 0) {
+      new AdvancedSettingsModal(listSetting, currentKey, (newSettingList, newCurrentKey) => {
+        new ListFilter(list, newSettingList).apply();
+        if (newSettingList.list.length <= 0) {
           throw new Error('Violation. The settingList is Empty.');
         }
         // 基本コントロールの状態を更新
-        const firstSetting = settingList.list[0];
-        input.value = firstSetting.regex?.source ?? '';
-        (invertBox.firstChild as HTMLInputElement).checked = firstSetting.invertMatch;
-        (markerBox.firstChild as HTMLInputElement).checked = firstSetting.marker;
-        (highlightBox.firstChild as HTMLInputElement).checked = firstSetting.highlight;
-        (grayOutBox.firstChild as HTMLInputElement).checked = firstSetting.grayOut;
-        (narrowBox.firstChild as HTMLInputElement).checked = firstSetting.narrow;
-        (hideBox.firstChild as HTMLInputElement).checked = firstSetting.hide;
+        refreshBasicControls(newSettingList.list[0], newCurrentKey);
       }).open();
     });
 
@@ -798,6 +875,27 @@ class ControlFactory {
     wrapper.appendChild(advancedBtn);
 
     return wrapper;
+
+    /**
+     * 基本コントロール群の表示をリフレッシュ
+     */
+    function refreshBasicControls(firstSetting: FilterSettingInterface, newCurrentKey: string) {
+      input.value = firstSetting.regex?.source ?? '';
+      settingSelect.length = 0;
+      for (const key in listSetting.filterSettingSet) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.text = listSetting.filterSettingSet[key].name || key;
+        settingSelect.appendChild(option);
+      }
+      settingSelect.value = newCurrentKey;
+      (invertBox.firstChild as HTMLInputElement).checked = firstSetting.invertMatch;
+      (markerBox.firstChild as HTMLInputElement).checked = firstSetting.marker;
+      (highlightBox.firstChild as HTMLInputElement).checked = firstSetting.highlight;
+      (grayOutBox.firstChild as HTMLInputElement).checked = firstSetting.grayOut;
+      (narrowBox.firstChild as HTMLInputElement).checked = firstSetting.narrow;
+      (hideBox.firstChild as HTMLInputElement).checked = firstSetting.hide;
+    }
   }
 }
 
@@ -1018,15 +1116,23 @@ function addListilControlsToLists(): void {
     list.dataset.listSettingId = listSettingId;
 
     // ストレージから復元。0件であればデフォルト設定を使う。
-    const listSetting = await (new ListSettingRepository).restore(createStorageKey(list.id));
-    const restoredSettingList = listSetting?.filterSettingSet['setting1'] ?? { list: [defaultSetting] };
+    const listSetting = await (new ListSettingRepository).restore(createStorageKey(list.id)) ?? {
+      name: 'xxxxx',
+      filterSettingSet: {
+        'setting1': {
+          name: 'setting1',
+          list: [defaultSetting]
+        }
+      }
+    };
+    const restoredSettingList = listSetting?.filterSettingSet['setting1'];
     restoredSettingList.list = (restoredSettingList.list.length > 0 ? restoredSettingList.list : [defaultSetting]).map((setting) => {
       // データ仕様変更を考慮してデフォルト設定とマージ
       return { ...defaultSetting, ...setting };
     });
     console.log(`[DEBUG]`, `Loaded setting`, restoredSettingList);
 
-    const controls = (new ControlFactory).createFilterControls(list, restoredSettingList);
+    const controls = (new ControlFactory).createFilterControls(list, listSetting);
     controls.style.display = 'none';
 
     const toggleListBtn = document.createElement('button');
