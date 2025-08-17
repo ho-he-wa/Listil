@@ -38,6 +38,21 @@ const defaultSetting: FilterSettingInterface = {
 };
 
 /**
+ * フィルタ設定セット
+ */
+type FilterSettingSet = {
+  [key: string]: FilterSettingInterface[]
+};
+
+/**
+ * リスト設定インタフェース
+ */
+interface ListSettingInterface {
+  name?: string,
+  filterSettingSet: FilterSettingSet,
+}
+
+/**
  * スタイル追加（mark.js用、表示制御用）
  */
 function injectStyles(): void {
@@ -798,7 +813,7 @@ class ControlFactory {
     saveButton.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      (new ListSettingsRepository).save(createStorageKey(list.id), settingList);
+      (new ListSettingRepository).save(createStorageKey(list.id), { filterSettingSet: { setting1: settingList } });
     });
 
     // input とラジオボタンを横並びにするラッパー
@@ -952,36 +967,34 @@ function findAncestorWithId(el: HTMLElement) {
 
 const SavePrefix = {
   global: 'global:',
-  pageSettings: 'pageSettings:'
+  listSettings: 'listSettings:'
 };
 
 /**
  * 保存キー生成
  */
 function createStorageKey(listId: string, url: string = location.href): string {
-  const wkUrl = SavePrefix.pageSettings + location.href.replace(/[#?].*$/, '');
+  const wkUrl = SavePrefix.listSettings + location.href.replace(/[#?].*$/, '');
   return `${wkUrl}#${listId}`;
-}
-
-class ListSettingsRepository {
+} class ListSettingRepository {
   /**
    * 保存
    */
-  public save(key: string, settingList: FilterSettingInterface[]): void {
-    const serialized = settingList.map(this.serializeSetting);
+  public save(key: string, setting: ListSettingInterface): void {
+    const serialized = this.serializeListSetting(setting);
     chrome.storage.local.set({ [key]: serialized }, () => {
-      console.log(`[listil] Saved setting array for ${key}`);
+      console.log(`[listil] Saved list setting for ${key}`);
     });
   }
 
   /**
    * 復元
    */
-  public async restore(key: string): Promise<FilterSettingInterface[] | null> {
+  public async restore(key: string): Promise<ListSettingInterface | null> {
     return new Promise((resolve) => {
       chrome.storage.local.get([key], (result) => {
-        if (result[key] && Array.isArray(result[key])) {
-          const deserialized = result[key].map(this.deserializeSetting);
+        if (result[key]) {
+          const deserialized = this.deserializeListSetting(result[key]);
           resolve(deserialized);
         } else {
           resolve(null);
@@ -991,9 +1004,42 @@ class ListSettingsRepository {
   }
 
   /**
-   * 設定のシリアライズ
+   * 設定のシリアライズ（ListSettingInterface → JSON）
    */
-  private serializeSetting(setting: FilterSettingInterface): object {
+  private serializeListSetting(setting: ListSettingInterface): object {
+    const serializedFilterSettingSet: { [key: string]: object } = {};
+    for (const key in setting.filterSettingSet) {
+      serializedFilterSettingSet[key] = setting.filterSettingSet[key].map(this.serializeFilterSetting);
+    }
+    return {
+      name: setting.name,
+      filterSettingSet: serializedFilterSettingSet,
+    };
+  }
+
+  /**
+   * 設定のデシリアライズ（JSON → ListSettingInterface）
+   */
+  private deserializeListSetting(serialized: any): ListSettingInterface {
+    const deserializedFilterSettingSet: FilterSettingSet = {};
+    for (const key in serialized.filterSettingSet) {
+      const settingArray = serialized.filterSettingSet[key];
+      if (Array.isArray(settingArray)) {
+        deserializedFilterSettingSet[key] = settingArray.map(this.deserializeFilterSetting);
+      } else {
+        deserializedFilterSettingSet[key] = [];
+      }
+    }
+    return {
+      name: serialized.name,
+      filterSettingSet: deserializedFilterSettingSet,
+    };
+  }
+
+  /**
+   * 個別フィルタ設定のシリアライズ
+   */
+  private serializeFilterSetting(setting: FilterSettingInterface): object {
     return {
       regexSource: setting.regex ? setting.regex.source : null,
       regexFlags: setting.regex ? setting.regex.flags : null,
@@ -1008,18 +1054,18 @@ class ListSettingsRepository {
   }
 
   /**
-   * 設定のデシリアライズ
+   * 個別フィルタ設定のデシリアライズ
    */
-  private deserializeSetting(serialized: any): FilterSettingInterface {
+  private deserializeFilterSetting(serialized: any): FilterSettingInterface {
     let regex: RegExp | null = null;
     try {
       if (serialized.regexSource && serialized.regexFlags !== null) {
         regex = new RegExp(serialized.regexSource, serialized.regexFlags);
       }
     } catch (e) {
-      console.warn('[listil] 正規表現の復元に失敗しました', e);
+      console.error('[listil] 正規表現の復元に失敗しました', e);
+      throw e;
     }
-
     return {
       regex,
       marker: serialized.marker,
@@ -1054,7 +1100,8 @@ function addListilControlsToLists(): void {
     list.dataset.listSettingId = listSettingId;
 
     // ストレージから復元。0件であればデフォルト設定を使う。
-    const restoredSettingList = await (new ListSettingsRepository).restore(createStorageKey(list.id)) ?? [];
+    const listSetting = await (new ListSettingRepository).restore(createStorageKey(list.id));
+    const restoredSettingList = listSetting?.filterSettingSet['setting1'] ?? [];
     const settingList = (restoredSettingList.length > 0 ? restoredSettingList : [defaultSetting]).map((setting) => {
       // データ仕様変更を考慮してデフォルト設定とマージ
       return { ...defaultSetting, ...setting };
