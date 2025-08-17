@@ -1,4 +1,8 @@
 import Mark from "mark.js";
+import { querySelectorAllWithDepth } from "./querySelectorAllWithDepth";
+import { extractValidFormElements } from "./extractValidFormElements";
+import { extractAttributeMaps } from "./extractAttributeMaps";
+import { getContentBoxSize } from "./getContentBoxSize";
 
 console.log("[DEBUG] Content script loaded (mark.js version)");
 
@@ -64,35 +68,6 @@ function injectStyles(): void {
 }
 
 /**
- * 深さ制限付きで指定セレクタに一致する要素を探索する関数
- * 呼び出し時に型パラメータで戻り値の型を指定可能
- *
- * @param root - 探索の起点となるルート要素
- * @param selector - CSS セレクタ文字列
- * @param maxDepth - 探索する最大の深さ（0はルート自身）
- * @returns 条件に一致した要素の配列（指定された型にキャスト）
- */
-function querySelectorAllWithDepth<T extends Element>(
-  root: Element,
-  selector: string,
-  maxDepth: number = 1
-): T[] {
-  const results: T[] = [];
-  const traverse = (node: Element, depth: number): void => {
-    if (depth > maxDepth) return;
-
-    if (node.matches(selector)) {
-      results.push(node as T);  // 明示的にキャスト
-    }
-    for (const child of Array.from(node.children)) {
-      traverse(child, depth + 1);
-    }
-  };
-  traverse(root, 0);
-  return results;
-}
-
-/**
  * コンテンツの領域を検索する
  */
 function findContentContainers(): Element[] {
@@ -119,63 +94,6 @@ function findContentContainers(): Element[] {
   if (result.length === 0) {
     result.push(document.body);
   }
-  return result;
-}
-
-/**
- * 指定要素配下の有効なフォーム要素を抽出する
- * 
- * - 同名がある場合は1つのみ抽出
- */
-function extractValidFormElements(root: Element, withDisabled: boolean = false): Map<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement> {
-  const elements = root.querySelectorAll<HTMLElement>('input, select, textarea');
-  const result = new Map<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>();
-  elements.forEach(el => {
-    if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
-      if (!withDisabled && el.disabled) {
-        return
-      };
-      if (el instanceof HTMLInputElement && (el.type === 'checkbox' || el.type === 'radio') && !el.checked) {
-        return
-      };
-      const key = el.name || el.id;
-      if (!key) {
-        return
-      };
-      result.set(key, el);
-    }
-  });
-  return result;
-}
-
-/**
- * 指定要素配下の要素の data-* 属性および任意の指定属性を抽出して
- * 属性名 → 属性値 の Map の配列を返す。
- *
- * - 同名がある場合は1つのみ抽出
- * @param root - 探索対象のルート要素
- * @param targetAttributes - 抽出対象とする追加属性（例：['href', 'src']）
- * @returns Map<string, string>[] - 属性名をキー、属性値を値とするMapの配列
- */
-function extractAttributeMaps(
-  root: Element,
-  targetAttributes: string[] = ['href']
-): Map<string, string>[] {
-  const result: Map<string, string>[] = [];
-  const elements = root.querySelectorAll<HTMLElement>('*');
-  elements.forEach(el => {
-    // data-* 属性と指定されたその他の属性を抽出
-    const item = new Map<string, string>();
-    Array.from(el.attributes)
-      .filter((attr) => attr.name.startsWith('data-') || targetAttributes.includes(attr.name))
-      .forEach(attr => {
-        console.log('DEBUG attribute:', attr);
-        item.set(attr.name, attr.value); // e.g., "data-role" => "admin"
-      });
-    if (item.size > 0) {
-      result.push(item);
-    }
-  });
   return result;
 }
 
@@ -269,28 +187,6 @@ function isInvisible(el: HTMLElement): boolean {
   const size = getContentBoxSize(el);
   const invisible = style.display === 'none' || size.width === 0 || size.height === 0;
   return invisible;
-}
-
-/**
- * 指定要素の高さと幅 (パディング含まない) を取得する
- */
-function getContentBoxSize(el: HTMLElement): { width: number, height: number } {
-  const style = window.getComputedStyle(el);
-  const boxSizing = style.boxSizing;
-  let width = el.clientWidth;
-  let height = el.clientHeight;
-  // NOTE : content-box の場合は rect.width = content size なのでそのまま返す
-  if (boxSizing === 'border-box') {
-    // NOTE : clientWidth には padding は含まれるが border は含まれない
-    const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
-    const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
-    width -= paddingX;
-    height -= paddingY;
-  }
-  return {
-    width: Math.max(0, width),
-    height: Math.max(0, height),
-  };
 }
 
 /**
