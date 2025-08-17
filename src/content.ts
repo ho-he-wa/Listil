@@ -884,7 +884,9 @@ const SavePrefix = {
 function createStorageKey(listId: string, _url: string = location.href): string {
   const wkUrl = SavePrefix.listSettings + location.href.replace(/[#?].*$/, '');
   return `${wkUrl}#${listId}`;
-} class ListSettingRepository {
+}
+
+class ListSettingRepository {
   /**
    * 保存
    */
