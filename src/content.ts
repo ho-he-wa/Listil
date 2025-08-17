@@ -41,11 +41,16 @@ const defaultSetting: FilterSettingInterface = {
   narrow: false,
 };
 
+interface FilterSettingList {
+  name?: string,
+  list: FilterSettingInterface[]
+};
+
 /**
  * フィルタ設定セット
  */
 type FilterSettingSet = {
-  [key: string]: FilterSettingInterface[]
+  [key: string]: FilterSettingList
 };
 
 /**
@@ -186,7 +191,7 @@ function isInvisible(el: HTMLElement): boolean {
  */
 class ListFilter {
   private list: HTMLElement;
-  private settingList: FilterSettingInterface[];
+  private settingList: FilterSettingList;
   private listSettingId: string | undefined;
 
   /**
@@ -194,7 +199,7 @@ class ListFilter {
    * @param list 対象リスト
    * @param settingList フィルタ設定の配列
    */
-  constructor(list: HTMLElement, settingList: FilterSettingInterface[]) {
+  constructor(list: HTMLElement, settingList: FilterSettingList) {
     this.list = list;
     this.settingList = settingList;
     this.listSettingId = list.dataset.listSettingId;
@@ -209,7 +214,7 @@ class ListFilter {
     this.removeHighlights();
 
     items.forEach((item: HTMLElement) => {
-      this.settingList.forEach((setting, index) => {
+      this.settingList.list.forEach((setting, index) => {
         this.applyToItem(item, setting, index === 0);
       });
     });
@@ -397,11 +402,11 @@ class ListFilter {
  * アドバンスド設定モーダル
  */
 class AdvancedSettingsModal {
-  private settingList: FilterSettingInterface[];
+  private settingList: FilterSettingList;
   private modal: HTMLDivElement;
   private onchange: () => void;
 
-  constructor(settingList: FilterSettingInterface[], onchange: () => void) {
+  constructor(settingList: FilterSettingList, onchange: () => void) {
     this.settingList = settingList;
     this.modal = this.createModal();
     this.onchange = onchange;
@@ -429,7 +434,7 @@ class AdvancedSettingsModal {
     const listWrapper = document.createElement('div');
     listWrapper.className = 'listil-setting-list';
 
-    this.settingList.forEach((setting, index) => {
+    this.settingList.list.forEach((setting, index) => {
       const item = this.createSettingEditor(setting, index);
       listWrapper.appendChild(item);
     });
@@ -438,8 +443,8 @@ class AdvancedSettingsModal {
     addBtn.textContent = '＋ Add Filter';
     addBtn.addEventListener('click', () => {
       const newSetting = { ...defaultSetting };
-      this.settingList.push(newSetting);
-      const item = this.createSettingEditor(newSetting, this.settingList.length - 1);
+      this.settingList.list.push(newSetting);
+      const item = this.createSettingEditor(newSetting, this.settingList.list.length - 1);
       listWrapper.appendChild(item);
     });
 
@@ -529,11 +534,11 @@ class AdvancedSettingsModal {
     removeBtn.textContent = '🗑';
     removeBtn.title = 'Remove this filter';
     removeBtn.addEventListener('click', () => {
-      if (this.settingList.length <= 1) {
+      if (this.settingList.list.length <= 1) {
         alert('2件以上ある場合のみ削除できます。');
         return;
       }
-      this.settingList.splice(index, 1);
+      this.settingList.list.splice(index, 1);
       this.onchange();
       this.modal.remove(); // 再生成
       this.modal = this.createModal();
@@ -644,12 +649,12 @@ class ControlFactory {
    * @param list 
    * @param settingList
    */
-  public createFilterControls(list: HTMLElement, settingList: FilterSettingInterface[]): HTMLElement {
+  public createFilterControls(list: HTMLElement, settingList: FilterSettingList): HTMLElement {
     // [x] TODO : settingとsettingListの2つあるのは冗長なので整理する
-    if (settingList.length <= 0) {
+    if (settingList.list.length <= 0) {
       throw new Error('Violation. The settingList is Empty.');
     }
-    const setting = settingList[0];
+    const setting = settingList.list[0];
 
     // 正規表現入力
     const input = this.createRegexInput(setting.regex);
@@ -748,11 +753,11 @@ class ControlFactory {
       e.stopImmediatePropagation();
       new AdvancedSettingsModal(settingList, () => {
         new ListFilter(list, settingList).apply();
-        if (settingList.length <= 0) {
+        if (settingList.list.length <= 0) {
           throw new Error('Violation. The settingList is Empty.');
         }
         // 基本コントロールの状態を更新
-        const firstSetting = settingList[0];
+        const firstSetting = settingList.list[0];
         input.value = firstSetting.regex?.source ?? '';
         (invertBox.firstChild as HTMLInputElement).checked = firstSetting.invertMatch;
         (markerBox.firstChild as HTMLInputElement).checked = firstSetting.marker;
@@ -882,8 +887,14 @@ function createStorageKey(listId: string, _url: string = location.href): string 
     return new Promise((resolve) => {
       chrome.storage.local.get([key], (result) => {
         if (result[key]) {
-          const deserialized = this.deserializeListSetting(result[key]);
-          resolve(deserialized);
+          try {
+            const deserialized = this.deserializeListSetting(result[key]);
+            resolve(deserialized);
+          } catch (e) {
+            // デシリアライズ失敗
+            console.warn('[Listil] 保存データのデシリアライズ失敗', e);
+            resolve(null);
+          }
         } else {
           resolve(null);
         }
@@ -895,9 +906,12 @@ function createStorageKey(listId: string, _url: string = location.href): string 
    * 設定のシリアライズ（ListSettingInterface → JSON）
    */
   private serializeListSetting(setting: ListSettingInterface): object {
-    const serializedFilterSettingSet: { [key: string]: object } = {};
+    const serializedFilterSettingSet: { [key: string]: { name?: string, list: any[] } } = {};
     for (const key in setting.filterSettingSet) {
-      serializedFilterSettingSet[key] = setting.filterSettingSet[key].map(this.serializeFilterSetting);
+      serializedFilterSettingSet[key] = {
+        ...setting.filterSettingSet[key]
+      };
+      serializedFilterSettingSet[key].list = setting.filterSettingSet[key].list.map(this.serializeFilterSetting);
     }
     return {
       name: setting.name,
@@ -908,14 +922,25 @@ function createStorageKey(listId: string, _url: string = location.href): string 
   /**
    * 設定のデシリアライズ（JSON → ListSettingInterface）
    */
-  private deserializeListSetting(serialized: any): ListSettingInterface {
+  private deserializeListSetting(serialized: {
+    name?: string,
+    filterSettingSet: {
+      [key: string]: {
+        name?: string,
+        list: any[],
+      }
+    }
+  }): ListSettingInterface {
     const deserializedFilterSettingSet: FilterSettingSet = {};
     for (const key in serialized.filterSettingSet) {
-      const settingArray = serialized.filterSettingSet[key];
-      if (Array.isArray(settingArray)) {
-        deserializedFilterSettingSet[key] = settingArray.map(this.deserializeFilterSetting);
+      const filterSetting = serialized.filterSettingSet[key];
+      deserializedFilterSettingSet[key] = {
+        ...filterSetting
+      };
+      if (Array.isArray(filterSetting.list)) {
+        deserializedFilterSettingSet[key].list = filterSetting.list.map(this.deserializeFilterSetting);
       } else {
-        deserializedFilterSettingSet[key] = [];
+        deserializedFilterSettingSet[key].list = [];
       }
     }
     return {
@@ -989,14 +1014,14 @@ function addListilControlsToLists(): void {
 
     // ストレージから復元。0件であればデフォルト設定を使う。
     const listSetting = await (new ListSettingRepository).restore(createStorageKey(list.id));
-    const restoredSettingList = listSetting?.filterSettingSet['setting1'] ?? [];
-    const settingList = (restoredSettingList.length > 0 ? restoredSettingList : [defaultSetting]).map((setting) => {
+    const restoredSettingList = listSetting?.filterSettingSet['setting1'] ?? { list: [defaultSetting] };
+    restoredSettingList.list = (restoredSettingList.list.length > 0 ? restoredSettingList.list : [defaultSetting]).map((setting) => {
       // データ仕様変更を考慮してデフォルト設定とマージ
       return { ...defaultSetting, ...setting };
     });
-    console.log(`[DEBUG]`, `Loaded setting`, settingList);
+    console.log(`[DEBUG]`, `Loaded setting`, restoredSettingList);
 
-    const controls = (new ControlFactory).createFilterControls(list, settingList);
+    const controls = (new ControlFactory).createFilterControls(list, restoredSettingList);
     controls.style.display = 'none';
 
     const toggleListBtn = document.createElement('button');
@@ -1036,8 +1061,8 @@ function addListilControlsToLists(): void {
     list.parentNode!.insertBefore(toggleBtnDiv, controls);
 
     // 設定復元時はリストのフィルターを適用
-    if (restoredSettingList.length > 0) {
-      new ListFilter(list, settingList).apply();
+    if (restoredSettingList.list.length > 0) {
+      new ListFilter(list, restoredSettingList).apply();
     }
   });
   console.timeEnd(timerName);
