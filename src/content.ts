@@ -950,11 +950,16 @@ function findAncestorWithId(el: HTMLElement) {
   return ancestor;
 }
 
+const SavePrefix = {
+  global: 'global:',
+  pageSettings: 'pageSettings:'
+};
+
 /**
  * 保存キー生成
  */
 function createStorageKey(listId: string, url: string = location.href): string {
-  const wkUrl = location.href.replace(/^https?:\/\//, '').replace(/[#?].*$/, '');
+  const wkUrl = SavePrefix.pageSettings + location.href.replace(/[#?].*$/, '');
   return `${wkUrl}#${listId}`;
 }
 
