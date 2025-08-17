@@ -14,7 +14,7 @@ const PseudoType = {
 /**
  * リスト設定インタフェース
  */
-interface ListSettingsInterface {
+interface ListSettingInterface {
   regex: RegExp | null;
   marker: boolean;
   highlight: boolean;
@@ -26,7 +26,7 @@ interface ListSettingsInterface {
 }
 
 // 初期デフォルト設定
-const defaultSettings: ListSettingsInterface = {
+const defaultSetting: ListSettingInterface = {
   regex: null,
   marker: true,
   highlight: false,
@@ -283,17 +283,17 @@ function getContentBoxSize(el: HTMLElement): { width: number, height: number } {
  */
 class ListFilter {
   private list: HTMLElement;
-  private settingsList: ListSettingsInterface[];
+  private settingList: ListSettingInterface[];
   private listSettingId: string | undefined;
 
   /**
    * 
    * @param list 対象リスト
-   * @param settingsList リスト設定の配列
+   * @param settingList リスト設定の配列
    */
-  constructor(list: HTMLElement, settingsList: ListSettingsInterface[]) {
+  constructor(list: HTMLElement, settingList: ListSettingInterface[]) {
     this.list = list;
-    this.settingsList = settingsList;
+    this.settingList = settingList;
     this.listSettingId = list.dataset.listSettingId;
   }
 
@@ -306,8 +306,8 @@ class ListFilter {
     this.removeHighlights();
 
     items.forEach((item: HTMLElement) => {
-      this.settingsList.forEach((settings, index) => {
-        this.applyToItem(item, settings, index === 0);
+      this.settingList.forEach((setting, index) => {
+        this.applyToItem(item, setting, index === 0);
       });
     });
   }
@@ -331,7 +331,7 @@ class ListFilter {
   /**
    * リストの項目にフィルターを適用
    */
-  public applyToItem(item: HTMLElement, settings: ListSettingsInterface, reset: boolean = true) {
+  public applyToItem(item: HTMLElement, setting: ListSettingInterface, reset: boolean = true) {
     // 元々非表示な要素は無視
     const originallyHidden = (item.dataset.ignore ?? null) == null && isInvisible(item);
     if (originallyHidden || (item.dataset.ignore === 'yes')) {
@@ -344,13 +344,13 @@ class ListFilter {
     reset && this.resetItem(item);
 
     const text: string = item.innerText;
-    const textMatch = settings.regex && text.match(settings.regex) !== null;
+    const textMatch = setting.regex && text.match(setting.regex) !== null;
     let match = textMatch;
     if (!match) {
       const formElements = extractValidFormElements(item, true);
       const formValueMatch = Array.from(formElements).some(([key, formElement]) => {
         console.log('DEBUG', 'form element value: ', { name: key, value: formElement.value });
-        return settings.regex && formElement.value?.match(settings.regex) !== null;
+        return setting.regex && formElement.value?.match(setting.regex) !== null;
       });
       match = formValueMatch;
     }
@@ -360,34 +360,34 @@ class ListFilter {
         console.log('DEBUG', 'element attributes:', attributeMap);
         return Array.from(attributeMap).some(([key, attribute]) => {
           console.log('DEBUG', 'element attribute: ', { attributeName: key, value: attribute });
-          return settings.regex && attribute.match(settings.regex) !== null;
+          return setting.regex && attribute.match(setting.regex) !== null;
         });
       });
       match = attributeMatch;
     }
-    const isMatchedTarget = settings.regex
-      ? settings.matchMode === 'match' ? match : !match
+    const isMatchedTarget = setting.regex
+      ? setting.matchMode === 'match' ? match : !match
       : false;
-    const isNotMatchedTarget = settings.regex
-      ? settings.matchMode === 'match' ? !match : match
+    const isNotMatchedTarget = setting.regex
+      ? setting.matchMode === 'match' ? !match : match
       : false;
 
     if (isMatchedTarget) {
-      if (settings.marker) {
-        this.applyMarkers(item, settings);
+      if (setting.marker) {
+        this.applyMarkers(item, setting);
       }
-      if (settings.highlight) {
+      if (setting.highlight) {
         this.applyHighlights(item);
       }
     }
     if (isNotMatchedTarget) {
-      if (settings.grayOut) {
+      if (setting.grayOut) {
         item.classList.add('listil-grayout');
       }
-      if (settings.hide) {
+      if (setting.hide) {
         item.classList.add('listil-hide');
       }
-      if (settings.narrow) {
+      if (setting.narrow) {
         this.applyNarrow(item);
       }
     }
@@ -453,10 +453,10 @@ class ListFilter {
   /**
    * マーカーを適用
    */
-  private applyMarkers(element: HTMLElement, settings: ListSettingsInterface): void {
+  private applyMarkers(element: HTMLElement, setting: ListSettingInterface): void {
     const instance = new Mark(element);
-    if (settings.regex) {
-      instance.markRegExp(settings.regex, {
+    if (setting.regex) {
+      instance.markRegExp(setting.regex, {
         className: 'listil-custom-mark',
       });
     }
@@ -494,12 +494,12 @@ class ListFilter {
  * アドバンスド設定モーダル
  */
 class AdvancedSettingsModal {
-  private settingsList: ListSettingsInterface[];
+  private settingList: ListSettingInterface[];
   private modal: HTMLDivElement;
   private onchange: () => void;
 
-  constructor(settingsList: ListSettingsInterface[], onchange: () => void) {
-    this.settingsList = settingsList;
+  constructor(settingList: ListSettingInterface[], onchange: () => void) {
+    this.settingList = settingList;
     this.modal = this.createModal();
     this.onchange = onchange;
   }
@@ -526,17 +526,17 @@ class AdvancedSettingsModal {
     const listWrapper = document.createElement('div');
     listWrapper.className = 'listil-setting-list';
 
-    this.settingsList.forEach((settings, index) => {
-      const item = this.createSettingsEditor(settings, index);
+    this.settingList.forEach((setting, index) => {
+      const item = this.createSettingEditor(setting, index);
       listWrapper.appendChild(item);
     });
 
     const addBtn = document.createElement('button');
     addBtn.textContent = '＋ Add Filter';
     addBtn.addEventListener('click', () => {
-      const newSetting = { ...defaultSettings };
-      this.settingsList.push(newSetting);
-      const item = this.createSettingsEditor(newSetting, this.settingsList.length - 1);
+      const newSetting = { ...defaultSetting };
+      this.settingList.push(newSetting);
+      const item = this.createSettingEditor(newSetting, this.settingList.length - 1);
       listWrapper.appendChild(item);
     });
 
@@ -554,7 +554,7 @@ class AdvancedSettingsModal {
     return modal;
   }
 
-  private createSettingsEditor(settings: ListSettingsInterface, index: number): HTMLElement {
+  private createSettingEditor(setting: ListSettingInterface, index: number): HTMLElement {
     const wrapper = document.createElement('div');
     wrapper.className = 'listil-setting-editor';
 
@@ -562,7 +562,7 @@ class AdvancedSettingsModal {
     title.textContent = `#${index + 1}`;
     title.className = 'listil-modal-setting-no';
 
-    const input = (new ControlFactory).createRegexInput(settings.regex);
+    const input = (new ControlFactory).createRegexInput(setting.regex);
     input.className = 'listil-modal-setting-input';
 
     // エラーメッセージ表示用
@@ -576,49 +576,49 @@ class AdvancedSettingsModal {
       e.stopImmediatePropagation();
       const str = input.value.trim();
       if (str === '') {
-        settings.regex = null;
+        setting.regex = null;
         input.style.borderColor = ''; // 通常の枠に戻す
         errorMessage.style.display = 'none';
         this.onchange();
         return;
       }
       try {
-        settings.regex = new RegExp(str, 'gi');
+        setting.regex = new RegExp(str, 'gi');
         // 正常な場合：装飾をリセット
         input.style.borderColor = '';
         errorMessage.style.display = 'none';
         this.onchange();
       } catch (err) {
         // エラーの場合：赤枠＋エラーメッセージ
-        settings.regex = null;
+        setting.regex = null;
         input.style.borderColor = 'red';
         errorMessage.style.display = 'inline';
       }
     });
 
-    const invertCheckbox = (new ControlFactory).createCheckbox('Invert', settings.invertMatch ?? false, (checked) => {
-      settings.invertMatch = checked;
-      settings.matchMode = !checked ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
+    const invertCheckbox = (new ControlFactory).createCheckbox('Invert', setting.invertMatch ?? false, (checked) => {
+      setting.invertMatch = checked;
+      setting.matchMode = !checked ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
       this.onchange();
     });
-    const markerCheckbox = (new ControlFactory).createCheckbox('Marker', settings.marker ?? false, (checked) => {
-      settings.marker = checked;
+    const markerCheckbox = (new ControlFactory).createCheckbox('Marker', setting.marker ?? false, (checked) => {
+      setting.marker = checked;
       this.onchange();
     });
-    const highlightCheckbox = (new ControlFactory).createCheckbox('Highlight', settings.highlight ?? false, (checked) => {
-      settings.highlight = checked;
+    const highlightCheckbox = (new ControlFactory).createCheckbox('Highlight', setting.highlight ?? false, (checked) => {
+      setting.highlight = checked;
       this.onchange();
     });
-    const grayOutCheckbox = (new ControlFactory).createCheckbox('GrayOut other', settings.grayOut ?? false, (checked) => {
-      settings.grayOut = checked;
+    const grayOutCheckbox = (new ControlFactory).createCheckbox('GrayOut other', setting.grayOut ?? false, (checked) => {
+      setting.grayOut = checked;
       this.onchange();
     });
-    const narrowCheckbox = (new ControlFactory).createCheckbox('Narrow other', settings.narrow ?? false, (checked) => {
-      settings.narrow = checked;
+    const narrowCheckbox = (new ControlFactory).createCheckbox('Narrow other', setting.narrow ?? false, (checked) => {
+      setting.narrow = checked;
       this.onchange();
     });
-    const hidecheckbox = (new ControlFactory).createCheckbox('Hide other', settings.hide ?? false, (checked) => {
-      settings.hide = checked;
+    const hidecheckbox = (new ControlFactory).createCheckbox('Hide other', setting.hide ?? false, (checked) => {
+      setting.hide = checked;
       this.onchange();
     });
 
@@ -626,11 +626,11 @@ class AdvancedSettingsModal {
     removeBtn.textContent = '🗑';
     removeBtn.title = 'Remove this filter';
     removeBtn.addEventListener('click', () => {
-      if (this.settingsList.length <= 1) {
+      if (this.settingList.length <= 1) {
         alert('2件以上ある場合のみ削除できます。');
         return;
       }
-      this.settingsList.splice(index, 1);
+      this.settingList.splice(index, 1);
       this.onchange();
       this.modal.remove(); // 再生成
       this.modal = this.createModal();
@@ -739,17 +739,17 @@ class ControlFactory {
    * コントロール UI 作成
    * 
    * @param list 
-   * @param settingsList
+   * @param settingList
    */
-  public createFilterControls(list: HTMLElement, settingsList: ListSettingsInterface[]): HTMLElement {
-    // [x] TODO : settingsとsettingsListの2つあるのは冗長なので整理する
-    if (settingsList.length <= 0) {
-      throw new Error('Violation. The settingsList is Empty.');
+  public createFilterControls(list: HTMLElement, settingList: ListSettingInterface[]): HTMLElement {
+    // [x] TODO : settingとsettingListの2つあるのは冗長なので整理する
+    if (settingList.length <= 0) {
+      throw new Error('Violation. The settingList is Empty.');
     }
-    const settings = settingsList[0];
+    const setting = settingList[0];
 
     // 正規表現入力
-    const input = this.createRegexInput(settings.regex);
+    const input = this.createRegexInput(setting.regex);
     input.className = 'listil-regex-input';
     input.style.marginRight = '10px';
 
@@ -764,31 +764,31 @@ class ControlFactory {
       e.stopImmediatePropagation();
       const str = input.value.trim();
       if (str === '') {
-        settings.regex = null;
+        setting.regex = null;
         input.style.borderColor = ''; // 通常の枠に戻す
         errorMessage.style.display = 'none';
-        new ListFilter(list, settingsList).apply();
+        new ListFilter(list, settingList).apply();
         return;
       }
       try {
-        settings.regex = new RegExp(str, 'gi');
+        setting.regex = new RegExp(str, 'gi');
         // 正常な場合：装飾をリセット
         input.style.borderColor = '';
         errorMessage.style.display = 'none';
-        new ListFilter(list, settingsList).apply();
+        new ListFilter(list, settingList).apply();
       } catch (err) {
         // エラーの場合：赤枠＋エラーメッセージ
-        settings.regex = null;
+        setting.regex = null;
         input.style.borderColor = 'red';
         errorMessage.style.display = 'inline';
       }
     });
 
     // マッチモードラジオボタン群
-    const invertBox = this.createCheckbox('invert matching', settings.invertMatch, (state: boolean) => {
-      settings.invertMatch = state;
-      settings.matchMode = !state ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
-      new ListFilter(list, settingsList).apply();
+    const invertBox = this.createCheckbox('invert matching', setting.invertMatch, (state: boolean) => {
+      setting.invertMatch = state;
+      setting.matchMode = !state ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
+      new ListFilter(list, settingList).apply();
     });
 
     const saveButton = document.createElement('button');
@@ -798,7 +798,7 @@ class ControlFactory {
     saveButton.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      (new ListSettingsRepository).save(createStorageKey(list.id), settingsList);
+      (new ListSettingsRepository).save(createStorageKey(list.id), settingList);
     });
 
     // input とラジオボタンを横並びにするラッパー
@@ -811,29 +811,29 @@ class ControlFactory {
     topRow.appendChild(saveButton);
 
     // 他のチェックボックスはそのまま
-    const markerBox = this.createCheckbox('Marker', settings.marker, (state: boolean) => {
-      settings.marker = state;
-      new ListFilter(list, settingsList).apply();
+    const markerBox = this.createCheckbox('Marker', setting.marker, (state: boolean) => {
+      setting.marker = state;
+      new ListFilter(list, settingList).apply();
     });
 
-    const highlightBox = this.createCheckbox('Highlight', settings.highlight, (state: boolean) => {
-      settings.highlight = state;
-      new ListFilter(list, settingsList).apply();
+    const highlightBox = this.createCheckbox('Highlight', setting.highlight, (state: boolean) => {
+      setting.highlight = state;
+      new ListFilter(list, settingList).apply();
     });
 
-    const grayOutBox = this.createCheckbox('GrayOut others', settings.grayOut, (state: boolean) => {
-      settings.grayOut = state;
-      new ListFilter(list, settingsList).apply();
+    const grayOutBox = this.createCheckbox('GrayOut others', setting.grayOut, (state: boolean) => {
+      setting.grayOut = state;
+      new ListFilter(list, settingList).apply();
     });
 
-    const narrowBox = this.createCheckbox('Narrow others', settings.narrow, (state: boolean) => {
-      settings.narrow = state;
-      new ListFilter(list, settingsList).apply();
+    const narrowBox = this.createCheckbox('Narrow others', setting.narrow, (state: boolean) => {
+      setting.narrow = state;
+      new ListFilter(list, settingList).apply();
     });
 
-    const hideBox = this.createCheckbox('Hide others', settings.hide, (state: boolean) => {
-      settings.hide = state;
-      new ListFilter(list, settingsList).apply();
+    const hideBox = this.createCheckbox('Hide others', setting.hide, (state: boolean) => {
+      setting.hide = state;
+      new ListFilter(list, settingList).apply();
     });
 
     const advancedBtn = document.createElement('button');
@@ -843,20 +843,20 @@ class ControlFactory {
     advancedBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      new AdvancedSettingsModal(settingsList, () => {
-        new ListFilter(list, settingsList).apply();
-        if (settingsList.length <= 0) {
-          throw new Error('Violation. The settingsList is Empty.');
+      new AdvancedSettingsModal(settingList, () => {
+        new ListFilter(list, settingList).apply();
+        if (settingList.length <= 0) {
+          throw new Error('Violation. The settingList is Empty.');
         }
         // 基本コントロールの状態を更新
-        const firstSettings = settingsList[0];
-        input.value = firstSettings.regex?.source ?? '';
-        (invertBox.firstChild as HTMLInputElement).checked = firstSettings.invertMatch;
-        (markerBox.firstChild as HTMLInputElement).checked = firstSettings.marker;
-        (highlightBox.firstChild as HTMLInputElement).checked = firstSettings.highlight;
-        (grayOutBox.firstChild as HTMLInputElement).checked = firstSettings.grayOut;
-        (narrowBox.firstChild as HTMLInputElement).checked = firstSettings.narrow;
-        (hideBox.firstChild as HTMLInputElement).checked = firstSettings.hide;
+        const firstSetting = settingList[0];
+        input.value = firstSetting.regex?.source ?? '';
+        (invertBox.firstChild as HTMLInputElement).checked = firstSetting.invertMatch;
+        (markerBox.firstChild as HTMLInputElement).checked = firstSetting.marker;
+        (highlightBox.firstChild as HTMLInputElement).checked = firstSetting.highlight;
+        (grayOutBox.firstChild as HTMLInputElement).checked = firstSetting.grayOut;
+        (narrowBox.firstChild as HTMLInputElement).checked = firstSetting.narrow;
+        (hideBox.firstChild as HTMLInputElement).checked = firstSetting.hide;
       }).open();
     });
 
@@ -967,21 +967,21 @@ class ListSettingsRepository {
   /**
    * 保存
    */
-  public save(key: string, settingsList: ListSettingsInterface[]): void {
-    const serialized = settingsList.map(this.serializeSettings);
+  public save(key: string, settingList: ListSettingInterface[]): void {
+    const serialized = settingList.map(this.serializeSetting);
     chrome.storage.local.set({ [key]: serialized }, () => {
-      console.log(`[listil] Saved settings array for ${key}`);
+      console.log(`[listil] Saved setting array for ${key}`);
     });
   }
 
   /**
    * 復元
    */
-  public async restore(key: string): Promise<ListSettingsInterface[] | null> {
+  public async restore(key: string): Promise<ListSettingInterface[] | null> {
     return new Promise((resolve) => {
       chrome.storage.local.get([key], (result) => {
         if (result[key] && Array.isArray(result[key])) {
-          const deserialized = result[key].map(this.deserializeSettings);
+          const deserialized = result[key].map(this.deserializeSetting);
           resolve(deserialized);
         } else {
           resolve(null);
@@ -993,24 +993,24 @@ class ListSettingsRepository {
   /**
    * リスト設定のシリアライズ
    */
-  private serializeSettings(settings: ListSettingsInterface): object {
+  private serializeSetting(setting: ListSettingInterface): object {
     return {
-      regexSource: settings.regex ? settings.regex.source : null,
-      regexFlags: settings.regex ? settings.regex.flags : null,
-      marker: settings.marker,
-      highlight: settings.highlight,
-      grayOut: settings.grayOut,
-      hide: settings.hide,
-      invertMatch: settings.invertMatch,
-      matchMode: settings.matchMode,
-      narrow: settings.narrow,
+      regexSource: setting.regex ? setting.regex.source : null,
+      regexFlags: setting.regex ? setting.regex.flags : null,
+      marker: setting.marker,
+      highlight: setting.highlight,
+      grayOut: setting.grayOut,
+      hide: setting.hide,
+      invertMatch: setting.invertMatch,
+      matchMode: setting.matchMode,
+      narrow: setting.narrow,
     };
   }
 
   /**
    * リスト設定のデシリアライズ
    */
-  private deserializeSettings(serialized: any): ListSettingsInterface {
+  private deserializeSetting(serialized: any): ListSettingInterface {
     let regex: RegExp | null = null;
     try {
       if (serialized.regexSource && serialized.regexFlags !== null) {
@@ -1055,13 +1055,13 @@ function addListilControlsToLists(): void {
 
     // ストレージから復元。0件であればデフォルト設定を使う。
     const restoredSettingList = await (new ListSettingsRepository).restore(createStorageKey(list.id)) ?? [];
-    const settingsList = (restoredSettingList.length > 0 ? restoredSettingList : [defaultSettings]).map((settings) => {
+    const settingList = (restoredSettingList.length > 0 ? restoredSettingList : [defaultSetting]).map((setting) => {
       // データ仕様変更を考慮してデフォルト設定とマージ
-      return { ...defaultSettings, ...settings };
+      return { ...defaultSetting, ...setting };
     });
-    console.log(`[DEBUG]`, `Loaded settings`, settingsList);
+    console.log(`[DEBUG]`, `Loaded setting`, settingList);
 
-    const controls = (new ControlFactory).createFilterControls(list, settingsList);
+    const controls = (new ControlFactory).createFilterControls(list, settingList);
     controls.style.display = 'none';
 
     const toggleListBtn = document.createElement('button');
@@ -1102,7 +1102,7 @@ function addListilControlsToLists(): void {
 
     // リスト設定復元時はリストのフィルターを適用
     if (restoredSettingList.length > 0) {
-      new ListFilter(list, settingsList).apply();
+      new ListFilter(list, settingList).apply();
     }
   });
   console.timeEnd(timerName);
