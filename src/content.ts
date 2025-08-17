@@ -12,9 +12,9 @@ const PseudoType = {
 } as const;
 
 /**
- * リスト設定インタフェース
+ * フィルタ設定インタフェース
  */
-interface ListSettingInterface {
+interface FilterSettingInterface {
   regex: RegExp | null;
   marker: boolean;
   highlight: boolean;
@@ -26,7 +26,7 @@ interface ListSettingInterface {
 }
 
 // 初期デフォルト設定
-const defaultSetting: ListSettingInterface = {
+const defaultSetting: FilterSettingInterface = {
   regex: null,
   marker: true,
   highlight: false,
@@ -283,15 +283,15 @@ function getContentBoxSize(el: HTMLElement): { width: number, height: number } {
  */
 class ListFilter {
   private list: HTMLElement;
-  private settingList: ListSettingInterface[];
+  private settingList: FilterSettingInterface[];
   private listSettingId: string | undefined;
 
   /**
    * 
    * @param list 対象リスト
-   * @param settingList リスト設定の配列
+   * @param settingList フィルタ設定の配列
    */
-  constructor(list: HTMLElement, settingList: ListSettingInterface[]) {
+  constructor(list: HTMLElement, settingList: FilterSettingInterface[]) {
     this.list = list;
     this.settingList = settingList;
     this.listSettingId = list.dataset.listSettingId;
@@ -331,7 +331,7 @@ class ListFilter {
   /**
    * リストの項目にフィルターを適用
    */
-  public applyToItem(item: HTMLElement, setting: ListSettingInterface, reset: boolean = true) {
+  public applyToItem(item: HTMLElement, setting: FilterSettingInterface, reset: boolean = true) {
     // 元々非表示な要素は無視
     const originallyHidden = (item.dataset.ignore ?? null) == null && isInvisible(item);
     if (originallyHidden || (item.dataset.ignore === 'yes')) {
@@ -453,7 +453,7 @@ class ListFilter {
   /**
    * マーカーを適用
    */
-  private applyMarkers(element: HTMLElement, setting: ListSettingInterface): void {
+  private applyMarkers(element: HTMLElement, setting: FilterSettingInterface): void {
     const instance = new Mark(element);
     if (setting.regex) {
       instance.markRegExp(setting.regex, {
@@ -494,11 +494,11 @@ class ListFilter {
  * アドバンスド設定モーダル
  */
 class AdvancedSettingsModal {
-  private settingList: ListSettingInterface[];
+  private settingList: FilterSettingInterface[];
   private modal: HTMLDivElement;
   private onchange: () => void;
 
-  constructor(settingList: ListSettingInterface[], onchange: () => void) {
+  constructor(settingList: FilterSettingInterface[], onchange: () => void) {
     this.settingList = settingList;
     this.modal = this.createModal();
     this.onchange = onchange;
@@ -554,7 +554,7 @@ class AdvancedSettingsModal {
     return modal;
   }
 
-  private createSettingEditor(setting: ListSettingInterface, index: number): HTMLElement {
+  private createSettingEditor(setting: FilterSettingInterface, index: number): HTMLElement {
     const wrapper = document.createElement('div');
     wrapper.className = 'listil-setting-editor';
 
@@ -741,7 +741,7 @@ class ControlFactory {
    * @param list 
    * @param settingList
    */
-  public createFilterControls(list: HTMLElement, settingList: ListSettingInterface[]): HTMLElement {
+  public createFilterControls(list: HTMLElement, settingList: FilterSettingInterface[]): HTMLElement {
     // [x] TODO : settingとsettingListの2つあるのは冗長なので整理する
     if (settingList.length <= 0) {
       throw new Error('Violation. The settingList is Empty.');
@@ -967,7 +967,7 @@ class ListSettingsRepository {
   /**
    * 保存
    */
-  public save(key: string, settingList: ListSettingInterface[]): void {
+  public save(key: string, settingList: FilterSettingInterface[]): void {
     const serialized = settingList.map(this.serializeSetting);
     chrome.storage.local.set({ [key]: serialized }, () => {
       console.log(`[listil] Saved setting array for ${key}`);
@@ -977,7 +977,7 @@ class ListSettingsRepository {
   /**
    * 復元
    */
-  public async restore(key: string): Promise<ListSettingInterface[] | null> {
+  public async restore(key: string): Promise<FilterSettingInterface[] | null> {
     return new Promise((resolve) => {
       chrome.storage.local.get([key], (result) => {
         if (result[key] && Array.isArray(result[key])) {
@@ -991,9 +991,9 @@ class ListSettingsRepository {
   }
 
   /**
-   * リスト設定のシリアライズ
+   * 設定のシリアライズ
    */
-  private serializeSetting(setting: ListSettingInterface): object {
+  private serializeSetting(setting: FilterSettingInterface): object {
     return {
       regexSource: setting.regex ? setting.regex.source : null,
       regexFlags: setting.regex ? setting.regex.flags : null,
@@ -1008,9 +1008,9 @@ class ListSettingsRepository {
   }
 
   /**
-   * リスト設定のデシリアライズ
+   * 設定のデシリアライズ
    */
-  private deserializeSetting(serialized: any): ListSettingInterface {
+  private deserializeSetting(serialized: any): FilterSettingInterface {
     let regex: RegExp | null = null;
     try {
       if (serialized.regexSource && serialized.regexFlags !== null) {
@@ -1100,7 +1100,7 @@ function addListilControlsToLists(): void {
     list.parentNode!.insertBefore(controls, list);
     list.parentNode!.insertBefore(toggleBtnDiv, controls);
 
-    // リスト設定復元時はリストのフィルターを適用
+    // 設定復元時はリストのフィルターを適用
     if (restoredSettingList.length > 0) {
       new ListFilter(list, settingList).apply();
     }
