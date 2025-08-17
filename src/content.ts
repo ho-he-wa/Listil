@@ -29,6 +29,21 @@ interface FilterSettingInterface {
   narrow: boolean;
 }
 
+/**
+ * フィルタ設定インタフェース(シリアライズド)
+ */
+interface SerializedFilterSettingInterface {
+  regexSource: string | null;
+  regexFlags: string | null;
+  marker: boolean;
+  highlight: boolean;
+  grayOut: boolean;
+  hide: boolean;
+  invertMatch: boolean;
+  matchMode: MatchMode; // [ ] TODO : invertMatch採用前の設定。不要であれば削除する。
+  narrow: boolean;
+}
+
 // 初期デフォルト設定
 const defaultSetting: FilterSettingInterface = {
   regex: null,
@@ -41,24 +56,24 @@ const defaultSetting: FilterSettingInterface = {
   narrow: false,
 };
 
-interface FilterSettingList {
+interface FilterSettingList<T extends FilterSettingInterface | SerializedFilterSettingInterface = FilterSettingInterface> {
   name?: string,
-  list: FilterSettingInterface[]
+  list: T[]
 };
 
 /**
  * フィルタ設定セット
  */
-type FilterSettingSet = {
-  [key: string]: FilterSettingList
+type FilterSettingSet<T extends FilterSettingInterface | SerializedFilterSettingInterface = FilterSettingInterface> = {
+  [key: string]: FilterSettingList<T>
 };
 
 /**
  * リスト設定インタフェース
  */
-interface ListSettingInterface {
+interface ListSettingInterface<T extends FilterSettingInterface | SerializedFilterSettingInterface = FilterSettingInterface> {
   name?: string,
-  filterSettingSet: FilterSettingSet,
+  filterSettingSet: FilterSettingSet<T>,
 }
 
 /**
@@ -905,13 +920,13 @@ function createStorageKey(listId: string, _url: string = location.href): string 
   /**
    * 設定のシリアライズ（ListSettingInterface → JSON）
    */
-  private serializeListSetting(setting: ListSettingInterface): object {
-    const serializedFilterSettingSet: { [key: string]: { name?: string, list: any[] } } = {};
+  private serializeListSetting(setting: ListSettingInterface): ListSettingInterface<SerializedFilterSettingInterface> {
+    const serializedFilterSettingSet: FilterSettingSet<SerializedFilterSettingInterface> = {};
     for (const key in setting.filterSettingSet) {
       serializedFilterSettingSet[key] = {
-        ...setting.filterSettingSet[key]
+        name: setting.filterSettingSet[key].name ?? undefined,
+        list: setting.filterSettingSet[key].list.map(this.serializeFilterSetting),
       };
-      serializedFilterSettingSet[key].list = setting.filterSettingSet[key].list.map(this.serializeFilterSetting);
     }
     return {
       name: setting.name,
@@ -922,26 +937,14 @@ function createStorageKey(listId: string, _url: string = location.href): string 
   /**
    * 設定のデシリアライズ（JSON → ListSettingInterface）
    */
-  private deserializeListSetting(serialized: {
-    name?: string,
-    filterSettingSet: {
-      [key: string]: {
-        name?: string,
-        list: any[],
-      }
-    }
-  }): ListSettingInterface {
+  private deserializeListSetting(serialized: ListSettingInterface<SerializedFilterSettingInterface>): ListSettingInterface {
     const deserializedFilterSettingSet: FilterSettingSet = {};
     for (const key in serialized.filterSettingSet) {
       const filterSetting = serialized.filterSettingSet[key];
       deserializedFilterSettingSet[key] = {
-        ...filterSetting
+        name: filterSetting.name ?? undefined,
+        list: Array.isArray(filterSetting.list) ? filterSetting.list.map(this.deserializeFilterSetting) : [],
       };
-      if (Array.isArray(filterSetting.list)) {
-        deserializedFilterSettingSet[key].list = filterSetting.list.map(this.deserializeFilterSetting);
-      } else {
-        deserializedFilterSettingSet[key].list = [];
-      }
     }
     return {
       name: serialized.name,
@@ -952,7 +955,7 @@ function createStorageKey(listId: string, _url: string = location.href): string 
   /**
    * 個別フィルタ設定のシリアライズ
    */
-  private serializeFilterSetting(setting: FilterSettingInterface): object {
+  private serializeFilterSetting(setting: FilterSettingInterface): SerializedFilterSettingInterface {
     return {
       regexSource: setting.regex ? setting.regex.source : null,
       regexFlags: setting.regex ? setting.regex.flags : null,
@@ -969,7 +972,7 @@ function createStorageKey(listId: string, _url: string = location.href): string 
   /**
    * 個別フィルタ設定のデシリアライズ
    */
-  private deserializeFilterSetting(serialized: any): FilterSettingInterface {
+  private deserializeFilterSetting(serialized: SerializedFilterSettingInterface): FilterSettingInterface {
     let regex: RegExp | null = null;
     try {
       if (serialized.regexSource && serialized.regexFlags !== null) {
