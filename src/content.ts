@@ -1185,3 +1185,40 @@ if (document.readyState === 'loading') {
 } else {
   addListilControlsToLists();
 }
+
+const monitorByMutationObserver = true;
+// MutationObserverで再描画を監視 (Reactサイト用)
+// NOTE : 試験的機能。今のところ実用的ではない。再描画に合わせてコントロールを再追加することはできているがまだ実用可能とはいえない。
+// BUG : フィルタ適用でコントロールが増殖したり、リスト全体が表示されなくなることがある
+// NOTE : manifest.jsonで `"run_at": "document_idle"` (Reactの初期レンダリングが完了した後にスクリプトを実行) を設定すること。
+monitorByMutationObserver && window.addEventListener('load', () => {
+  const observer = new MutationObserver((mutationsList) => {
+    for (const mutation of mutationsList) {
+      let shouldBreak = false;
+      mutation.addedNodes.forEach((node) => {
+        if (shouldBreak) { return; }
+        if (!(node instanceof HTMLElement)) { return; }
+        if (node.nodeType !== Node.ELEMENT_NODE) { return; };
+        // 要素およびその子孫が無視条件にマッチするならば無視
+        if (node.matches('[class*="listil-"]')) { return; };
+        if (node.querySelector('[class*="listil-"]')) { return; };
+
+        // コントロールを削除
+        console.log('[DEBUG] DOM change detected. Executing cleanup and re-add controls...');
+        const elements = document.querySelectorAll('[class*="listil-"]');
+        elements.forEach(el => el.remove());
+        // コントロールを追加
+        addListilControlsToLists();
+        shouldBreak = true;
+      });
+    }
+  });
+  observer.observe(document.body, {
+    /** 子要素の追加・削除を監視 (true:監視する) */
+    childList: true,
+    /** その要素の中のすべての子孫（ネストした要素全部）も監視 (true:監視する) */
+    subtree: true,
+    /** 属性の変更も検知 (true:検知する) */
+    attributes: false
+  });
+});

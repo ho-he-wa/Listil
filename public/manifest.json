@@ -27,7 +27,8 @@
       ],
       "css": [
         "toggle.css"
-      ]
+      ],
+      "run_at": "document_idle"
     }
   ]
 }
