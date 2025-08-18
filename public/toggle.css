@@ -58,7 +58,7 @@ button.listil-toggle-button {
 }
 
 input.listil-regex-input {
-  display: block;
+  display: block;     
   margin: 5px 0 10px;
   padding: 4px 10px;
   width: 200px;
@@ -99,17 +99,17 @@ mark.listil-custom-mark {
 }
 
 .listil-grayout {
-  opacity: 0.3;
+  opacity: 0.3 !important;
 }
 
 .listil-hide {
-  display: none;
+  display: none !important;
 }
 
 .listil-narrow,
 .listil-narrow>td>* {
-  max-height: 3.0rem;
-  overflow: hidden;
+  max-height: 3.0rem !important;
+  overflow: hidden !important;
 }
 
 
