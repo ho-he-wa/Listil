@@ -1186,7 +1186,7 @@ if (document.readyState === 'loading') {
   addListilControlsToLists();
 }
 
-const monitorByMutationObserver = true;
+const monitorByMutationObserver = false;
 // MutationObserverで再描画を監視 (Reactサイト用)
 // NOTE : 試験的機能。今のところ実用的ではない。再描画に合わせてコントロールを再追加することはできているがまだ実用可能とはいえない。
 // BUG : フィルタ適用でコントロールが増殖したり、リスト全体が表示されなくなることがある
