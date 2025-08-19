@@ -7,23 +7,38 @@
   <title>Popup</title>
   <style>
     body {
-      width: 200px;
-      height: 150px;
+      width: 250px;
+      height: 180px;
       font-family: sans-serif;
       padding: 10px;
     }
 
-    button {
+    button,
+    label {
       width: 100%;
+      margin-top: 10px;
+    }
+
+    #toggle-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
   </style>
 </head>
 
 <body>
   <h1>Popup</h1>
-  <button id="click-me">Click Me</button>
+
+  <div id="toggle-container">
+    <label for="toggle-setting">有効 / 無効</label>
+    <input type="checkbox" id="toggle-setting" />
+  </div>
+
+  <button id="global-settings-btn">グローバル設定</button>
+
   <div id="test-display"></div>
-  <!-- 出力されたJavaScriptファイルを読み込む -->
+
   <script src="./dist/popup.js" defer></script>
 </body>
 
