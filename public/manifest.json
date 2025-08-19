@@ -11,6 +11,11 @@
   "background": {
     "service_worker": "dist/background.js"
   },
+  "options_page": "dashboard.html", 
+  "web_accessible_resources": [{
+    "resources": ["dashboard.html"],
+    "matches": ["<all_urls>"]
+  }],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

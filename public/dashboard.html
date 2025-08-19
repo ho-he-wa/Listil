@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>グローバル設定</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+
+    #toggle-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 300px;
+      margin-top: 20px;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.3);
+    }
+  </style>
+</head>
+<body>
+  <h2>グローバル設定</h2>
+
+  <div id="toggle-container">
+    <label for="global-toggle">拡張機能を有効にする</label>
+    <input type="checkbox" id="global-toggle">
+  </div>
+
+  <script src="dist/dashboard.js" defer></script>
+</body>
+</html>
