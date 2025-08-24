@@ -28,8 +28,8 @@ class ThisDocument {
   currentUrlDisp() {
     return document.getElementById("current-url") as HTMLElement;
   }
-  matchingPatternsDisp() {
-    return document.getElementById("matching-patterns") as HTMLElement;
+  matchedPatternsDisp() {
+    return document.getElementById("matched-patterns") as HTMLElement;
   }
   enabledToggle() {
     return document.getElementById("enabled-in-page") as HTMLInputElement;
@@ -45,6 +45,35 @@ class ThisDocument {
   }
   globalBtn() {
     return document.getElementById("global-settings-btn") as HTMLButtonElement;
+  }
+  matchedatternTemplate() {
+    return document.getElementById(
+      "matched-pattern-template"
+    ) as HTMLTemplateElement;
+  }
+  updateMatchedPatternsDisp(matchedSettings: { [k: string]: PageSettingType }) {
+    this.createMatchedPatternElements(matchedSettings).forEach((element) =>
+      this.matchedPatternsDisp().appendChild(element)
+    );
+  }
+  createMatchedPatternElements(matchedSettings: {
+    [k: string]: PageSettingType;
+  }) {
+    if (Object.values(matchedSettings).length === 0) {
+      const newPatternElement = this.createMatchedPattern("(新規)");
+      return [newPatternElement];
+    }
+    return Object.values(matchedSettings).map((setting) =>
+      this.createMatchedPattern(setting.urlPattern)
+    );
+  }
+  createMatchedPattern(text: string) {
+    const newPatternElement = this.matchedatternTemplate().content.cloneNode(
+      true
+    ) as HTMLElement;
+    const item = newPatternElement.querySelector(".matched-pattern-item")!;
+    item.textContent = text;
+    return newPatternElement;
   }
   formValues(): PageSettingType {
     return {
@@ -73,14 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const urlPattern = matchedSetting?.urlPattern || currentUrl;
 
     thisDocument.currentUrlDisp().textContent = currentUrl;
-    thisDocument.matchingPatternsDisp().textContent = (() => {
-      if (Object.values(matchedSettings).length === 0) {
-        return "(新規)";
-      }
-      return Object.values(matchedSettings)
-        .map((setting) => setting.urlPattern)
-        .join("\n");
-    })();
+    thisDocument.updateMatchedPatternsDisp(matchedSettings);
 
     thisDocument.oldPatternHidden().value = urlPattern;
 

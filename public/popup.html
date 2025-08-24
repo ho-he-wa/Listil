@@ -37,6 +37,13 @@
         font-size: 0.9em;
       }
 
+      .matched-pattern-item {
+        margin-left: 1rem;
+        padding: 4px 6px;
+        background-color: #f0f0f0;
+        font-size: 0.9em;
+      }
+
       /* トグルスイッチ風スタイル */
       .switch {
         position: relative;
@@ -109,7 +116,7 @@
       </div>
       <div class="config-entry">
         <div class="config-label">マッチする保存済URLパターン</div>
-        <div id="matching-patterns" class="config-item"></div>
+        <div id="matched-patterns" class="config-item"></div>
       </div>
       <div class="config-entry">
         <div class="config-label">URL またはパターン</div>
@@ -122,6 +129,9 @@
     <div style="display: none">
       <input type="hidden" id="old-url-pattern" />
     </div>
+    <template id="matched-pattern-template">
+      <div class="matched-pattern-item"></div>
+    </template>
 
     <button id="global-settings-btn">グローバル設定</button>
 
