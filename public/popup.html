@@ -1,95 +1,132 @@
 <!DOCTYPE html>
 <html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ページ別設定</title>
+    <style>
+      body {
+        width: 360px;
+        height: auto;
+        font-family: sans-serif;
+        padding: 10px;
+      }
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Popup</title>
-  <style>
-    body {
-      width: 250px;
-      height: 180px;
-      font-family: sans-serif;
-      padding: 10px;
-    }
+      button,
+      label {
+        width: 100%;
+        margin-top: 10px;
+      }
 
-    button,
-    label {
-      width: 100%;
-      margin-top: 10px;
-    }
+      .config-entry {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .config-label {
+        font-weight: bold;
+        min-width: 50%;
+      }
+      .config-item {
+        min-width: 16rem;
+      }
 
-    #toggle-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+      .error-text {
+        margin-top: 5px;
+        font-size: 0.9em;
+      }
 
-    /* トグルスイッチ風スタイル */
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 66px;
-      height: 24px;
-      margin-left: 10px;
-    }
+      /* トグルスイッチ風スタイル */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 52px;
+        min-width: 52px;
+        max-width: 52px;
+        height: 24px;
+        min-height: 24px;
+        max-height: 24px;
+        margin-left: 10px;
+      }
 
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
 
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      transition: 0.3s;
-      border-radius: 24px;
-    }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.3s;
+        border-radius: 24px;
+      }
 
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: 0.3s;
-      border-radius: 50%;
-    }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+      }
 
-    .switch input:checked+.slider {
-      background-color: #4caf50;
-    }
+      .switch input:checked + .slider {
+        background-color: #4caf50;
+      }
 
-    .switch input:checked+.slider:before {
-      transform: translateX(26px);
-    }
-  </style>
-</head>
+      .switch input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+    </style>
+  </head>
 
-<body>
-  <h1>Popup</h1>
+  <body>
+    <h1>ページ別設定</h1>
 
-  <div id="toggle-container">
-    <label for="toggle-setting">有効 / 無効</label>
-    <label class="switch">
-      <input type="checkbox" id="toggle-setting" />
-      <span class="slider"></span>
-    </label>
-  </div>
+    <div>
+      <div class="config-entry">
+        <div class="config-label">有効 / 無効</div>
+        <label class="switch config-item">
+          <input type="checkbox" id="enabled-in-page" />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+    <div>
+      <div class="config-entry">
+        <div class="config-label">現在のURL</div>
+        <div id="current-url" class="config-item"></div>
+      </div>
+      <div class="config-entry">
+        <div class="config-label">マッチする保存済URLパターン</div>
+        <div id="matching-patterns" class="config-item"></div>
+      </div>
+      <div class="config-entry">
+        <div class="config-label">URL またはパターン</div>
+        <div class="config-item">
+          <input type="text" id="url-pattern" style="width: 100%" />
+          <div id="pattern-status" class="error-text"></div>
+        </div>
+      </div>
+    </div>
+    <div style="display: none">
+      <input type="hidden" id="old-url-pattern" />
+    </div>
 
-  <button id="global-settings-btn">グローバル設定</button>
+    <button id="global-settings-btn">グローバル設定</button>
 
-  <div id="test-display"></div>
+    <div id="test-display"></div>
 
-  <script src="./dist/popup.js" defer></script>
-</body>
-
+    <script src="./dist/popup.js" defer></script>
+  </body>
 </html>
