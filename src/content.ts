@@ -1,18 +1,18 @@
 import Mark from "mark.js";
-import { querySelectorAllWithDepth } from "./querySelectorAllWithDepth";
-import { extractValidFormElements } from "./extractValidFormElements";
-import { extractAttributeMaps } from "./extractAttributeMaps";
-import { getContentBoxSize } from "./getContentBoxSize";
+import { querySelectorAllWithDepth } from "./Dom/querySelectorAllWithDepth";
+import { extractValidFormElements } from "./Dom/extractValidFormElements";
+import { extractAttributeMaps } from "./Dom/extractAttributeMaps";
+import { getContentBoxSize } from "./Dom/getContentBoxSize";
 
 console.log("[DEBUG] Content script loaded (mark.js version)");
 
 /**
  * パターンマッチのモード(マッチする、マッチしない)
  */
-type MatchMode = 'match' | 'not match';
+type MatchMode = "match" | "not match";
 const PseudoType = {
-  list: 'list',
-  listitem: 'listitem',
+  list: "list",
+  listitem: "listitem",
 } as const;
 
 /**
@@ -52,35 +52,47 @@ const defaultSetting: FilterSettingInterface = {
   grayOut: false,
   hide: false,
   invertMatch: false,
-  matchMode: 'match',
+  matchMode: "match",
   narrow: false,
 };
 
-interface FilterSettingList<T extends FilterSettingInterface | SerializedFilterSettingInterface = FilterSettingInterface> {
-  name?: string,
-  list: T[]
-};
+interface FilterSettingList<
+  T extends
+    | FilterSettingInterface
+    | SerializedFilterSettingInterface = FilterSettingInterface
+> {
+  name?: string;
+  list: T[];
+}
 
 /**
  * フィルタ設定セット
  */
-type FilterSettingSet<T extends FilterSettingInterface | SerializedFilterSettingInterface = FilterSettingInterface> = {
-  [key: string]: FilterSettingList<T>
+type FilterSettingSet<
+  T extends
+    | FilterSettingInterface
+    | SerializedFilterSettingInterface = FilterSettingInterface
+> = {
+  [key: string]: FilterSettingList<T>;
 };
 
 /**
  * リスト設定インタフェース
  */
-interface ListSettingInterface<T extends FilterSettingInterface | SerializedFilterSettingInterface = FilterSettingInterface> {
-  name?: string,
-  filterSettingSet: FilterSettingSet<T>,
+interface ListSettingInterface<
+  T extends
+    | FilterSettingInterface
+    | SerializedFilterSettingInterface = FilterSettingInterface
+> {
+  name?: string;
+  filterSettingSet: FilterSettingSet<T>;
 }
 
 /**
  * スタイル追加（mark.js用、表示制御用）
  */
 function injectStyles(): void {
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   // NOTE : 基本的にcssファイルにスタイルを設定
   style.textContent = `
   `;
@@ -93,7 +105,7 @@ function injectStyles(): void {
 function findContentContainers(): Element[] {
   const seen = new Set<Element>();
   const result: Element[] = [];
-  const contentSelectors = ['main', /* '[id="main"]', '[id="content"]' */];
+  const contentSelectors = ["main" /* '[id="main"]', '[id="content"]' */];
   for (const sel of contentSelectors) {
     // NOTE : 処理が重たいので該当するものが1つ見つかれば他はスキップ
     if (result.length > 0) {
@@ -121,8 +133,8 @@ function findContentContainers(): Element[] {
  * リストの検索処理
  */
 class ListFinder {
-  private excludeSelector = 'nav, footer, header, #nav, #footer, #header';
-  private excludeSuffixes = ['menu', 'Menu', 'nav', 'Nav'];
+  private excludeSelector = "nav, footer, header, #nav, #footer, #header";
+  private excludeSuffixes = ["menu", "Menu", "nav", "Nav"];
   private contentContainers: Element[];
 
   constructor(contentContainers: Element[]) {
@@ -132,10 +144,12 @@ class ListFinder {
   public findLists(): HTMLElement[] {
     const lists: HTMLElement[] = [];
 
-    this.contentContainers.forEach(container => {
-      const listElements = container.querySelectorAll<HTMLElement>(`ul, ol, table, [data-pseudotype="${PseudoType.list}"]`);
+    this.contentContainers.forEach((container) => {
+      const listElements = container.querySelectorAll<HTMLElement>(
+        `ul, ol, table, [data-pseudotype="${PseudoType.list}"]`
+      );
 
-      listElements.forEach(list => {
+      listElements.forEach((list) => {
         if (!this.isEligibleList(list)) return;
         lists.push(list);
       });
@@ -149,20 +163,26 @@ class ListFinder {
    */
   private isEligibleList(el: HTMLElement): boolean {
     const tag = el.tagName.toLowerCase();
-    console.log('[DEBUG] ' + (el.dataset.pseudotype ?? '-'));
+    console.log("[DEBUG] " + (el.dataset.pseudotype ?? "-"));
 
     // 対象外の要素配下か
     if (el.closest(this.excludeSelector)) return false;
     if (this.hasExcludedAncestor(el)) return false;
 
-    if (tag === 'table') {
+    if (tag === "table") {
       // NOTE : tbodyを挟む場合があるので深さ2を指定
-      return querySelectorAllWithDepth(el, 'tr', 2).length >= 10;
-    } else if (tag === 'ul' || tag === 'ol') {
-      return querySelectorAllWithDepth(el, 'li', 1).length >= 10;
+      return querySelectorAllWithDepth(el, "tr", 2).length >= 10;
+    } else if (tag === "ul" || tag === "ol") {
+      return querySelectorAllWithDepth(el, "li", 1).length >= 10;
     } else if (el.dataset.pseudotype === PseudoType.list) {
-      console.log('[DEBUG] pseudo listitem');
-      return querySelectorAllWithDepth(el, `[data-pseudotype="${PseudoType.listitem}"]`, 1).length >= 10;
+      console.log("[DEBUG] pseudo listitem");
+      return (
+        querySelectorAllWithDepth(
+          el,
+          `[data-pseudotype="${PseudoType.listitem}"]`,
+          1
+        ).length >= 10
+      );
     }
 
     return false;
@@ -174,11 +194,12 @@ class ListFinder {
   private hasExcludedAncestor(el: Element): boolean {
     let current: Element | null = el;
     while (current) {
-      const id = current.id || '';
+      const id = current.id || "";
       const classList = Array.from(current.classList);
 
-      const matches = this.excludeSuffixes.some(suffix =>
-        id.endsWith(suffix) || classList.some(cls => cls.endsWith(suffix))
+      const matches = this.excludeSuffixes.some(
+        (suffix) =>
+          id.endsWith(suffix) || classList.some((cls) => cls.endsWith(suffix))
       );
 
       if (matches) return true;
@@ -190,14 +211,14 @@ class ListFinder {
   }
 }
 
-
 /**
  * 要素は非表示か否か
  */
 function isInvisible(el: HTMLElement): boolean {
   const style = window.getComputedStyle(el);
   const size = getContentBoxSize(el);
-  const invisible = style.display === 'none' || size.width === 0 || size.height === 0;
+  const invisible =
+    style.display === "none" || size.width === 0 || size.height === 0;
   return invisible;
 }
 
@@ -210,7 +231,7 @@ class ListFilter {
   private listSettingId: string | undefined;
 
   /**
-   * 
+   *
    * @param list 対象リスト
    * @param settingList フィルタ設定の配列
    */
@@ -241,12 +262,19 @@ class ListFilter {
   private findListItems() {
     let items: HTMLElement[];
     if (this.list.matches(`[data-pseudotype="${PseudoType.list}"]`)) {
-      items = querySelectorAllWithDepth(this.list, `[data-pseudotype="${PseudoType.listitem}"]`, 1);
+      items = querySelectorAllWithDepth(
+        this.list,
+        `[data-pseudotype="${PseudoType.listitem}"]`,
+        1
+      );
     } else {
       const tag = this.list.tagName.toLowerCase();
-      items = tag === 'table'
-        ? querySelectorAllWithDepth<HTMLElement>(this.list, 'tr', 2).filter((tr) => !this.shouldExcludeTableRow(tr))
-        : querySelectorAllWithDepth(this.list, 'li', 1);
+      items =
+        tag === "table"
+          ? querySelectorAllWithDepth<HTMLElement>(this.list, "tr", 2).filter(
+              (tr) => !this.shouldExcludeTableRow(tr)
+            )
+          : querySelectorAllWithDepth(this.list, "li", 1);
     }
     return items;
   }
@@ -254,14 +282,19 @@ class ListFilter {
   /**
    * リストの項目にフィルターを適用
    */
-  public applyToItem(item: HTMLElement, setting: FilterSettingInterface, reset: boolean = true) {
+  public applyToItem(
+    item: HTMLElement,
+    setting: FilterSettingInterface,
+    reset: boolean = true
+  ) {
     // 元々非表示な要素は無視
-    const originallyHidden = (item.dataset.ignore ?? null) == null && isInvisible(item);
-    if (originallyHidden || (item.dataset.ignore === 'yes')) {
-      item.dataset.ignore = 'yes';
+    const originallyHidden =
+      (item.dataset.ignore ?? null) == null && isInvisible(item);
+    if (originallyHidden || item.dataset.ignore === "yes") {
+      item.dataset.ignore = "yes";
       return;
     }
-    item.dataset.ignore = 'no';
+    item.dataset.ignore = "no";
 
     // 表示リセット
     reset && this.resetItem(item);
@@ -271,28 +304,42 @@ class ListFilter {
     let match = textMatch;
     if (!match) {
       const formElements = extractValidFormElements(item, true);
-      const formValueMatch = Array.from(formElements).some(([key, formElement]) => {
-        console.log('DEBUG', 'form element value: ', { name: key, value: formElement.value });
-        return setting.regex && formElement.value?.match(setting.regex) !== null;
-      });
+      const formValueMatch = Array.from(formElements).some(
+        ([key, formElement]) => {
+          console.log("DEBUG", "form element value: ", {
+            name: key,
+            value: formElement.value,
+          });
+          return (
+            setting.regex && formElement.value?.match(setting.regex) !== null
+          );
+        }
+      );
       match = formValueMatch;
     }
     if (!match) {
       const attributeMaps = extractAttributeMaps(item);
       const attributeMatch = attributeMaps.some((attributeMap) => {
-        console.log('DEBUG', 'element attributes:', attributeMap);
+        console.log("DEBUG", "element attributes:", attributeMap);
         return Array.from(attributeMap).some(([key, attribute]) => {
-          console.log('DEBUG', 'element attribute: ', { attributeName: key, value: attribute });
+          console.log("DEBUG", "element attribute: ", {
+            attributeName: key,
+            value: attribute,
+          });
           return setting.regex && attribute.match(setting.regex) !== null;
         });
       });
       match = attributeMatch;
     }
     const isMatchedTarget = setting.regex
-      ? setting.matchMode === 'match' ? match : !match
+      ? setting.matchMode === "match"
+        ? match
+        : !match
       : false;
     const isNotMatchedTarget = setting.regex
-      ? setting.matchMode === 'match' ? !match : match
+      ? setting.matchMode === "match"
+        ? !match
+        : match
       : false;
 
     if (isMatchedTarget) {
@@ -305,10 +352,10 @@ class ListFilter {
     }
     if (isNotMatchedTarget) {
       if (setting.grayOut) {
-        item.classList.add('listil-grayout');
+        item.classList.add("listil-grayout");
       }
       if (setting.hide) {
-        item.classList.add('listil-hide');
+        item.classList.add("listil-hide");
       }
       if (setting.narrow) {
         this.applyNarrow(item);
@@ -317,14 +364,10 @@ class ListFilter {
   }
 
   public resetItem(item: HTMLElement) {
-    item.classList.remove(
-      'listil-grayout',
-      'listil-hide',
-      'listil-narrow'
-    );
+    item.classList.remove("listil-grayout", "listil-hide", "listil-narrow");
     // trの高さ制限用ラッパーを削除
-    if (item.tagName.toLowerCase() === 'tr') {
-      item.querySelectorAll('.listil-td-inner').forEach(tdInner => {
+    if (item.tagName.toLowerCase() === "tr") {
+      item.querySelectorAll(".listil-td-inner").forEach((tdInner) => {
         const parent = tdInner.parentNode;
         if (!parent) {
           return;
@@ -341,14 +384,18 @@ class ListFilter {
    * 高さ制限を適用
    */
   private applyNarrow(item: HTMLElement) {
-    item.classList.add('listil-narrow');
+    item.classList.add("listil-narrow");
     // trの高さ制限
-    if (item.tagName.toLowerCase() === 'tr') {
-      Array.from(item.children).forEach(trChild => {
-        if (trChild.tagName.toLowerCase() !== 'td') { return; }
-        if (trChild.classList.contains('listil-td-inner')) { return; }
+    if (item.tagName.toLowerCase() === "tr") {
+      Array.from(item.children).forEach((trChild) => {
+        if (trChild.tagName.toLowerCase() !== "td") {
+          return;
+        }
+        if (trChild.classList.contains("listil-td-inner")) {
+          return;
+        }
         const tdInner = document.createElement("div");
-        tdInner.className = 'listil-td-inner';
+        tdInner.className = "listil-td-inner";
         while (trChild.firstChild) {
           tdInner.appendChild(trChild.firstChild);
         }
@@ -359,7 +406,7 @@ class ListFilter {
 
   /**
    * 指定された <tr> 要素が除外対象であるかを判定する
-   * 
+   *
    * 以下の条件に該当する場合、true を返す（＝除外）：
    * - <thead> または <tfoot> 内にある
    * - 子要素に <td> を1つも含まない
@@ -367,7 +414,11 @@ class ListFilter {
    * @returns boolean 除外すべき場合 true、そうでなければ false
    */
   private shouldExcludeTableRow(tr: HTMLElement): boolean {
-    if (tr.closest('thead') || tr.closest('tfoot') || querySelectorAllWithDepth(tr, 'td', 1).length <= 0) {
+    if (
+      tr.closest("thead") ||
+      tr.closest("tfoot") ||
+      querySelectorAllWithDepth(tr, "td", 1).length <= 0
+    ) {
       return true;
     }
     return false;
@@ -376,11 +427,14 @@ class ListFilter {
   /**
    * マーカーを適用
    */
-  private applyMarkers(element: HTMLElement, setting: FilterSettingInterface): void {
+  private applyMarkers(
+    element: HTMLElement,
+    setting: FilterSettingInterface
+  ): void {
     const instance = new Mark(element);
     if (setting.regex) {
       instance.markRegExp(setting.regex, {
-        className: 'listil-custom-mark',
+        className: "listil-custom-mark",
       });
     }
   }
@@ -400,7 +454,7 @@ class ListFilter {
    */
   private applyHighlights(element: HTMLElement): void {
     // 枠線を追加
-    element.classList.add('listil-highlight-item');
+    element.classList.add("listil-highlight-item");
   }
 
   /**
@@ -408,8 +462,8 @@ class ListFilter {
    */
   private removeHighlights(): void {
     if (!this.listSettingId) return;
-    const items = this.list.querySelectorAll('.listil-highlight-item');
-    items.forEach(item => item.classList.remove('listil-highlight-item'));
+    const items = this.list.querySelectorAll(".listil-highlight-item");
+    items.forEach((item) => item.classList.remove("listil-highlight-item"));
   }
 }
 
@@ -420,9 +474,16 @@ class AdvancedSettingsModal {
   private listSetting: ListSettingInterface;
   private currentKey: string;
   private modal: HTMLDivElement;
-  private onchange: (settingList: FilterSettingList, currentKey: string) => void;
+  private onchange: (
+    settingList: FilterSettingList,
+    currentKey: string
+  ) => void;
 
-  constructor(listSetting: ListSettingInterface, currentKey: string, onchange: (settingList: FilterSettingList, currentKey: string) => void) {
+  constructor(
+    listSetting: ListSettingInterface,
+    currentKey: string,
+    onchange: (settingList: FilterSettingList, currentKey: string) => void
+  ) {
     this.listSetting = listSetting;
     this.currentKey = currentKey;
     this.modal = this.createModal();
@@ -438,31 +499,31 @@ class AdvancedSettingsModal {
   }
 
   private createModal(): HTMLDivElement {
-    const modal = document.createElement('div');
-    modal.className = 'listil-modal listil-root';
+    const modal = document.createElement("div");
+    modal.className = "listil-modal listil-root";
 
-    const overlay = document.createElement('div');
-    overlay.className = 'listil-overlay';
-    overlay.addEventListener('click', () => this.close());
+    const overlay = document.createElement("div");
+    overlay.className = "listil-overlay";
+    overlay.addEventListener("click", () => this.close());
 
-    const content = document.createElement('div');
-    content.className = 'listil-modal-content';
+    const content = document.createElement("div");
+    content.className = "listil-modal-content";
 
-    const title = document.createElement('h3');
-    title.textContent = 'Advanced Filter Settings';
-    title.className = 'listil-modal-title';
+    const title = document.createElement("h3");
+    title.textContent = "Advanced Filter Settings";
+    title.className = "listil-modal-title";
 
-    const switchSetting = document.createElement('div');
+    const switchSetting = document.createElement("div");
     // ▼ 設定切り替え用セレクトボックス
-    const settingSelect = document.createElement('select');
+    const settingSelect = document.createElement("select");
     for (const key in this.listSetting.filterSettingSet) {
-      const option = document.createElement('option');
+      const option = document.createElement("option");
       option.value = key;
-      option.text = this.listSetting.filterSettingSet[key].name ?? '';
+      option.text = this.listSetting.filterSettingSet[key].name ?? "";
       settingSelect.appendChild(option);
     }
     settingSelect.value = this.currentKey;
-    settingSelect.addEventListener('change', () => {
+    settingSelect.addEventListener("change", () => {
       this.currentKey = settingSelect.value;
       const newModal = this.createModal();
       this.modal.replaceWith(newModal);
@@ -472,11 +533,11 @@ class AdvancedSettingsModal {
     switchSetting.appendChild(settingSelect);
 
     // ▼ 設定名の変更フィールド
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text';
-    nameInput.value = this.currentSettingList().name ?? '';
-    nameInput.placeholder = '設定名';
-    nameInput.addEventListener('change', (e) => {
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.value = this.currentSettingList().name ?? "";
+    nameInput.placeholder = "設定名";
+    nameInput.addEventListener("change", (e) => {
       this.currentSettingList().name = nameInput.value;
       const newModal = this.createModal();
       this.modal.replaceWith(newModal);
@@ -486,12 +547,12 @@ class AdvancedSettingsModal {
     switchSetting.appendChild(nameInput);
 
     // ▼ 追加ボタン
-    const addButton = document.createElement('button');
-    addButton.textContent = '＋設定をコピー';
-    addButton.addEventListener('click', () => {
+    const addButton = document.createElement("button");
+    addButton.textContent = "＋設定をコピー";
+    addButton.addEventListener("click", () => {
       const newKey = `setting_${Date.now()}`;
       const newFilterSettingList: FilterSettingList = {
-        name: (this.currentSettingList().name ?? '') + ' (Copy)',
+        name: (this.currentSettingList().name ?? "") + " (Copy)",
         list: this.currentSettingList().list.map((filterSetting) => {
           return Object.assign({}, filterSetting);
         }),
@@ -505,26 +566,29 @@ class AdvancedSettingsModal {
     });
     switchSetting.appendChild(addButton);
 
-    const listWrapper = document.createElement('div');
-    listWrapper.className = 'listil-setting-list';
+    const listWrapper = document.createElement("div");
+    listWrapper.className = "listil-setting-list";
 
     this.currentSettingList().list.forEach((setting, index) => {
       const item = this.createSettingEditor(setting, index);
       listWrapper.appendChild(item);
     });
 
-    const addBtn = document.createElement('button');
-    addBtn.textContent = '＋ Add Filter';
-    addBtn.addEventListener('click', () => {
+    const addBtn = document.createElement("button");
+    addBtn.textContent = "＋ Add Filter";
+    addBtn.addEventListener("click", () => {
       const newSetting = { ...defaultSetting };
       this.currentSettingList().list.push(newSetting);
-      const item = this.createSettingEditor(newSetting, this.currentSettingList().list.length - 1);
+      const item = this.createSettingEditor(
+        newSetting,
+        this.currentSettingList().list.length - 1
+      );
       listWrapper.appendChild(item);
     });
 
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = '✖ Close';
-    closeBtn.addEventListener('click', () => this.close());
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "✖ Close";
+    closeBtn.addEventListener("click", () => this.close());
 
     content.appendChild(title);
     content.appendChild(switchSetting);
@@ -537,80 +601,107 @@ class AdvancedSettingsModal {
     return modal;
   }
 
-  private createSettingEditor(setting: FilterSettingInterface, index: number): HTMLElement {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'listil-setting-editor';
+  private createSettingEditor(
+    setting: FilterSettingInterface,
+    index: number
+  ): HTMLElement {
+    const wrapper = document.createElement("div");
+    wrapper.className = "listil-setting-editor";
 
-    const title = document.createElement('h4');
+    const title = document.createElement("h4");
     title.textContent = `#${index + 1}`;
-    title.className = 'listil-modal-setting-no';
+    title.className = "listil-modal-setting-no";
 
-    const input = (new ControlFactory).createRegexInput(setting.regex);
-    input.className = 'listil-modal-setting-input';
+    const input = new ControlFactory().createRegexInput(setting.regex);
+    input.className = "listil-modal-setting-input";
 
     // エラーメッセージ表示用
-    const errorMessage = document.createElement('span');
-    errorMessage.classList.add('listil-validation-error');
-    errorMessage.style.display = 'none';
-    errorMessage.textContent = '無効な正規表現です';
+    const errorMessage = document.createElement("span");
+    errorMessage.classList.add("listil-validation-error");
+    errorMessage.style.display = "none";
+    errorMessage.textContent = "無効な正規表現です";
 
-    input.addEventListener('input', (e) => {
+    input.addEventListener("input", (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
       const str = input.value.trim();
-      if (str === '') {
+      if (str === "") {
         setting.regex = null;
-        input.style.borderColor = ''; // 通常の枠に戻す
-        errorMessage.style.display = 'none';
+        input.style.borderColor = ""; // 通常の枠に戻す
+        errorMessage.style.display = "none";
         this.onchange(this.currentSettingList(), this.currentKey);
         return;
       }
       try {
-        setting.regex = new RegExp(str, 'gi');
+        setting.regex = new RegExp(str, "gi");
         // 正常な場合：装飾をリセット
-        input.style.borderColor = '';
-        errorMessage.style.display = 'none';
+        input.style.borderColor = "";
+        errorMessage.style.display = "none";
         this.onchange(this.currentSettingList(), this.currentKey);
       } catch (err) {
         // エラーの場合：赤枠＋エラーメッセージ
         setting.regex = null;
-        input.style.borderColor = 'red';
-        errorMessage.style.display = 'inline';
+        input.style.borderColor = "red";
+        errorMessage.style.display = "inline";
       }
     });
 
-    const invertCheckbox = (new ControlFactory).createCheckbox('Invert', setting.invertMatch ?? false, (checked) => {
-      setting.invertMatch = checked;
-      setting.matchMode = !checked ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
-      this.onchange(this.currentSettingList(), this.currentKey);
-    });
-    const markerCheckbox = (new ControlFactory).createCheckbox('Marker', setting.marker ?? false, (checked) => {
-      setting.marker = checked;
-      this.onchange(this.currentSettingList(), this.currentKey);
-    });
-    const highlightCheckbox = (new ControlFactory).createCheckbox('Highlight', setting.highlight ?? false, (checked) => {
-      setting.highlight = checked;
-      this.onchange(this.currentSettingList(), this.currentKey);
-    });
-    const grayOutCheckbox = (new ControlFactory).createCheckbox('GrayOut other', setting.grayOut ?? false, (checked) => {
-      setting.grayOut = checked;
-      this.onchange(this.currentSettingList(), this.currentKey);
-    });
-    const narrowCheckbox = (new ControlFactory).createCheckbox('Narrow other', setting.narrow ?? false, (checked) => {
-      setting.narrow = checked;
-      this.onchange(this.currentSettingList(), this.currentKey);
-    });
-    const hidecheckbox = (new ControlFactory).createCheckbox('Hide other', setting.hide ?? false, (checked) => {
-      setting.hide = checked;
-      this.onchange(this.currentSettingList(), this.currentKey);
-    });
+    const invertCheckbox = new ControlFactory().createCheckbox(
+      "Invert",
+      setting.invertMatch ?? false,
+      (checked) => {
+        setting.invertMatch = checked;
+        setting.matchMode = !checked ? "match" : "not match"; // 以前のマッチモードラジオボタンとの互換用
+        this.onchange(this.currentSettingList(), this.currentKey);
+      }
+    );
+    const markerCheckbox = new ControlFactory().createCheckbox(
+      "Marker",
+      setting.marker ?? false,
+      (checked) => {
+        setting.marker = checked;
+        this.onchange(this.currentSettingList(), this.currentKey);
+      }
+    );
+    const highlightCheckbox = new ControlFactory().createCheckbox(
+      "Highlight",
+      setting.highlight ?? false,
+      (checked) => {
+        setting.highlight = checked;
+        this.onchange(this.currentSettingList(), this.currentKey);
+      }
+    );
+    const grayOutCheckbox = new ControlFactory().createCheckbox(
+      "GrayOut other",
+      setting.grayOut ?? false,
+      (checked) => {
+        setting.grayOut = checked;
+        this.onchange(this.currentSettingList(), this.currentKey);
+      }
+    );
+    const narrowCheckbox = new ControlFactory().createCheckbox(
+      "Narrow other",
+      setting.narrow ?? false,
+      (checked) => {
+        setting.narrow = checked;
+        this.onchange(this.currentSettingList(), this.currentKey);
+      }
+    );
+    const hidecheckbox = new ControlFactory().createCheckbox(
+      "Hide other",
+      setting.hide ?? false,
+      (checked) => {
+        setting.hide = checked;
+        this.onchange(this.currentSettingList(), this.currentKey);
+      }
+    );
 
-    const removeBtn = document.createElement('button');
-    removeBtn.textContent = '🗑';
-    removeBtn.title = 'Remove this filter';
-    removeBtn.addEventListener('click', () => {
+    const removeBtn = document.createElement("button");
+    removeBtn.textContent = "🗑";
+    removeBtn.title = "Remove this filter";
+    removeBtn.addEventListener("click", () => {
       if (this.currentSettingList().list.length <= 1) {
-        alert('2件以上ある場合のみ削除できます。');
+        alert("2件以上ある場合のみ削除できます。");
         return;
       }
       this.currentSettingList().list.splice(index, 1);
@@ -620,14 +711,14 @@ class AdvancedSettingsModal {
       this.open();
     });
 
-    const topRow = document.createElement('div');
-    topRow.style.width = '100%';
+    const topRow = document.createElement("div");
+    topRow.style.width = "100%";
     topRow.appendChild(input);
     topRow.appendChild(errorMessage);
     topRow.appendChild(invertCheckbox);
 
-    const fieldset = document.createElement('fieldset');
-    fieldset.className = 'listil-fieldset';
+    const fieldset = document.createElement("fieldset");
+    fieldset.className = "listil-fieldset";
 
     fieldset.appendChild(topRow);
     fieldset.appendChild(markerCheckbox);
@@ -652,19 +743,23 @@ class ControlFactory {
   /**
    * チェックボックス作成
    */
-  public createCheckbox(label: string, checked: boolean, onChange: (checked: boolean) => void): HTMLElement {
-    const wrapper = document.createElement('label');
-    wrapper.style.marginRight = '8px';
+  public createCheckbox(
+    label: string,
+    checked: boolean,
+    onChange: (checked: boolean) => void
+  ): HTMLElement {
+    const wrapper = document.createElement("label");
+    wrapper.style.marginRight = "8px";
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'listil-checkbox';
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "listil-checkbox";
     checkbox.checked = checked;
-    checkbox.style.marginRight = '4px';
+    checkbox.style.marginRight = "4px";
 
-    checkbox.addEventListener('change', (e) => {
+    checkbox.addEventListener("change", (e) => {
       e.preventDefault();
-      e.stopImmediatePropagation()
+      e.stopImmediatePropagation();
       onChange(checkbox.checked);
     });
 
@@ -682,21 +777,21 @@ class ControlFactory {
     checked: boolean,
     onChange: (value: string) => void
   ): HTMLElement {
-    const label = document.createElement('label');
-    label.style.marginRight = '8px';
+    const label = document.createElement("label");
+    label.style.marginRight = "8px";
 
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.className = 'listil-radio';
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.className = "listil-radio";
     radio.name = name;
     radio.value = value;
     radio.checked = checked;
-    radio.style.marginRight = '4px';
+    radio.style.marginRight = "4px";
 
-    radio.addEventListener('change', (e) => {
+    radio.addEventListener("change", (e) => {
       if (radio.checked) {
         e.preventDefault();
-        e.stopImmediatePropagation()
+        e.stopImmediatePropagation();
         onChange(value);
       }
     });
@@ -707,96 +802,103 @@ class ControlFactory {
   }
 
   public createInput(value: string): HTMLInputElement {
-    const input = document.createElement('input');
+    const input = document.createElement("input");
     input.value = value;
     return input;
   }
 
   public createRegexInput(regex: RegExp | null) {
-    const input = this.createInput(regex?.source ?? '');
-    input.placeholder = '正規表現を入力...';
+    const input = this.createInput(regex?.source ?? "");
+    input.placeholder = "正規表現を入力...";
     return input;
   }
 
   /**
    * コントロール UI 作成
-   * 
-   * @param list 
+   *
+   * @param list
    * @param settingList
    */
-  public createFilterControls(list: HTMLElement, listSetting: ListSettingInterface<FilterSettingInterface>): HTMLElement {
-    let currentKey = 'setting1';
+  public createFilterControls(
+    list: HTMLElement,
+    listSetting: ListSettingInterface<FilterSettingInterface>
+  ): HTMLElement {
+    let currentKey = "setting1";
     // [x] TODO : settingとsettingListの2つあるのは冗長なので整理する
     if (listSetting.filterSettingSet[currentKey].list.length <= 0) {
-      throw new Error('Violation. The settingList is Empty.');
+      throw new Error("Violation. The settingList is Empty.");
     }
     const setting = listSetting.filterSettingSet[currentKey].list[0];
 
     // 正規表現入力
     const input = this.createRegexInput(setting.regex);
-    input.className = 'listil-regex-input';
-    input.style.marginRight = '10px';
+    input.className = "listil-regex-input";
+    input.style.marginRight = "10px";
 
     // エラーメッセージ表示用
-    const errorMessage = document.createElement('span');
-    errorMessage.classList.add('listil-validation-error');
-    errorMessage.style.display = 'none'; // 初期状態は非表示
-    errorMessage.textContent = '無効な正規表現です';
+    const errorMessage = document.createElement("span");
+    errorMessage.classList.add("listil-validation-error");
+    errorMessage.style.display = "none"; // 初期状態は非表示
+    errorMessage.textContent = "無効な正規表現です";
 
-    input.addEventListener('input', (e) => {
+    input.addEventListener("input", (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
       const str = input.value.trim();
-      if (str === '') {
+      if (str === "") {
         currentFirstSetting().regex = null;
-        input.style.borderColor = ''; // 通常の枠に戻す
-        errorMessage.style.display = 'none';
+        input.style.borderColor = ""; // 通常の枠に戻す
+        errorMessage.style.display = "none";
         new ListFilter(list, currentSetting()).apply();
         return;
       }
       try {
-        currentFirstSetting().regex = new RegExp(str, 'gi');
+        currentFirstSetting().regex = new RegExp(str, "gi");
         // 正常な場合：装飾をリセット
-        input.style.borderColor = '';
-        errorMessage.style.display = 'none';
+        input.style.borderColor = "";
+        errorMessage.style.display = "none";
         new ListFilter(list, currentSetting()).apply();
       } catch (err) {
         // エラーの場合：赤枠＋エラーメッセージ
         currentFirstSetting().regex = null;
-        input.style.borderColor = 'red';
-        errorMessage.style.display = 'inline';
+        input.style.borderColor = "red";
+        errorMessage.style.display = "inline";
       }
     });
 
     // マッチモードラジオボタン群
-    const invertBox = this.createCheckbox('invert matching', setting.invertMatch, (state: boolean) => {
-      currentFirstSetting().invertMatch = state;
-      currentFirstSetting().matchMode = !state ? 'match' : 'not match'; // 以前のマッチモードラジオボタンとの互換用
-      new ListFilter(list, currentSetting()).apply();
-    });
+    const invertBox = this.createCheckbox(
+      "invert matching",
+      setting.invertMatch,
+      (state: boolean) => {
+        currentFirstSetting().invertMatch = state;
+        currentFirstSetting().matchMode = !state ? "match" : "not match"; // 以前のマッチモードラジオボタンとの互換用
+        new ListFilter(list, currentSetting()).apply();
+      }
+    );
 
-    const saveButton = document.createElement('button');
-    saveButton.textContent = 'Save';
-    saveButton.type = 'button';
-    saveButton.style.marginLeft = '10px';
-    saveButton.addEventListener('click', (e) => {
+    const saveButton = document.createElement("button");
+    saveButton.textContent = "Save";
+    saveButton.type = "button";
+    saveButton.style.marginLeft = "10px";
+    saveButton.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      (new ListSettingRepository).save(createStorageKey(list.id), listSetting);
+      new ListSettingRepository().save(createStorageKey(list.id), listSetting);
     });
 
-    const settingSelect = document.createElement('select');
+    const settingSelect = document.createElement("select");
     for (const key in listSetting.filterSettingSet) {
-      const option = document.createElement('option');
+      const option = document.createElement("option");
       option.value = key;
       option.text = listSetting.filterSettingSet[key].name || key;
       settingSelect.appendChild(option);
     }
     settingSelect.value = currentKey;
-    settingSelect.addEventListener('change', () => {
+    settingSelect.addEventListener("change", () => {
       currentKey = settingSelect.value;
       const newSetting = listSetting.filterSettingSet[currentKey];
-      console.log('DEBUG', currentKey, newSetting);
+      console.log("DEBUG", currentKey, newSetting);
       new ListFilter(list, newSetting).apply();
       refreshBasicControls(newSetting.list[0], currentKey);
     });
@@ -805,11 +907,11 @@ class ControlFactory {
     };
     const currentFirstSetting = () => {
       return currentSetting().list[0];
-    }
+    };
 
     // input とラジオボタンを横並びにするラッパー
-    const topRow = document.createElement('div');
-    topRow.classList.add('listil-top-row');
+    const topRow = document.createElement("div");
+    topRow.classList.add("listil-top-row");
 
     topRow.appendChild(input);
     topRow.appendChild(errorMessage); // input, invertBox, saveButton の行に追加
@@ -818,52 +920,76 @@ class ControlFactory {
     topRow.appendChild(settingSelect);
 
     // 他のチェックボックスはそのまま
-    const markerBox = this.createCheckbox('Marker', setting.marker, (state: boolean) => {
-      currentFirstSetting().marker = state;
-      new ListFilter(list, currentSetting()).apply();
-    });
+    const markerBox = this.createCheckbox(
+      "Marker",
+      setting.marker,
+      (state: boolean) => {
+        currentFirstSetting().marker = state;
+        new ListFilter(list, currentSetting()).apply();
+      }
+    );
 
-    const highlightBox = this.createCheckbox('Highlight', setting.highlight, (state: boolean) => {
-      currentFirstSetting().highlight = state;
-      new ListFilter(list, currentSetting()).apply();
-    });
+    const highlightBox = this.createCheckbox(
+      "Highlight",
+      setting.highlight,
+      (state: boolean) => {
+        currentFirstSetting().highlight = state;
+        new ListFilter(list, currentSetting()).apply();
+      }
+    );
 
-    const grayOutBox = this.createCheckbox('GrayOut others', setting.grayOut, (state: boolean) => {
-      currentFirstSetting().grayOut = state;
-      new ListFilter(list, currentSetting()).apply();
-    });
+    const grayOutBox = this.createCheckbox(
+      "GrayOut others",
+      setting.grayOut,
+      (state: boolean) => {
+        currentFirstSetting().grayOut = state;
+        new ListFilter(list, currentSetting()).apply();
+      }
+    );
 
-    const narrowBox = this.createCheckbox('Narrow others', setting.narrow, (state: boolean) => {
-      currentFirstSetting().narrow = state;
-      new ListFilter(list, currentSetting()).apply();
-    });
+    const narrowBox = this.createCheckbox(
+      "Narrow others",
+      setting.narrow,
+      (state: boolean) => {
+        currentFirstSetting().narrow = state;
+        new ListFilter(list, currentSetting()).apply();
+      }
+    );
 
-    const hideBox = this.createCheckbox('Hide others', setting.hide, (state: boolean) => {
-      currentFirstSetting().hide = state;
-      new ListFilter(list, currentSetting()).apply();
-    });
+    const hideBox = this.createCheckbox(
+      "Hide others",
+      setting.hide,
+      (state: boolean) => {
+        currentFirstSetting().hide = state;
+        new ListFilter(list, currentSetting()).apply();
+      }
+    );
 
-    const advancedBtn = document.createElement('button');
-    advancedBtn.textContent = 'Advanced';
-    advancedBtn.type = 'button';
-    advancedBtn.style.marginLeft = '10px';
-    advancedBtn.addEventListener('click', (e) => {
+    const advancedBtn = document.createElement("button");
+    advancedBtn.textContent = "Advanced";
+    advancedBtn.type = "button";
+    advancedBtn.style.marginLeft = "10px";
+    advancedBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      new AdvancedSettingsModal(listSetting, currentKey, (newSettingList, newCurrentKey) => {
-        new ListFilter(list, newSettingList).apply();
-        if (newSettingList.list.length <= 0) {
-          throw new Error('Violation. The settingList is Empty.');
+      new AdvancedSettingsModal(
+        listSetting,
+        currentKey,
+        (newSettingList, newCurrentKey) => {
+          new ListFilter(list, newSettingList).apply();
+          if (newSettingList.list.length <= 0) {
+            throw new Error("Violation. The settingList is Empty.");
+          }
+          // 基本コントロールの状態を更新
+          refreshBasicControls(newSettingList.list[0], newCurrentKey);
         }
-        // 基本コントロールの状態を更新
-        refreshBasicControls(newSettingList.list[0], newCurrentKey);
-      }).open();
+      ).open();
     });
 
-    const wrapper = document.createElement('div');
-    wrapper.className = 'listil-controls listil-root';
-    const fieldset = document.createElement('fieldset');
-    fieldset.className = 'listil-fieldset';
+    const wrapper = document.createElement("div");
+    wrapper.className = "listil-controls listil-root";
+    const fieldset = document.createElement("fieldset");
+    fieldset.className = "listil-fieldset";
 
     fieldset.appendChild(topRow);
     fieldset.appendChild(markerBox);
@@ -879,20 +1005,26 @@ class ControlFactory {
     /**
      * 基本コントロール群の表示をリフレッシュ
      */
-    function refreshBasicControls(firstSetting: FilterSettingInterface, newCurrentKey: string) {
-      input.value = firstSetting.regex?.source ?? '';
+    function refreshBasicControls(
+      firstSetting: FilterSettingInterface,
+      newCurrentKey: string
+    ) {
+      input.value = firstSetting.regex?.source ?? "";
       settingSelect.length = 0;
       for (const key in listSetting.filterSettingSet) {
-        const option = document.createElement('option');
+        const option = document.createElement("option");
         option.value = key;
         option.text = listSetting.filterSettingSet[key].name || key;
         settingSelect.appendChild(option);
       }
       settingSelect.value = newCurrentKey;
-      (invertBox.firstChild as HTMLInputElement).checked = firstSetting.invertMatch;
+      (invertBox.firstChild as HTMLInputElement).checked =
+        firstSetting.invertMatch;
       (markerBox.firstChild as HTMLInputElement).checked = firstSetting.marker;
-      (highlightBox.firstChild as HTMLInputElement).checked = firstSetting.highlight;
-      (grayOutBox.firstChild as HTMLInputElement).checked = firstSetting.grayOut;
+      (highlightBox.firstChild as HTMLInputElement).checked =
+        firstSetting.highlight;
+      (grayOutBox.firstChild as HTMLInputElement).checked =
+        firstSetting.grayOut;
       (narrowBox.firstChild as HTMLInputElement).checked = firstSetting.narrow;
       (hideBox.firstChild as HTMLInputElement).checked = firstSetting.hide;
     }
@@ -901,12 +1033,14 @@ class ControlFactory {
 
 /**
  * 事実上のリストにlist/listitemの識別タグを付加
- * 
+ *
  * @param root - 探索の起点となるルート要素（デフォルトは document.body）
  */
 function addPseudoType(root: Element = document.body): void {
   const candidateItems = Array.from(
-    root.querySelectorAll<HTMLElement>('div[role="listitem"], p[role="listitem"]')
+    root.querySelectorAll<HTMLElement>(
+      'div[role="listitem"], p[role="listitem"]'
+    )
   );
 
   const groups = new Map<HTMLElement, HTMLElement[]>();
@@ -937,16 +1071,20 @@ function addPseudoType(root: Element = document.body): void {
  * idを付加する。既にidがある場合はスキップ。
  */
 function assignIdToListElements(root: Element = document.body) {
-  const targets = root.querySelectorAll<HTMLElement>(`ul, ol, table, [data-pseudotype="${PseudoType.list}"]`);
+  const targets = root.querySelectorAll<HTMLElement>(
+    `ul, ol, table, [data-pseudotype="${PseudoType.list}"]`
+  );
   const groupCounters = new Map<string, number>();
   targets.forEach((el) => {
-    if (el.id) { return; }
+    if (el.id) {
+      return;
+    }
     // 最も近い id を持つ祖先要素を探す
     const ancestor = findAncestorWithId(el);
     const ancestorId = ancestor ? ancestor.id : undefined;
-    el.setAttribute('data-listil-group', ancestorId ?? '');
+    el.setAttribute("data-listil-group", ancestorId ?? "");
     // group 用に連番管理
-    const groupPrefix = `listil-${ancestorId ?? ''}`;
+    const groupPrefix = `listil-${ancestorId ?? ""}`;
     const count = groupCounters.get(groupPrefix) ?? 0;
     const newId = `${groupPrefix}-list-${count}`;
     groupCounters.set(groupPrefix, count + 1);
@@ -972,15 +1110,18 @@ function findAncestorWithId(el: HTMLElement) {
 }
 
 const SavePrefix = {
-  global: 'global:',
-  listSettings: 'listSettings:'
+  global: "global:",
+  listSettings: "listSettings:",
 };
 
 /**
  * 保存キー生成
  */
-function createStorageKey(listId: string, _url: string = location.href): string {
-  const wkUrl = SavePrefix.listSettings + location.href.replace(/[#?].*$/, '');
+function createStorageKey(
+  listId: string,
+  _url: string = location.href
+): string {
+  const wkUrl = SavePrefix.listSettings + location.href.replace(/[#?].*$/, "");
   return `${wkUrl}#${listId}`;
 }
 
@@ -1007,7 +1148,7 @@ class ListSettingRepository {
             resolve(deserialized);
           } catch (e) {
             // デシリアライズ失敗
-            console.warn('[Listil] 保存データのデシリアライズ失敗', e);
+            console.warn("[Listil] 保存データのデシリアライズ失敗", e);
             resolve(null);
           }
         } else {
@@ -1020,12 +1161,17 @@ class ListSettingRepository {
   /**
    * 設定のシリアライズ（ListSettingInterface → JSON）
    */
-  private serializeListSetting(setting: ListSettingInterface): ListSettingInterface<SerializedFilterSettingInterface> {
-    const serializedFilterSettingSet: FilterSettingSet<SerializedFilterSettingInterface> = {};
+  private serializeListSetting(
+    setting: ListSettingInterface
+  ): ListSettingInterface<SerializedFilterSettingInterface> {
+    const serializedFilterSettingSet: FilterSettingSet<SerializedFilterSettingInterface> =
+      {};
     for (const key in setting.filterSettingSet) {
       serializedFilterSettingSet[key] = {
         name: setting.filterSettingSet[key].name ?? undefined,
-        list: setting.filterSettingSet[key].list.map(this.serializeFilterSetting),
+        list: setting.filterSettingSet[key].list.map(
+          this.serializeFilterSetting
+        ),
       };
     }
     return {
@@ -1037,13 +1183,17 @@ class ListSettingRepository {
   /**
    * 設定のデシリアライズ（JSON → ListSettingInterface）
    */
-  private deserializeListSetting(serialized: ListSettingInterface<SerializedFilterSettingInterface>): ListSettingInterface {
+  private deserializeListSetting(
+    serialized: ListSettingInterface<SerializedFilterSettingInterface>
+  ): ListSettingInterface {
     const deserializedFilterSettingSet: FilterSettingSet = {};
     for (const key in serialized.filterSettingSet) {
       const filterSetting = serialized.filterSettingSet[key];
       deserializedFilterSettingSet[key] = {
         name: filterSetting.name ?? undefined,
-        list: Array.isArray(filterSetting.list) ? filterSetting.list.map(this.deserializeFilterSetting) : [],
+        list: Array.isArray(filterSetting.list)
+          ? filterSetting.list.map(this.deserializeFilterSetting)
+          : [],
       };
     }
     return {
@@ -1055,7 +1205,9 @@ class ListSettingRepository {
   /**
    * 個別フィルタ設定のシリアライズ
    */
-  private serializeFilterSetting(setting: FilterSettingInterface): SerializedFilterSettingInterface {
+  private serializeFilterSetting(
+    setting: FilterSettingInterface
+  ): SerializedFilterSettingInterface {
     return {
       regexSource: setting.regex ? setting.regex.source : null,
       regexFlags: setting.regex ? setting.regex.flags : null,
@@ -1072,14 +1224,16 @@ class ListSettingRepository {
   /**
    * 個別フィルタ設定のデシリアライズ
    */
-  private deserializeFilterSetting(serialized: SerializedFilterSettingInterface): FilterSettingInterface {
+  private deserializeFilterSetting(
+    serialized: SerializedFilterSettingInterface
+  ): FilterSettingInterface {
     let regex: RegExp | null = null;
     try {
       if (serialized.regexSource && serialized.regexFlags !== null) {
         regex = new RegExp(serialized.regexSource, serialized.regexFlags);
       }
     } catch (e) {
-      console.error('[listil] 正規表現の復元に失敗しました', e);
+      console.error("[listil] 正規表現の復元に失敗しました", e);
       throw e;
     }
     return {
@@ -1099,13 +1253,17 @@ class ListSettingRepository {
  * トグルボタンとUI追加
  */
 function addListilControlsToLists(): void {
-  const timerName = '[DEBUG] addListilControlsToLists';
+  const timerName = "[DEBUG] addListilControlsToLists";
   console.time(timerName);
   injectStyles();
   console.timeLog(timerName);
   const contentContainers = findContentContainers();
-  contentContainers.forEach((container) => { addPseudoType(container); });
-  contentContainers.forEach((container) => { assignIdToListElements(container); });
+  contentContainers.forEach((container) => {
+    addPseudoType(container);
+  });
+  contentContainers.forEach((container) => {
+    assignIdToListElements(container);
+  });
   console.timeLog(timerName);
   const finder = new ListFinder(contentContainers);
   const lists = finder.findLists();
@@ -1116,55 +1274,66 @@ function addListilControlsToLists(): void {
     list.dataset.listSettingId = listSettingId;
 
     // ストレージから復元。0件であればデフォルト設定を使う。
-    const listSetting = await (new ListSettingRepository).restore(createStorageKey(list.id)) ?? {
-      name: 'xxxxx',
+    const listSetting = (await new ListSettingRepository().restore(
+      createStorageKey(list.id)
+    )) ?? {
+      name: "xxxxx",
       filterSettingSet: {
-        'setting1': {
-          name: 'setting1',
-          list: [defaultSetting]
-        }
-      }
+        setting1: {
+          name: "setting1",
+          list: [defaultSetting],
+        },
+      },
     };
-    const restoredSettingList = listSetting?.filterSettingSet['setting1'];
-    restoredSettingList.list = (restoredSettingList.list.length > 0 ? restoredSettingList.list : [defaultSetting]).map((setting) => {
+    const restoredSettingList = listSetting?.filterSettingSet["setting1"];
+    restoredSettingList.list = (
+      restoredSettingList.list.length > 0
+        ? restoredSettingList.list
+        : [defaultSetting]
+    ).map((setting) => {
       // データ仕様変更を考慮してデフォルト設定とマージ
       return { ...defaultSetting, ...setting };
     });
     console.log(`[DEBUG]`, `Loaded setting`, restoredSettingList);
 
-    const controls = (new ControlFactory).createFilterControls(list, listSetting);
-    controls.style.display = 'none';
+    const controls = new ControlFactory().createFilterControls(
+      list,
+      listSetting
+    );
+    controls.style.display = "none";
 
-    const toggleListBtn = document.createElement('button');
-    toggleListBtn.type = 'button';
-    toggleListBtn.textContent = 'Hide List';
-    toggleListBtn.className = 'listil-toggle-button';
-    toggleListBtn.style.marginBottom = '6px';
+    const toggleListBtn = document.createElement("button");
+    toggleListBtn.type = "button";
+    toggleListBtn.textContent = "Hide List";
+    toggleListBtn.className = "listil-toggle-button";
+    toggleListBtn.style.marginBottom = "6px";
     let listVisible = true;
-    toggleListBtn.addEventListener('click', (e) => {
+    toggleListBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      e.stopImmediatePropagation()
+      e.stopImmediatePropagation();
       listVisible = !listVisible;
-      list.style.display = listVisible ? '' : 'none';
-      toggleListBtn.textContent = listVisible ? 'Hide List' : 'Show List';
+      list.style.display = listVisible ? "" : "none";
+      toggleListBtn.textContent = listVisible ? "Hide List" : "Show List";
     });
 
-    const toggleControlsBtn = document.createElement('button');
-    toggleControlsBtn.type = 'button';
-    toggleControlsBtn.textContent = 'Show Controls';
-    toggleControlsBtn.className = 'listil-toggle-button';
-    toggleControlsBtn.style.marginBottom = '6px';
+    const toggleControlsBtn = document.createElement("button");
+    toggleControlsBtn.type = "button";
+    toggleControlsBtn.textContent = "Show Controls";
+    toggleControlsBtn.className = "listil-toggle-button";
+    toggleControlsBtn.style.marginBottom = "6px";
     let controlsVisible = false;
-    toggleControlsBtn.addEventListener('click', (e) => {
+    toggleControlsBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      e.stopImmediatePropagation()
+      e.stopImmediatePropagation();
       controlsVisible = !controlsVisible;
-      controls.style.display = controlsVisible ? '' : 'none';
-      toggleControlsBtn.textContent = controlsVisible ? 'Hide Controls' : 'Show Controls';
+      controls.style.display = controlsVisible ? "" : "none";
+      toggleControlsBtn.textContent = controlsVisible
+        ? "Hide Controls"
+        : "Show Controls";
     });
 
-    const toggleBtnDiv = document.createElement('div');
-    toggleBtnDiv.className = 'listil-toggle-button-div listil-root';
+    const toggleBtnDiv = document.createElement("div");
+    toggleBtnDiv.className = "listil-toggle-button-div listil-root";
     toggleBtnDiv.appendChild(toggleListBtn);
     toggleBtnDiv.appendChild(toggleControlsBtn);
 
@@ -1180,8 +1349,8 @@ function addListilControlsToLists(): void {
 }
 
 // --- 実行 ---
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', addListilControlsToLists);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", addListilControlsToLists);
 } else {
   addListilControlsToLists();
 }
@@ -1191,34 +1360,47 @@ const monitorByMutationObserver = false;
 // NOTE : 試験的機能。今のところ実用的ではない。再描画に合わせてコントロールを再追加することはできているがまだ実用可能とはいえない。
 // BUG : フィルタ適用でコントロールが増殖したり、リスト全体が表示されなくなることがある
 // NOTE : manifest.jsonで `"run_at": "document_idle"` (Reactの初期レンダリングが完了した後にスクリプトを実行) を設定すること。
-monitorByMutationObserver && window.addEventListener('load', () => {
-  const observer = new MutationObserver((mutationsList) => {
-    for (const mutation of mutationsList) {
-      let shouldBreak = false;
-      mutation.addedNodes.forEach((node) => {
-        if (shouldBreak) { return; }
-        if (!(node instanceof HTMLElement)) { return; }
-        if (node.nodeType !== Node.ELEMENT_NODE) { return; };
-        // 要素およびその子孫が無視条件にマッチするならば無視
-        if (node.matches('[class*="listil-"]')) { return; };
-        if (node.querySelector('[class*="listil-"]')) { return; };
+monitorByMutationObserver &&
+  window.addEventListener("load", () => {
+    const observer = new MutationObserver((mutationsList) => {
+      for (const mutation of mutationsList) {
+        let shouldBreak = false;
+        mutation.addedNodes.forEach((node) => {
+          if (shouldBreak) {
+            return;
+          }
+          if (!(node instanceof HTMLElement)) {
+            return;
+          }
+          if (node.nodeType !== Node.ELEMENT_NODE) {
+            return;
+          }
+          // 要素およびその子孫が無視条件にマッチするならば無視
+          if (node.matches('[class*="listil-"]')) {
+            return;
+          }
+          if (node.querySelector('[class*="listil-"]')) {
+            return;
+          }
 
-        // コントロールを削除
-        console.log('[DEBUG] DOM change detected. Executing cleanup and re-add controls...');
-        const elements = document.querySelectorAll('[class*="listil-"]');
-        elements.forEach(el => el.remove());
-        // コントロールを追加
-        addListilControlsToLists();
-        shouldBreak = true;
-      });
-    }
+          // コントロールを削除
+          console.log(
+            "[DEBUG] DOM change detected. Executing cleanup and re-add controls..."
+          );
+          const elements = document.querySelectorAll('[class*="listil-"]');
+          elements.forEach((el) => el.remove());
+          // コントロールを追加
+          addListilControlsToLists();
+          shouldBreak = true;
+        });
+      }
+    });
+    observer.observe(document.body, {
+      /** 子要素の追加・削除を監視 (true:監視する) */
+      childList: true,
+      /** その要素の中のすべての子孫（ネストした要素全部）も監視 (true:監視する) */
+      subtree: true,
+      /** 属性の変更も検知 (true:検知する) */
+      attributes: false,
+    });
   });
-  observer.observe(document.body, {
-    /** 子要素の追加・削除を監視 (true:監視する) */
-    childList: true,
-    /** その要素の中のすべての子孫（ネストした要素全部）も監視 (true:監視する) */
-    subtree: true,
-    /** 属性の変更も検知 (true:検知する) */
-    attributes: false
-  });
-});
