@@ -43,7 +43,7 @@ export class PageSettingManager {
       this.storage.get(null, (items) => {
         const settings: Record<string, PageSettingType> = {};
         for (const key in items) {
-          if (!key.startsWith("pageSetting:")) {
+          if (!PageSettingKeyManager.isPageSettingKey(key)) {
             continue;
           }
           settings[key] = items[key];

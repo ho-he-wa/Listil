@@ -21,4 +21,7 @@ export class PageSettingKeyManager {
     }
     return keys;
   }
+  public static isPageSettingKey(key: string) {
+    return key.startsWith("pageSetting:");
+  }
 }
