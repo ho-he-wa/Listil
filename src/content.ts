@@ -1348,12 +1348,32 @@ function addListilControlsToLists(): void {
   console.timeEnd(timerName);
 }
 
+function cleanListilControls() {
+  const elements = document.querySelectorAll('[class*="listil-"]');
+  elements.forEach((el) => el.remove());
+}
+
 // --- 実行 ---
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", addListilControlsToLists);
 } else {
   addListilControlsToLists();
 }
+
+chrome.runtime.onMessage.addListener(
+  (message: { type: string; enabled: boolean }, sender, sendResponse) => {
+    // NOTE: 非同期で応答する場合、リスナー内で return true; が必要
+    if (message.type === "enabled_changed") {
+      if (message.enabled) {
+        addListilControlsToLists();
+        // [ ] TODO コントロール追加時にリストのスタイルを適用する
+      } else {
+        cleanListilControls();
+      }
+      sendResponse({ success: true, data: {} });
+    }
+  }
+);
 
 const monitorByMutationObserver = false;
 // MutationObserverで再描画を監視 (Reactサイト用)
@@ -1387,8 +1407,7 @@ monitorByMutationObserver &&
           console.log(
             "[DEBUG] DOM change detected. Executing cleanup and re-add controls..."
           );
-          const elements = document.querySelectorAll('[class*="listil-"]');
-          elements.forEach((el) => el.remove());
+          cleanListilControls();
           // コントロールを追加
           addListilControlsToLists();
           shouldBreak = true;

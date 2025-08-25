@@ -1,5 +1,6 @@
 // popup.ts
 
+import { GlobalSettingManager } from "./GlobalSetting/GlobalSettingManager";
 import { PageSettingKeyManager } from "./PageSetting/PageSettingKeyManager";
 import { PageSettingManager } from "./PageSetting/PageSettingManager";
 import { PageSettingType } from "./PageSetting/PageSettingType";
@@ -90,6 +91,27 @@ function validateUrlPattern(url: string, urlPattern: string): boolean {
   return true;
 }
 
+/**
+ *
+ * @param url
+ * @returns
+ * @see https://chromeenterprise.google/intl/ja_jp/policies/url-patterns/ chrome suppoted schemes
+ */
+function isRestrictedUrl(url: string) {
+  // const isAllowedUrl =
+  //   url.startsWith("http://") ||
+  //   url.startsWith("https://") ||
+  //   url.startsWith("file://");
+  // return !isAllowedUrl;
+  return (
+    url.startsWith("chrome://") ||
+    url.startsWith("chrome-extension://") ||
+    url.startsWith("devtools://") ||
+    url.startsWith("about:") ||
+    url.startsWith("edge://")
+  );
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const thisDocument = new ThisDocument();
 
@@ -135,12 +157,45 @@ document.addEventListener("DOMContentLoaded", async () => {
       thisDocument.oldPatternHidden().value = newUrlPattern;
     });
 
+    const globalSettingManager = new GlobalSettingManager();
+    const globalSetting = await globalSettingManager.load();
+
     const enabledToggle = thisDocument.enabledToggle();
-    enabledToggle.checked = matchedSetting?.enabled ?? true;
+    enabledToggle.checked =
+      matchedSetting?.enabled ?? globalSetting.enabled ?? true;
     enabledToggle.addEventListener("change", async () => {
+      // 保存
       const foundKey = await pageSettingManager.findKeyByUrl(currentUrl);
       const keyToSave = foundKey ?? createKey(currentUrl);
       pageSettingManager.save(keyToSave, thisDocument.formValues());
+      // タブにメッセージ送信
+      const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      const tab = tabs[0] ?? null;
+      if (tab == null || tab.id == null) {
+        console.warn("タブの URL を取得できません");
+        return;
+      }
+      if (!tab.url || isRestrictedUrl(tab.url ?? "")) {
+        console.warn(
+          `このページには content script を注入できません:${tab.url}`
+        );
+        return;
+      }
+      chrome.tabs.sendMessage(
+        tab.id,
+        {
+          type: "enabled_changed",
+          enabled: thisDocument.formValues().enabled,
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("送信失敗:", chrome.runtime.lastError.message);
+          }
+        }
+      );
     });
 
     thisDocument.globalBtn().addEventListener("click", () => {
