@@ -3,19 +3,17 @@
   "name": "Listil",
   "version": "1.0",
   "description": "A utility for lists that can apply patterns to highlight, gray out, or hide entries.",
-  "permissions": [
-    "storage",
-    "tabs",
-    "scripting"
-  ],
+  "permissions": ["storage", "tabs", "scripting"],
   "background": {
-    "service_worker": "js/background.js"
+    "service_worker": "background.js"
   },
-  "options_page": "dashboard.html", 
-  "web_accessible_resources": [{
-    "resources": ["dashboard.html"],
-    "matches": ["<all_urls>"]
-  }],
+  "options_page": "dashboard.html",
+  "web_accessible_resources": [
+    {
+      "resources": ["dashboard.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -24,15 +22,9 @@
   },
   "content_scripts": [
     {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "js/content.js"
-      ],
-      "css": [
-        "toggle.css"
-      ],
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["toggle.css"],
       "run_at": "document_idle"
     }
   ]
