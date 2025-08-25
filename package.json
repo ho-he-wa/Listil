@@ -7,7 +7,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "vite build",
-    "dev": "vite build --watch"
+    "dev": "concurrently \"npm run dev:content\" \"npm run dev:others\"",
+    "dev:content": "vite build --watch --config vite.config.content.ts",
+    "dev:others": "vite build --watch --config vite.config.ts"
   },
   "keywords": [],
   "author": "",

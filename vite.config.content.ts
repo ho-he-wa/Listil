@@ -8,12 +8,13 @@ export default defineConfig({
     emptyOutDir: false,
     rollupOptions: {
       input: {
-        popup: resolve(__dirname, "src/popup.ts"),
-        background: resolve(__dirname, "src/background.ts"),
-        dashboard: resolve(__dirname, "src/dashboard.ts"),
+        content: resolve(__dirname, "src/content.ts"),
       },
       output: {
         entryFileNames: "[name].js",
+        /** true:import構文を使用しない */
+        inlineDynamicImports: true,
+        format: "iife",
       },
     },
   },
