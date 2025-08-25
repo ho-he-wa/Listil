@@ -9,7 +9,7 @@
     "scripting"
   ],
   "background": {
-    "service_worker": "dist/background.js"
+    "service_worker": "js/background.js"
   },
   "options_page": "dashboard.html", 
   "web_accessible_resources": [{
@@ -28,7 +28,7 @@
         "<all_urls>"
       ],
       "js": [
-        "dist/content.js"
+        "js/content.js"
       ],
       "css": [
         "toggle.css"

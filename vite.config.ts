@@ -3,7 +3,7 @@ import { resolve } from 'path';
 
 export default defineConfig({
   build: {
-    outDir: 'public/dist',
+    outDir: "dist/js",
     emptyOutDir: true, // distを毎回クリア
     rollupOptions: {
       input: {

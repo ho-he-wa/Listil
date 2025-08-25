@@ -7,7 +7,7 @@
     ], // DOM操作とES2020のAPI使用可能
     "module": "ESNext", // モダンなモジュールシステム
     "moduleResolution": "Node", // Node風のモジュール解決
-    "outDir": "public/dist", // 出力先
+    "outDir": "dist", // 出力先
     "rootDir": "src", // ソースコードのルート
     "strict": true, // 厳格な型チェック
     "esModuleInterop": true, // CommonJSとの互換性
