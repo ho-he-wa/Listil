@@ -1352,16 +1352,47 @@ function addListilControlsToLists(): void {
     list.parentNode!.insertBefore(controls, list);
     list.parentNode!.insertBefore(toggleBtnDiv, controls);
 
-    // 設定復元時はリストのフィルターを適用
-    if (restoredSettingList.list.length > 0) {
-      new ListFilter(list, restoredSettingList).apply();
-    }
+    // リストのフィルターを適用
+    new ListFilter(list, restoredSettingList).apply();
   });
   console.timeEnd(timerName);
 }
 
+/**
+ * トグルボタンとUIを削除。フィルタによるスタイルもクリア
+ */
 function cleanListilControls() {
-  const elements = document.querySelectorAll('[class*="listil-"]');
+  const contentContainers = findContentContainers();
+  const finder = new ListFinder(contentContainers);
+  const lists = finder.findLists();
+
+  lists.forEach(async (list: HTMLElement, index: number) => {
+    // ストレージから復元。0件であればデフォルト設定を使う。
+    const listSetting = (await new ListSettingRepository().restore(
+      createStorageKey(list.id)
+    )) ?? {
+      name: "xxxxx",
+      filterSettingSet: {
+        setting1: {
+          name: "setting1",
+          list: [defaultSetting],
+        },
+      },
+    };
+    const restoredSettingList = listSetting?.filterSettingSet["setting1"];
+    restoredSettingList.list = (
+      restoredSettingList.list.length > 0
+        ? restoredSettingList.list
+        : [defaultSetting]
+    ).map((setting) => {
+      // データ仕様変更を考慮してデフォルト設定とマージ
+      return { ...defaultSetting, ...setting };
+    });
+    // リストのフィルターを適用
+    new ListFilter(list, restoredSettingList).clear();
+  });
+
+  const elements = document.querySelectorAll('[class~="listil-root"]');
   elements.forEach((el) => el.remove());
 }
 
@@ -1378,7 +1409,6 @@ chrome.runtime.onMessage.addListener(
     if (message.type === "enabled_changed") {
       if (message.enabled) {
         addListilControlsToLists();
-        // [ ] TODO コントロール追加時にリストのスタイルを適用する
       } else {
         cleanListilControls();
       }
