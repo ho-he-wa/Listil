@@ -1367,29 +1367,12 @@ function cleanListilControls() {
   const lists = finder.findLists();
 
   lists.forEach(async (list: HTMLElement, index: number) => {
-    // ストレージから復元。0件であればデフォルト設定を使う。
-    const listSetting = (await new ListSettingRepository().restore(
-      createStorageKey(list.id)
-    )) ?? {
-      name: "xxxxx",
-      filterSettingSet: {
-        setting1: {
+    // リストのスタイルをクリア。クリアのみなのでダミー設定でフィルターを適用
+    const dummySettingList = {
           name: "setting1",
           list: [defaultSetting],
-        },
-      },
     };
-    const restoredSettingList = listSetting?.filterSettingSet["setting1"];
-    restoredSettingList.list = (
-      restoredSettingList.list.length > 0
-        ? restoredSettingList.list
-        : [defaultSetting]
-    ).map((setting) => {
-      // データ仕様変更を考慮してデフォルト設定とマージ
-      return { ...defaultSetting, ...setting };
-    });
-    // リストのフィルターを適用
-    new ListFilter(list, restoredSettingList).clear();
+    new ListFilter(list, dummySettingList).clear();
   });
 
   const elements = document.querySelectorAll('[class~="listil-root"]');
