@@ -246,13 +246,25 @@ class ListFilter {
    */
   public apply(): void {
     const items = this.findListItems();
-    this.removeMarkers();
-    this.removeHighlights();
+    this.clear();
 
     items.forEach((item: HTMLElement) => {
       this.settingList.list.forEach((setting, index) => {
-        this.applyToItem(item, setting, index === 0);
+        // 前処理で表示リセット済なのでresetオプションは常にfalse
+        this.applyToItem(item, setting, false);
       });
+    });
+  }
+
+  /**
+   * リストのフィルターをクリア
+   */
+  public clear(): void {
+    const items = this.findListItems();
+    this.removeMarkers();
+    this.removeHighlights();
+    items.forEach((item: HTMLElement) => {
+      this.resetItem(item);
     });
   }
 
