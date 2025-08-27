@@ -52,6 +52,9 @@
 button.listil-toggle-button {
   margin: 5px 0;
   padding: 4px 10px;
+  font-size: 12px;
+  max-width: 98px;
+  max-height: 44px;
   background-color: #4CAF50;
   color: white;
   border: none;
