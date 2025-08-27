@@ -1371,8 +1371,8 @@ function cleanListilControls() {
   lists.forEach(async (list: HTMLElement, index: number) => {
     // リストのスタイルをクリア。クリアのみなのでダミー設定でフィルターを適用
     const dummySettingList = {
-          name: "setting1",
-          list: [defaultSetting],
+      name: "setting1",
+      list: [defaultSetting],
     };
     new ListFilter(list, dummySettingList).clear();
   });
@@ -1464,13 +1464,13 @@ monitorByMutationObserver &&
       }
       if (shouldRefresh && document.body.dataset.listilCnt === `${cnt}`) {
         cnt++;
-          // コントロールを削除
-          console.log(
+        // コントロールを削除
+        console.log(
           "DEBUG",
           " DOM change detected. Executing cleanup and re-add controls...",
           cnt
-          );
-          cleanListilControls();
+        );
+        cleanListilControls();
         // 初期化・コントロールを追加
         await initialize();
         document.body.dataset.listilCnt = `${cnt}`;
