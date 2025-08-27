@@ -1407,10 +1407,15 @@ const monitorByMutationObserver = false;
 // NOTE : manifest.jsonで `"run_at": "document_idle"` (Reactの初期レンダリングが完了した後にスクリプトを実行) を設定すること。
 monitorByMutationObserver &&
   window.addEventListener("load", () => {
-    const observer = new MutationObserver((mutationsList) => {
+    let cnt = 0;
+    document.body.dataset.listilCnt = `${cnt}`;
+    const observer = new MutationObserver(async (mutationsList) => {
+      let shouldRefresh = false;
       for (const mutation of mutationsList) {
+        console.log("DEBUG", "mutation", mutation.target.nodeName, mutation);
         let shouldBreak = false;
         mutation.addedNodes.forEach((node) => {
+          console.log("DEBUG", "mutation node", node.nodeName, node);
           if (shouldBreak) {
             return;
           }
@@ -1420,6 +1425,9 @@ monitorByMutationObserver &&
           if (node.nodeType !== Node.ELEMENT_NODE) {
             return;
           }
+          if (!(node.firstChild instanceof HTMLElement)) {
+            return;
+          }
           // 要素およびその子孫が無視条件にマッチするならば無視
           if (node.matches('[class*="listil-"]')) {
             return;
@@ -1427,16 +1435,27 @@ monitorByMutationObserver &&
           if (node.querySelector('[class*="listil-"]')) {
             return;
           }
-
-          // コントロールを削除
-          console.log(
-            "[DEBUG] DOM change detected. Executing cleanup and re-add controls..."
-          );
-          cleanListilControls();
-          // コントロールを追加
-          addListilControlsToLists();
+          if (node.querySelector("[data-listil-checked]")) {
+            console.log("DEBUG", "This DOM Element has already checked.");
+            return;
+          }
+          node.firstChild.dataset.listilChecked = "checked";
+          shouldRefresh = true;
           shouldBreak = true;
         });
+      }
+      if (shouldRefresh && document.body.dataset.listilCnt === `${cnt}`) {
+        cnt++;
+          // コントロールを削除
+          console.log(
+          "DEBUG",
+          " DOM change detected. Executing cleanup and re-add controls...",
+          cnt
+          );
+          cleanListilControls();
+        // 初期化・コントロールを追加
+          addListilControlsToLists();
+        document.body.dataset.listilCnt = `${cnt}`;
       }
     });
     observer.observe(document.body, {
