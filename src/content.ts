@@ -3,6 +3,8 @@ import { querySelectorAllWithDepth } from "./Dom/querySelectorAllWithDepth";
 import { extractValidFormElements } from "./Dom/extractValidFormElements";
 import { extractAttributeMaps } from "./Dom/extractAttributeMaps";
 import { getContentBoxSize } from "./Dom/getContentBoxSize";
+import { GlobalSettingManager } from "./GlobalSetting/GlobalSettingManager";
+import { PageSettingManager } from "./PageSetting/PageSettingManager";
 
 console.log("[DEBUG] Content script loaded (mark.js version)");
 
@@ -1379,11 +1381,27 @@ function cleanListilControls() {
   elements.forEach((el) => el.remove());
 }
 
+const globalSettingManager = new GlobalSettingManager();
+const pageSettingManager = new PageSettingManager();
+
+/**
+ * 初期化。設定を読み込み、コントロールを追加する。
+ */
+async function initialize() {
+  const globalSetting = await globalSettingManager.load();
+  const pageSetting = await pageSettingManager.findByUrl(location.href);
+  console.log("DEBUG", "loaded globalSetting: ", globalSetting);
+  console.log("DEBUG", "loaded pageSetting: ", pageSetting);
+  if (pageSetting?.enabled ?? globalSetting.enabled ?? true) {
+    addListilControlsToLists();
+  }
+}
+
 // --- 実行 ---
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", addListilControlsToLists);
+  document.addEventListener("DOMContentLoaded", initialize);
 } else {
-  addListilControlsToLists();
+  initialize();
 }
 
 chrome.runtime.onMessage.addListener(
@@ -1391,7 +1409,7 @@ chrome.runtime.onMessage.addListener(
     // NOTE: 非同期で応答する場合、リスナー内で return true; が必要
     if (message.type === "enabled_changed") {
       if (message.enabled) {
-        addListilControlsToLists();
+        initialize();
       } else {
         cleanListilControls();
       }
@@ -1454,7 +1472,7 @@ monitorByMutationObserver &&
           );
           cleanListilControls();
         // 初期化・コントロールを追加
-          addListilControlsToLists();
+        await initialize();
         document.body.dataset.listilCnt = `${cnt}`;
       }
     });
