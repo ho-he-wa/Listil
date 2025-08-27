@@ -107,7 +107,7 @@ function injectStyles(): void {
 function findContentContainers(): Element[] {
   const seen = new Set<Element>();
   const result: Element[] = [];
-  const contentSelectors = ["main" /* '[id="main"]', '[id="content"]' */];
+  const contentSelectors = ["main", '[id="main"]', '[id="content"]'];
   for (const sel of contentSelectors) {
     // NOTE : 処理が重たいので該当するものが1つ見つかれば他はスキップ
     if (result.length > 0) {
