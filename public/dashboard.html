@@ -9,7 +9,11 @@
         padding: 20px;
       }
 
-      #toggle-container {
+      .config-section {
+        width: 100%;
+      }
+
+      .config-container {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -25,9 +29,28 @@
   <body>
     <h2>グローバル設定</h2>
 
-    <div id="toggle-container">
-      <label for="global-toggle">拡張機能を有効にする</label>
-      <input type="checkbox" id="global-toggle" />
+    <div class="config-section">
+      <div class="config-container">
+        <label for="global-toggle">拡張機能を有効にする</label>
+        <input type="checkbox" id="global-toggle" />
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="config-section">
+      <h3>データのエクスポート・インポート</h3>
+      <div>
+        <button id="export-button">設定をエクスポート</button>
+      </div>
+      <div>
+        <div>
+          <input type="file" id="import-file" accept=".json" />
+        </div>
+        <div>
+          <button id="import-button">設定をインポート</button>
+        </div>
+      </div>
     </div>
 
     <script type="module" src="dashboard.js" defer></script>

@@ -16,4 +16,18 @@ export class GlobalSettingManager {
       [GLOBAL_SETTING_KEY]: setting,
     });
   }
+  /**
+   * export all settings.
+   */
+  public async export() {
+    const data = await chrome.storage.local.get(null);
+    return data;
+  }
+  /**
+   * import settings.
+   */
+  public async import(text: string) {
+    const json = JSON.parse(text);
+    await chrome.storage.local.set(json);
+  }
 }
