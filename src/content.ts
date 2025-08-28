@@ -8,10 +8,6 @@ import { PageSettingManager } from "./PageSetting/PageSettingManager";
 
 console.log("[DEBUG] Content script loaded (mark.js version)");
 
-/**
- * パターンマッチのモード(マッチする、マッチしない)
- */
-type MatchMode = "match" | "not match";
 const PseudoType = {
   list: "list",
   listitem: "listitem",
@@ -27,7 +23,6 @@ interface FilterSettingInterface {
   grayOut: boolean;
   hide: boolean;
   invertMatch: boolean;
-  matchMode: MatchMode; // [ ] TODO : invertMatch採用前の設定。不要であれば削除する。
   narrow: boolean;
 }
 
@@ -42,7 +37,6 @@ interface SerializedFilterSettingInterface {
   grayOut: boolean;
   hide: boolean;
   invertMatch: boolean;
-  matchMode: MatchMode; // [ ] TODO : invertMatch採用前の設定。不要であれば削除する。
   narrow: boolean;
 }
 
@@ -54,7 +48,6 @@ const defaultSetting: FilterSettingInterface = {
   grayOut: false,
   hide: false,
   invertMatch: false,
-  matchMode: "match",
   narrow: false,
 };
 
@@ -346,12 +339,12 @@ class ListFilter {
       match = attributeMatch;
     }
     const isMatchedTarget = setting.regex
-      ? setting.matchMode === "match"
+      ? !setting.invertMatch
         ? match
         : !match
       : false;
     const isNotMatchedTarget = setting.regex
-      ? setting.matchMode === "match"
+      ? !setting.invertMatch
         ? !match
         : match
       : false;
@@ -665,7 +658,6 @@ class AdvancedSettingsModal {
       setting.invertMatch ?? false,
       (checked) => {
         setting.invertMatch = checked;
-        setting.matchMode = !checked ? "match" : "not match"; // 以前のマッチモードラジオボタンとの互換用
         this.onchange(this.currentSettingList(), this.currentKey);
       }
     );
@@ -886,7 +878,6 @@ class ControlFactory {
       setting.invertMatch,
       (state: boolean) => {
         currentFirstSetting().invertMatch = state;
-        currentFirstSetting().matchMode = !state ? "match" : "not match"; // 以前のマッチモードラジオボタンとの互換用
         new ListFilter(list, currentSetting()).apply();
       }
     );
@@ -1230,7 +1221,6 @@ class ListSettingRepository {
       grayOut: setting.grayOut,
       hide: setting.hide,
       invertMatch: setting.invertMatch,
-      matchMode: setting.matchMode,
       narrow: setting.narrow,
     };
   }
@@ -1257,7 +1247,6 @@ class ListSettingRepository {
       grayOut: serialized.grayOut,
       hide: serialized.hide,
       invertMatch: serialized.invertMatch,
-      matchMode: serialized.matchMode,
       narrow: serialized.narrow,
     };
   }
