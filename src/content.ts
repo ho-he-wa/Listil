@@ -1,8 +1,9 @@
 import Mark from "mark.js";
-import { querySelectorAllWithDepth } from "./Dom/querySelectorAllWithDepth";
-import { extractValidFormElements } from "./Dom/extractValidFormElements";
+import { createElementByHtml } from "./Dom/createElementByHtml";
 import { extractAttributeMaps } from "./Dom/extractAttributeMaps";
+import { extractValidFormElements } from "./Dom/extractValidFormElements";
 import { getContentBoxSize } from "./Dom/getContentBoxSize";
+import { querySelectorAllWithDepth } from "./Dom/querySelectorAllWithDepth";
 import { GlobalSettingManager } from "./GlobalSetting/GlobalSettingManager";
 import { PageSettingManager } from "./PageSetting/PageSettingManager";
 
@@ -1305,12 +1306,25 @@ function addListilControlsToLists(): void {
     );
     controls.style.display = "none";
 
-    const toggleListBtn = document.createElement("button");
-    toggleListBtn.type = "button";
-    toggleListBtn.textContent = "Hide List";
-    toggleListBtn.className = "listil-toggle-button";
-    toggleListBtn.style.marginBottom = "6px";
+    const toggleBtnDiv = createElementByHtml(/*html*/ `
+      <div class="listil-toggle-button-div listil-root">
+        <button type="button" name="listil-showhide-toggle"
+          class="listil-toggle-button"
+          style="margin-bottom:6px;">
+            Hide List
+        </button>
+        <button type="button" name="listil-onoff-toggle"
+          class="listil-toggle-button"
+          style="margin-bottom:6px;">
+            Show Controls
+        </button>
+      </div>
+    `);
+
     let listVisible = true;
+    const toggleListBtn = toggleBtnDiv.querySelector(
+      '[name="listil-showhide-toggle"]'
+    )!;
     toggleListBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -1319,12 +1333,10 @@ function addListilControlsToLists(): void {
       toggleListBtn.textContent = listVisible ? "Hide List" : "Show List";
     });
 
-    const toggleControlsBtn = document.createElement("button");
-    toggleControlsBtn.type = "button";
-    toggleControlsBtn.textContent = "Show Controls";
-    toggleControlsBtn.className = "listil-toggle-button";
-    toggleControlsBtn.style.marginBottom = "6px";
     let controlsVisible = false;
+    const toggleControlsBtn = toggleBtnDiv.querySelector(
+      '[name="listil-onoff-toggle"]'
+    )!;
     toggleControlsBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -1334,11 +1346,6 @@ function addListilControlsToLists(): void {
         ? "Hide Controls"
         : "Show Controls";
     });
-
-    const toggleBtnDiv = document.createElement("div");
-    toggleBtnDiv.className = "listil-toggle-button-div listil-root";
-    toggleBtnDiv.appendChild(toggleListBtn);
-    toggleBtnDiv.appendChild(toggleControlsBtn);
 
     list.parentNode!.insertBefore(controls, list);
     list.parentNode!.insertBefore(toggleBtnDiv, controls);
