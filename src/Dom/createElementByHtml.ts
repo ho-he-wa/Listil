@@ -10,7 +10,7 @@ function createElementsByHtml(htmlString: string) {
 /**
  * htmlから要素を作成する。
  */
-export function createElementByHtml(htmlString: string) {
+export function createElementByHtml<T extends HTMLElement>(htmlString: string) {
   const elements = createElementsByHtml(htmlString);
   if (elements.length === 0) {
     throw new Error("no elements in a html string.");
@@ -18,5 +18,8 @@ export function createElementByHtml(htmlString: string) {
   if (elements.length >= 2) {
     throw new Error("two or more elements in a html string.");
   }
-  return elements[0];
+  if (!(elements[0] instanceof HTMLElement)) {
+    throw new Error("Created element is not HTMLElement.");
+  }
+  return elements[0] as T;
 }
