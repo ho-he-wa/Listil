@@ -3,6 +3,7 @@ import { createElementByHtml } from "./Dom/createElementByHtml";
 import { extractAttributeMaps } from "./Dom/extractAttributeMaps";
 import { extractValidFormElements } from "./Dom/extractValidFormElements";
 import { getContentBoxSize } from "./Dom/getContentBoxSize";
+import { getElementsByChildCount } from "./Dom/getElementsByChildCount";
 import { querySelectorAllWithDepth } from "./Dom/querySelectorAllWithDepth";
 import { GlobalSettingManager } from "./GlobalSetting/GlobalSettingManager";
 import { PageSettingManager } from "./PageSetting/PageSettingManager";
@@ -1051,26 +1052,38 @@ class ControlFactory {
  * @param root - 探索の起点となるルート要素（デフォルトは document.body）
  */
 function addPseudoType(root: Element = document.body): void {
+  // 子要素要素数で評価
+  const exclude = ["table", "ol", "ul", "tbody", "thead", "tfoot"];
+  const elementsWithManyChildren = getElementsByChildCount(root, 20, exclude);
+  elementsWithManyChildren.forEach((element) => {
+    element.dataset.pseudotype = PseudoType.list;
+    Array.from(element.children).map((child) => {
+      if (!(child instanceof HTMLElement)) {
+        return;
+      }
+      child.dataset.pseudotype = PseudoType.listitem;
+    });
+  });
+  // 子要素のリスト要素候補で評価
   const candidateItems = Array.from(
     root.querySelectorAll<HTMLElement>(
       'div[role="listitem"], p[role="listitem"]'
     )
   );
-
   const groups = new Map<HTMLElement, HTMLElement[]>();
-
   for (const item of candidateItems) {
-    if (item.dataset.pseudotype === PseudoType.listitem) continue;
-
+    if (item.dataset.pseudotype === PseudoType.listitem) {
+      continue;
+    }
     const parent = item.parentElement;
-    if (!parent) continue;
-
+    if (!parent) {
+      continue;
+    }
     if (!groups.has(parent)) {
       groups.set(parent, []);
     }
     groups.get(parent)!.push(item);
   }
-
   for (const [parent, items] of groups) {
     if (items.length >= 5) {
       parent.dataset.pseudotype = PseudoType.list;
