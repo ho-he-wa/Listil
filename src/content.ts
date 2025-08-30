@@ -755,23 +755,23 @@ class ControlFactory {
     checked: boolean,
     onChange: (checked: boolean) => void
   ): HTMLElement {
-    const wrapper = document.createElement("label");
-    wrapper.style.marginRight = "8px";
+    const wrapper = createElementByHtml<HTMLLabelElement>(/*html*/ `
+      <label
+        style="margin-right:8px;">
+        <input type="checkbox"
+          class="listil-checkbox"
+          style="margin-right:4px;"
+        >${label}</label>
+    `)!;
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.className = "listil-checkbox";
+    const checkbox = wrapper.querySelector("input")!;
     checkbox.checked = checked;
-    checkbox.style.marginRight = "4px";
-
     checkbox.addEventListener("change", (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
       onChange(checkbox.checked);
     });
 
-    wrapper.appendChild(checkbox);
-    wrapper.appendChild(document.createTextNode(label));
     return wrapper;
   }
 
@@ -808,15 +808,12 @@ class ControlFactory {
     return label;
   }
 
-  public createInput(value: string): HTMLInputElement {
-    const input = document.createElement("input");
-    input.value = value;
-    return input;
-  }
-
   public createRegexInput(regex: RegExp | null) {
-    const input = this.createInput(regex?.source ?? "");
-    input.placeholder = "正規表現を入力...";
+    const input = createElementByHtml<HTMLInputElement>(/*html*/ `
+      <input name="listil-pattern-input"
+        placeholder="正規表現を入力...">
+    `)!;
+    input.value = regex?.source ?? "";
     return input;
   }
 
@@ -836,6 +833,24 @@ class ControlFactory {
       throw new Error("Violation. The settingList is Empty.");
     }
     const setting = listSetting.filterSettingSet[currentKey].list[0];
+
+    const wrapper = createElementByHtml(/*html*/ `
+      <div class="listil-controls">
+        <fieldset class="listil-fieldset">
+          <div class="listil-top-row">
+            <button type="button" name="listil-save-button"
+              style="margin-left:10px;">
+              Save
+            </button>
+            <select name="listil-setting-select"></select>
+          </div>
+        </fieldset>
+        <button type="button" name="listil-advanced-button"
+          style="margin-left:10px;">
+          Advanced
+        </button>
+      </div>
+    `);
 
     // 正規表現入力
     const input = this.createRegexInput(setting.regex);
@@ -883,17 +898,18 @@ class ControlFactory {
       }
     );
 
-    const saveButton = document.createElement("button");
-    saveButton.textContent = "Save";
-    saveButton.type = "button";
-    saveButton.style.marginLeft = "10px";
+    const saveButton = wrapper.querySelector<HTMLButtonElement>(
+      '[name="listil-save-button"]'
+    )!;
     saveButton.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
       new ListSettingRepository().save(createStorageKey(list.id), listSetting);
     });
 
-    const settingSelect = document.createElement("select");
+    const settingSelect = wrapper.querySelector<HTMLSelectElement>(
+      '[name="listil-setting-select"]'
+    )!;
     for (const key in listSetting.filterSettingSet) {
       const option = document.createElement("option");
       option.value = key;
@@ -916,14 +932,9 @@ class ControlFactory {
     };
 
     // input とラジオボタンを横並びにするラッパー
-    const topRow = document.createElement("div");
-    topRow.classList.add("listil-top-row");
+    const topRow = wrapper.querySelector(".listil-top-row")!;
 
-    topRow.appendChild(input);
-    topRow.appendChild(errorMessage); // input, invertBox, saveButton の行に追加
-    topRow.appendChild(invertBox);
-    topRow.appendChild(saveButton);
-    topRow.appendChild(settingSelect);
+    topRow.prepend(input, errorMessage, invertBox);
 
     // 他のチェックボックスはそのまま
     const markerBox = this.createCheckbox(
@@ -971,10 +982,9 @@ class ControlFactory {
       }
     );
 
-    const advancedBtn = document.createElement("button");
-    advancedBtn.textContent = "Advanced";
-    advancedBtn.type = "button";
-    advancedBtn.style.marginLeft = "10px";
+    const advancedBtn = wrapper.querySelector(
+      '[name="listil-advanced-button"]'
+    )!;
     advancedBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -992,19 +1002,13 @@ class ControlFactory {
       ).open();
     });
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "listil-controls";
-    const fieldset = document.createElement("fieldset");
-    fieldset.className = "listil-fieldset";
-
+    const fieldset = wrapper.querySelector("fieldset")!;
     fieldset.appendChild(topRow);
     fieldset.appendChild(markerBox);
     fieldset.appendChild(highlightBox);
     fieldset.appendChild(grayOutBox);
     fieldset.appendChild(narrowBox);
     fieldset.appendChild(hideBox);
-    wrapper.appendChild(fieldset);
-    wrapper.appendChild(advancedBtn);
 
     return wrapper;
 
