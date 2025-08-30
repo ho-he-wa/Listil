@@ -993,7 +993,7 @@ class ControlFactory {
     });
 
     const wrapper = document.createElement("div");
-    wrapper.className = "listil-controls listil-root";
+    wrapper.className = "listil-controls";
     const fieldset = document.createElement("fieldset");
     fieldset.className = "listil-fieldset";
 
@@ -1307,7 +1307,7 @@ function addListilControlsToLists(): void {
     controls.style.display = "none";
 
     const toggleBtnDiv = createElementByHtml(/*html*/ `
-      <div class="listil-toggle-button-div listil-root">
+      <div class="listil-toggle-button-div">
         <button type="button" name="listil-showhide-toggle"
           class="listil-toggle-button"
           style="margin-bottom:6px;">
@@ -1347,8 +1347,15 @@ function addListilControlsToLists(): void {
         : "Show Controls";
     });
 
-    list.parentNode!.insertBefore(controls, list);
-    list.parentNode!.insertBefore(toggleBtnDiv, controls);
+    const rootDiv = createElementByHtml(/*html*/ `
+      <div class="listil-root">
+      </div>
+    `);
+    rootDiv.appendChild(toggleBtnDiv);
+    rootDiv.appendChild(controls);
+
+    const parentOfList = list.parentNode!;
+    parentOfList.insertBefore(rootDiv, list);
 
     // リストのフィルターを適用
     new ListFilter(list, restoredSettingList).apply();
