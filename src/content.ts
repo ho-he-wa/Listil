@@ -352,13 +352,16 @@ class ListFilter {
 
     if (isMatchedTarget) {
       if (setting.marker) {
-        this.applyMarkers(item, setting);
+        this.applyMarkers(item, setting, "listil-custom-mark-yellow");
       }
       if (setting.highlight) {
         this.applyHighlights(item);
       }
     }
     if (isNotMatchedTarget) {
+      if (setting.marker) {
+        this.applyMarkers(item, setting, "listil-custom-mark-purple");
+      }
       if (setting.grayOut) {
         item.classList.add("listil-grayout");
       }
@@ -437,12 +440,13 @@ class ListFilter {
    */
   private applyMarkers(
     element: HTMLElement,
-    setting: FilterSettingInterface
+    setting: FilterSettingInterface,
+    className: string = "listil-custom-mark"
   ): void {
     const instance = new Mark(element);
     if (setting.regex) {
       instance.markRegExp(setting.regex, {
-        className: "listil-custom-mark",
+        className: className,
       });
     }
   }

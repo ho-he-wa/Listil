@@ -90,8 +90,22 @@ input.listil-regex-input {
   margin-left: 2px;
 }
 
-mark.listil-custom-mark {
+mark.listil-custom-mark,
+mark.listil-custom-mark-yellow {
   background-color: yellow;
+  color: black;
+}
+
+mark.listil-custom-mark-purple {
+  /**
+   * purple
+   * - #8000FF: Saturation 100, luminance 0.1180919423 ... Too deep
+   * - #DFBFFF: Saturation  25, luminance 0.6016957869
+   * - #E5CCFF: Saturation  18, luminance 0.6706374472
+   * - #EBD8FF: Saturation  15, luminance 0.7399390113
+   * - #EFE0FF: Saturation  12, luminance 0.7888203142 ... Too pale
+   */
+  background-color:#EBD8FF;
   color: black;
 }
 
