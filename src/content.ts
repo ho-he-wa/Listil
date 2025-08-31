@@ -764,6 +764,7 @@ class ControlFactory {
       <label
         style="margin-right:8px;">
         <input type="checkbox"
+          form="not-exists"
           class="listil-checkbox"
           style="margin-right:4px;"
         >${label}</label>
@@ -816,6 +817,7 @@ class ControlFactory {
   public createRegexInput(regex: RegExp | null) {
     const input = createElementByHtml<HTMLInputElement>(/*html*/ `
       <input name="listil-pattern-input"
+        form="not-exists"
         placeholder="正規表現を入力...">
     `)!;
     input.value = regex?.source ?? "";
@@ -844,13 +846,15 @@ class ControlFactory {
         <fieldset class="listil-fieldset">
           <div class="listil-top-row">
             <button type="button" name="listil-save-button"
+              form="not-exists"
               style="margin-left:10px;">
               Save
             </button>
-            <select name="listil-setting-select"></select>
+            <select name="listil-setting-select" form="not-exists"></select>
           </div>
         </fieldset>
         <button type="button" name="listil-advanced-button"
+          form="not-exists"
           style="margin-left:10px;">
           Advanced
         </button>
@@ -1348,11 +1352,13 @@ function addListilControlsToLists(skipReload: boolean = false): void {
     const toggleBtnDiv = createElementByHtml(/*html*/ `
       <div class="listil-toggle-button-div">
         <button type="button" name="listil-showhide-toggle"
+          form="not-exists"
           class="listil-toggle-button"
           style="margin-bottom:6px;">
             Hide List
         </button>
         <button type="button" name="listil-onoff-toggle"
+          form="not-exists"
           class="listil-toggle-button"
           style="margin-bottom:6px;">
             Show Controls
