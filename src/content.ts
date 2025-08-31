@@ -1451,11 +1451,16 @@ chrome.runtime.onMessage.addListener(
     // NOTE: 非同期で応答する場合、リスナー内で return true; が必要
     if (message.type === "enabled_changed") {
       if (message.enabled) {
-        initialize();
+        (async () => {
+          await initialize();
+          sendResponse({ success: true, data: {} });
+        })();
+        // 非同期応答のために通信チャネルを維持
+        return true;
       } else {
         cleanListilControls();
+        sendResponse({ success: true, data: {} });
       }
-      sendResponse({ success: true, data: {} });
     }
   }
 );
