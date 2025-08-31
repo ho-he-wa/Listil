@@ -1073,23 +1073,27 @@ function addPseudoType(root: Element = document.body): void {
   const groups = new Map<HTMLElement, HTMLElement[]>();
   for (const item of candidateItems) {
     if (item.dataset.pseudotype === PseudoType.listitem) {
+      // 既に識別タグ付与済であればスキップ
       continue;
     }
-    const parent = item.parentElement;
-    if (!parent) {
+    const list = item.parentElement;
+    if (!list) {
       continue;
     }
-    if (!groups.has(parent)) {
-      groups.set(parent, []);
+    if (!groups.has(list)) {
+      // リスト要素配列を初期化
+      groups.set(list, []);
     }
-    groups.get(parent)!.push(item);
+    const listItems = groups.get(list)!;
+    listItems.push(item);
   }
-  for (const [parent, items] of groups) {
-    if (items.length >= 5) {
-      parent.dataset.pseudotype = PseudoType.list;
-      for (const item of items) {
-        item.dataset.pseudotype = PseudoType.listitem;
-      }
+  for (const [list, items] of groups) {
+    if (items.length < 5) {
+      continue;
+    }
+    list.dataset.pseudotype = PseudoType.list;
+    for (const item of items) {
+      item.dataset.pseudotype = PseudoType.listitem;
     }
   }
 }
