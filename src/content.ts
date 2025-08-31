@@ -1278,10 +1278,15 @@ class ListSettingRepository {
   }
 }
 
+const listSettings = new Map<
+  string,
+  ListSettingInterface<FilterSettingInterface>
+>();
+
 /**
  * トグルボタンとUI追加
  */
-function addListilControlsToLists(): void {
+function addListilControlsToLists(skipReload: boolean = false): void {
   const timerName = "[DEBUG] addListilControlsToLists";
   console.time(timerName);
   injectStyles();
@@ -1302,18 +1307,27 @@ function addListilControlsToLists(): void {
     const listSettingId = `list-${index}`;
     list.dataset.listSettingId = listSettingId;
 
-    // ストレージから復元。0件であればデフォルト設定を使う。
-    const listSetting = (await new ListSettingRepository().restore(
-      createStorageKey(list.id)
-    )) ?? {
-      name: "xxxxx",
-      filterSettingSet: {
-        setting1: {
-          name: "setting1",
-          list: [defaultSetting],
+    // listSettingsに設定がなければデータを追加。リロードはオプション次第
+    const key = createStorageKey(list.id);
+    if (listSettings.get(key) == null || !skipReload) {
+      // ストレージから復元。0件であればデフォルト設定を使う。
+      const wkListSetting = (await new ListSettingRepository().restore(
+        key
+      )) ?? {
+        name: "xxxxx",
+        filterSettingSet: {
+          setting1: {
+            name: "setting1",
+            list: [defaultSetting],
+          },
         },
-      },
-    };
+      };
+      listSettings.set(key, wkListSetting);
+    }
+    const listSetting = listSettings.get(key);
+    if (listSetting == null) {
+      throw new Error("the listSetting is undefined.");
+    }
     const restoredSettingList = listSetting?.filterSettingSet["setting1"];
     restoredSettingList.list = (
       restoredSettingList.list.length > 0
@@ -1415,19 +1429,19 @@ const pageSettingManager = new PageSettingManager();
 /**
  * 初期化。設定を読み込み、コントロールを追加する。
  */
-async function initialize() {
+async function initialize(skipReload: boolean = false) {
   const globalSetting = await globalSettingManager.load();
   const pageSetting = await pageSettingManager.findByUrl(location.href);
   console.log("DEBUG", "loaded globalSetting: ", globalSetting);
   console.log("DEBUG", "loaded pageSetting: ", pageSetting);
   if (pageSetting?.enabled ?? globalSetting.enabled ?? true) {
-    addListilControlsToLists();
+    addListilControlsToLists(skipReload);
   }
 }
 
 // --- 実行 ---
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initialize);
+  document.addEventListener("DOMContentLoaded", () => initialize());
 } else {
   initialize();
 }
@@ -1500,7 +1514,7 @@ monitorByMutationObserver &&
         );
         cleanListilControls();
         // 初期化・コントロールを追加
-        await initialize();
+        await initialize(true);
         document.body.dataset.listilCnt = `${cnt}`;
       }
     });
