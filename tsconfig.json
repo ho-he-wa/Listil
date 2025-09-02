@@ -3,7 +3,7 @@
     "target": "ES2020", // Service Worker対応のため ES2020 以上推奨
     "lib": [
       "DOM",
-      "ES2020"
+      "ESNext",
     ], // DOM操作とES2020のAPI使用可能
     "module": "ESNext", // モダンなモジュールシステム
     "moduleResolution": "bundler", // Node風のモジュール解決
