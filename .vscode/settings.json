@@ -1,9 +1,7 @@
 {
     "code-runner.executorMap": {
-        "typescript": "./node_modules/.bin/ts-node"
+        "typescript": "./node_modules/.bin/tsx"
     },
     "code-runner.runInTerminal": true,
-    "code-runner.executorMapByFileExtension": {
-        ".ts": "ts-node"
-    }
+    "code-runner.ignoreSelection": true,
 }
