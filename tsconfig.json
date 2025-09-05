@@ -20,8 +20,11 @@
     "isolatedModules": true, // 各ファイルを独立モジュールとして扱う
     "sourceMap": true,
     "types": [
-      "chrome"
-    ] // `chrome` API 型定義を読み込む
+      /* `chrome` API 型定義 */
+      "chrome",
+      /* Vite でクライアント用のコードを使用 */
+      "vite/client",
+    ]
   },
   "include": [
     "src/**/*.ts"
