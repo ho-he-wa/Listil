@@ -634,7 +634,7 @@ class AdvancedSettingsModal {
     errorMessage.style.display = "none";
     errorMessage.textContent = "無効な正規表現です";
 
-    input.addEventListener("input", (e) => {
+    input.addEventListener("change", (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
       const str = input.value.trim();
@@ -872,7 +872,7 @@ class ControlFactory {
     errorMessage.style.display = "none"; // 初期状態は非表示
     errorMessage.textContent = "無効な正規表現です";
 
-    input.addEventListener("input", (e) => {
+    input.addEventListener("change", (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
       const str = input.value.trim();
