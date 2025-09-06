@@ -8,20 +8,21 @@
  * @returns 条件に一致した要素の配列（指定された型にキャスト）
  */
 export function querySelectorAllWithDepth<T extends Element>(
-    root: Element,
-    selector: string,
-    maxDepth: number = 1): T[] {
-    const results: T[] = [];
-    const traverse = (node: Element, depth: number): void => {
-        if (depth > maxDepth) return;
+  root: Element,
+  selector: string,
+  maxDepth: number = 1
+): T[] {
+  const results: T[] = [];
+  const traverse = (node: Element, depth: number): void => {
+    if (depth > maxDepth) return;
 
-        if (node.matches(selector)) {
-            results.push(node as T); // 明示的にキャスト
-        }
-        for (const child of Array.from(node.children)) {
-            traverse(child, depth + 1);
-        }
-    };
-    traverse(root, 0);
-    return results;
+    if (node.matches(selector)) {
+      results.push(node as T); // 明示的にキャスト
+    }
+    for (const child of Array.from(node.children)) {
+      traverse(child, depth + 1);
+    }
+  };
+  traverse(root, 0);
+  return results;
 }

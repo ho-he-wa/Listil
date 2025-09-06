@@ -8,22 +8,26 @@
  * @returns Map<string, string>[] - 属性名をキー、属性値を値とするMapの配列
  */
 export function extractAttributeMaps(
-    root: Element,
-    targetAttributes: string[] = ['href']): Map<string, string>[] {
-    const result: Map<string, string>[] = [];
-    const elements = root.querySelectorAll<HTMLElement>('*');
-    elements.forEach(el => {
-        // data-* 属性と指定されたその他の属性を抽出
-        const item = new Map<string, string>();
-        Array.from(el.attributes)
-            .filter((attr) => attr.name.startsWith('data-') || targetAttributes.includes(attr.name))
-            .forEach(attr => {
-                console.log('DEBUG attribute:', attr);
-                item.set(attr.name, attr.value); // e.g., "data-role" => "admin"
-            });
-        if (item.size > 0) {
-            result.push(item);
-        }
-    });
-    return result;
+  root: Element,
+  targetAttributes: string[] = ["href"]
+): Map<string, string>[] {
+  const result: Map<string, string>[] = [];
+  const elements = root.querySelectorAll<HTMLElement>("*");
+  elements.forEach((el) => {
+    // data-* 属性と指定されたその他の属性を抽出
+    const item = new Map<string, string>();
+    Array.from(el.attributes)
+      .filter(
+        (attr) =>
+          attr.name.startsWith("data-") || targetAttributes.includes(attr.name)
+      )
+      .forEach((attr) => {
+        console.log("DEBUG attribute:", attr);
+        item.set(attr.name, attr.value); // e.g., "data-role" => "admin"
+      });
+    if (item.size > 0) {
+      result.push(item);
+    }
+  });
+  return result;
 }
