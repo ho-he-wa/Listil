@@ -6,6 +6,7 @@ export class DispCriterion implements CriterionInterface {
   public readonly option;
   public readonly operator;
   public readonly value;
+  private readonly hintRegExp;
   public constructor(params: {
     hint: string;
     option: string;
@@ -16,6 +17,7 @@ export class DispCriterion implements CriterionInterface {
     this.option = params.option;
     this.operator = params.operator;
     this.value = params.value;
+    this.hintRegExp = DispCriterion.tryCreateRegExp(params.hint, "giu");
     console.log(this);
   }
 
@@ -65,7 +67,7 @@ export class DispCriterion implements CriterionInterface {
         };
       })
       .filter((item) => item.text.length >= 1 && item.text.length <= 200) // テキストなしは除外。またパフォーマンスを考慮して一定サイズ以上のテキストも除外(数値抽出の納得感も落ちるため)
-      .filter((item) => item.text.includes(this.hint))
+      .filter((item) => this.hintMatch(item.text))
       .sort((a, b) => {
         // 長さの昇順
         return a.text.length - b.text.length;
@@ -134,8 +136,8 @@ export class DispCriterion implements CriterionInterface {
     }
     // 3. this.hint に部分一致する列インデックスを探す
     const thList = Array.from(headerRow.querySelectorAll("th"));
-    const targetColIndex = thList.findIndex(
-      (th) => th.textContent?.includes(this.hint) ?? false
+    const targetColIndex = thList.findIndex((th) =>
+      this.hintMatch(th.textContent)
     );
     return targetColIndex;
   }
@@ -143,6 +145,24 @@ export class DispCriterion implements CriterionInterface {
   public matchValue(value: string): boolean {
     const util = new CriterionUtility();
     return util.match(value, this.operator, this.value);
+  }
+
+  private hintMatch(text: string | undefined) {
+    if (this.hintRegExp) {
+      return text?.match(this.hintRegExp) ?? false;
+    }
+    return text?.includes(this.hint) ?? false;
+  }
+
+  private static tryCreateRegExp(pattern: string, flags: string) {
+    try {
+      return new RegExp(pattern, flags);
+    } catch (e) {
+      if (e instanceof SyntaxError) {
+        return undefined;
+      }
+      throw e;
+    }
   }
 }
 
