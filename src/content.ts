@@ -1,4 +1,5 @@
 import Mark from "mark.js";
+import { CriterionFactory } from "./Criteria/CriterionFactory";
 import { createElementByHtml } from "./Dom/createElementByHtml";
 import { extractAttributeMaps } from "./Dom/extractAttributeMaps";
 import { extractValidFormElements } from "./Dom/extractValidFormElements";
@@ -20,6 +21,7 @@ const PseudoType = {
  */
 interface FilterSettingInterface {
   regex: RegExp | null;
+  criterion: string;
   marker: boolean;
   highlight: boolean;
   grayOut: boolean;
@@ -34,6 +36,7 @@ interface FilterSettingInterface {
 interface SerializedFilterSettingInterface {
   regexSource: string | null;
   regexFlags: string | null;
+  criterion: string;
   marker: boolean;
   highlight: boolean;
   grayOut: boolean;
@@ -45,6 +48,7 @@ interface SerializedFilterSettingInterface {
 // 初期デフォルト設定
 const defaultSetting: FilterSettingInterface = {
   regex: null,
+  criterion: "",
   marker: true,
   highlight: false,
   grayOut: false,
@@ -309,43 +313,48 @@ class ListFilter {
     reset && this.resetItem(item);
 
     const text: string = item.innerText;
-    const textMatch = setting.regex && text.match(setting.regex) !== null;
-    let match = textMatch;
+    const textMatch = (): boolean => {
+      if (setting.regex) {
+        return text.match(setting.regex) !== null;
+      }
+      if (setting.criterion) {
+        const criterion = new CriterionFactory().create(setting.criterion);
+        const matched = criterion.existsIn(item);
+        console.log("DEBUG", "criterion.existsIn:", matched, criterion);
+        return matched;
+      }
+      return false;
+    };
+    let match = textMatch();
     if (!match) {
       const formElements = extractValidFormElements(item, true);
       const formValueMatch = Array.from(formElements).some(
         ([key, formElement]) => {
-          console.log("DEBUG", "form element value: ", {
-            name: key,
-            value: formElement.value,
-          });
           return (
             setting.regex && formElement.value?.match(setting.regex) !== null
           );
         }
       );
       match = formValueMatch;
+      console.log("DEBUG", "formValueMatch:", formValueMatch);
     }
     if (!match) {
       const attributeMaps = extractAttributeMaps(item);
       const attributeMatch = attributeMaps.some((attributeMap) => {
-        console.log("DEBUG", "element attributes:", attributeMap);
         return Array.from(attributeMap).some(([key, attribute]) => {
-          console.log("DEBUG", "element attribute: ", {
-            attributeName: key,
-            value: attribute,
-          });
           return setting.regex && attribute.match(setting.regex) !== null;
         });
       });
       match = attributeMatch;
+      console.log("DEBUG", "attributeMatch:", attributeMatch);
     }
-    const isMatchedTarget = setting.regex
+    const regexOrCriterion = setting.regex || setting.criterion;
+    const isMatchedTarget = regexOrCriterion
       ? !setting.invertMatch
         ? match
         : !match
       : false;
-    const isNotMatchedTarget = setting.regex
+    const isNotMatchedTarget = regexOrCriterion
       ? !setting.invertMatch
         ? !match
         : match
@@ -625,7 +634,9 @@ class AdvancedSettingsModal {
     title.textContent = `#${index + 1}`;
     title.className = "listil-modal-setting-no";
 
-    const input = new ControlFactory().createRegexInput(setting.regex);
+    const input = new ControlFactory().createPatternInput(
+      setting.regex?.source ?? setting.criterion
+    );
     input.className = "listil-modal-setting-input";
 
     // エラーメッセージ表示用
@@ -640,22 +651,36 @@ class AdvancedSettingsModal {
       const str = input.value.trim();
       if (str === "") {
         setting.regex = null;
+        setting.criterion = "";
         input.style.borderColor = ""; // 通常の枠に戻す
+        errorMessage.style.display = "none";
+        this.onchange(this.currentSettingList(), this.currentKey);
+        return;
+      }
+      if (str.charAt(0) === "*") {
+        setting.regex = null;
+        setting.criterion = str;
+        // 正常な場合：装飾をリセット
+        input.style.borderColor = "";
         errorMessage.style.display = "none";
         this.onchange(this.currentSettingList(), this.currentKey);
         return;
       }
       try {
         setting.regex = new RegExp(str, "gi");
+        setting.criterion = "";
         // 正常な場合：装飾をリセット
         input.style.borderColor = "";
         errorMessage.style.display = "none";
         this.onchange(this.currentSettingList(), this.currentKey);
+        return;
       } catch (err) {
         // エラーの場合：赤枠＋エラーメッセージ
         setting.regex = null;
+        setting.criterion = "";
         input.style.borderColor = "red";
         errorMessage.style.display = "inline";
+        return;
       }
     });
 
@@ -814,13 +839,13 @@ class ControlFactory {
     return label;
   }
 
-  public createRegexInput(regex: RegExp | null) {
+  public createPatternInput(value: string) {
     const input = createElementByHtml<HTMLInputElement>(/*html*/ `
       <input name="listil-pattern-input"
         form="not-exists"
         placeholder="正規表現を入力...">
     `)!;
-    input.value = regex?.source ?? "";
+    input.value = value;
     return input;
   }
 
@@ -861,8 +886,11 @@ class ControlFactory {
       </div>
     `);
 
+    // [ ] TODO criterionも対象にする
     // 正規表現入力
-    const input = this.createRegexInput(setting.regex);
+    const input = this.createPatternInput(
+      setting.regex?.source ?? setting.criterion
+    );
     input.className = "listil-regex-input";
     input.style.marginRight = "10px";
 
@@ -878,22 +906,37 @@ class ControlFactory {
       const str = input.value.trim();
       if (str === "") {
         currentFirstSetting().regex = null;
+        currentFirstSetting().criterion = "";
         input.style.borderColor = ""; // 通常の枠に戻す
+        errorMessage.style.display = "none";
+        new ListFilter(list, currentSetting()).apply();
+        return;
+      }
+
+      if (str.charAt(0) === "*") {
+        currentFirstSetting().regex = null;
+        currentFirstSetting().criterion = str;
+        // 正常な場合：装飾をリセット
+        input.style.borderColor = "";
         errorMessage.style.display = "none";
         new ListFilter(list, currentSetting()).apply();
         return;
       }
       try {
         currentFirstSetting().regex = new RegExp(str, "gi");
+        currentFirstSetting().criterion = "";
         // 正常な場合：装飾をリセット
         input.style.borderColor = "";
         errorMessage.style.display = "none";
         new ListFilter(list, currentSetting()).apply();
+        return;
       } catch (err) {
         // エラーの場合：赤枠＋エラーメッセージ
         currentFirstSetting().regex = null;
+        currentFirstSetting().criterion = "";
         input.style.borderColor = "red";
         errorMessage.style.display = "inline";
+        return;
       }
     });
 
@@ -1028,7 +1071,8 @@ class ControlFactory {
       firstSetting: FilterSettingInterface,
       newCurrentKey: string
     ) {
-      input.value = firstSetting.regex?.source ?? "";
+      // [x] TODO criterionも対象にする
+      input.value = firstSetting.regex?.source ?? firstSetting.criterion;
       settingSelect.length = 0;
       for (const key in listSetting.filterSettingSet) {
         const option = document.createElement("option");
@@ -1243,9 +1287,11 @@ class ListSettingRepository {
   private serializeFilterSetting(
     setting: FilterSettingInterface
   ): SerializedFilterSettingInterface {
+    // [x] TODO criterionも対象にする
     return {
       regexSource: setting.regex ? setting.regex.source : null,
       regexFlags: setting.regex ? setting.regex.flags : null,
+      criterion: setting.criterion,
       marker: setting.marker,
       highlight: setting.highlight,
       grayOut: setting.grayOut,
@@ -1270,8 +1316,10 @@ class ListSettingRepository {
       console.error("[listil] 正規表現の復元に失敗しました", e);
       throw e;
     }
+    // [x] TODO criterionも対象にする
     return {
       regex,
+      criterion: serialized.criterion,
       marker: serialized.marker,
       highlight: serialized.highlight,
       grayOut: serialized.grayOut,
