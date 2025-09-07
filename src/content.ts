@@ -224,6 +224,26 @@ function isInvisible(el: HTMLElement): boolean {
 }
 
 /**
+ * データ属性を更新。ただし既に設定済の場合は何もしない。
+ */
+function setDataAttr(el: HTMLElement, key: string, value: string) {
+  if ((el.dataset[key] ?? undefined) === value) {
+    return;
+  }
+  el.dataset[key] = value;
+}
+
+/**
+ * クラス属性を更新。ただし既に設定済の場合は何もしない。
+ */
+function addCssClass(el: HTMLElement, token: string) {
+  if (el.classList.contains(token)) {
+    return;
+  }
+  el.classList.add(token);
+}
+
+/**
  * リストフィルター
  */
 class ListFilter {
@@ -304,10 +324,10 @@ class ListFilter {
     const originallyHidden =
       (item.dataset.ignore ?? null) == null && isInvisible(item);
     if (originallyHidden || item.dataset.ignore === "yes") {
-      item.dataset.ignore = "yes";
+      setDataAttr(item, "ignore", "yes");
       return;
     }
-    item.dataset.ignore = "no";
+    setDataAttr(item, "ignore", "no");
 
     // 表示リセット
     reset && this.resetItem(item);
@@ -370,10 +390,8 @@ class ListFilter {
         this.applyHighlights(item);
       }
       if (setting.marker && elementMatchedCriterion) {
-        elementMatchedCriterion.classList.add(
-          "listil-critorion-matched",
-          "listil-custom-mark-yellow"
-        );
+        addCssClass(elementMatchedCriterion, "listil-critorion-matched");
+        addCssClass(elementMatchedCriterion, "listil-custom-mark-yellow");
       }
     }
     if (isNotMatchedTarget) {
@@ -381,16 +399,14 @@ class ListFilter {
         this.applyMarkers(item, setting, "listil-custom-mark-purple");
       }
       if (setting.marker && elementMatchedCriterion) {
-        elementMatchedCriterion.classList.add(
-          "listil-critorion-matched",
-          "listil-custom-mark-purple"
-        );
+        addCssClass(elementMatchedCriterion, "listil-critorion-matched");
+        addCssClass(elementMatchedCriterion, "listil-custom-mark-purple");
       }
       if (setting.grayOut) {
-        item.classList.add("listil-grayout");
+        addCssClass(item, "listil-grayout");
       }
       if (setting.hide) {
-        item.classList.add("listil-hide");
+        addCssClass(item, "listil-hide");
       }
       if (setting.narrow) {
         this.applyNarrow(item);
@@ -419,7 +435,7 @@ class ListFilter {
    * 高さ制限を適用
    */
   private applyNarrow(item: HTMLElement) {
-    item.classList.add("listil-narrow");
+    addCssClass(item, "listil-narrow");
     // trの高さ制限
     if (item.tagName.toLowerCase() === "tr") {
       Array.from(item.children).forEach((trChild) => {
@@ -499,7 +515,7 @@ class ListFilter {
    */
   private applyHighlights(element: HTMLElement): void {
     // 枠線を追加
-    element.classList.add("listil-highlight-item");
+    addCssClass(element, "listil-highlight-item");
   }
 
   /**
