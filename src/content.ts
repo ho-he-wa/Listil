@@ -1175,7 +1175,18 @@ class ControlFactory {
  */
 function addPseudoType(root: Element = document.body): void {
   // 子要素要素数で評価
-  const exclude = ["table", "ol", "ul", "tbody", "thead", "tfoot"];
+  const exclude = [
+    "table",
+    "ol",
+    "ul",
+    "tbody",
+    "thead",
+    "tfoot",
+    // select, optgroup, datalistは配下に大量のoptionを持つので除外する
+    "select",
+    "optgroup",
+    "datalist",
+  ];
   const elementsWithManyChildren = getElementsByChildCount(root, 20, exclude);
   elementsWithManyChildren.forEach((element) => {
     element.dataset.pseudotype = PseudoType.list;
