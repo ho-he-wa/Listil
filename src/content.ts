@@ -833,15 +833,22 @@ class ControlFactory {
         >${label}</label>
     `)!;
 
-    const checkbox = wrapper.querySelector("input")!;
+    const checkbox = wrapper.querySelector<HTMLInputElement>("input")!;
+    this.initCheckbox(checkbox, checked, onChange);
+    return wrapper;
+  }
+
+  public initCheckbox(
+    checkbox: HTMLInputElement,
+    checked: boolean,
+    onChange: (checked: boolean) => void
+  ): void {
     checkbox.checked = checked;
     checkbox.addEventListener("change", (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
       onChange(checkbox.checked);
     });
-
-    return wrapper;
   }
 
   /**
@@ -888,6 +895,41 @@ class ControlFactory {
             </button>
             <select name="listil-setting-select" form="not-exists"></select>
           </div>
+          <label style="margin-right:8px;">
+            <input type="checkbox" name="marker"
+              form="not-exists"
+              class="listil-checkbox"
+              style="margin-right:4px;">
+            Marker
+          </label>
+          <label style="margin-right:8px;">
+            <input type="checkbox" name="highlight"
+              form="not-exists"
+              class="listil-checkbox"
+              style="margin-right:4px;">
+            Highlight
+          </label>
+          <label style="margin-right:8px;">
+            <input type="checkbox" name="grayout-others"
+              form="not-exists"
+              class="listil-checkbox"
+              style="margin-right:4px;">
+            GrayOut others
+          </label>
+          <label style="margin-right:8px;">
+            <input type="checkbox" name="narrow-others"
+              form="not-exists"
+              class="listil-checkbox"
+              style="margin-right:4px;">
+            Narrow others
+          </label>
+          <label style="margin-right:8px;">
+            <input type="checkbox" name="hide-others"
+              form="not-exists"
+              class="listil-checkbox"
+              style="margin-right:4px;">
+            Hide others
+          </label>
         </fieldset>
         <button type="button" name="listil-advanced-button"
           form="not-exists"
@@ -996,50 +1038,45 @@ class ControlFactory {
     };
 
     // 他のチェックボックスはそのまま
-    const markerBox = this.createCheckbox(
-      "Marker",
-      setting.marker,
-      (state: boolean) => {
-        currentFirstSetting().marker = state;
-        new ListFilter(list, currentSetting()).apply();
-      }
-    );
+    const markerBox = wrapper.querySelector<HTMLInputElement>(
+      'input[name="marker"]'
+    )!;
+    this.initCheckbox(markerBox, setting.marker, (state) => {
+      currentFirstSetting().marker = state;
+      new ListFilter(list, currentSetting()).apply();
+    });
 
-    const highlightBox = this.createCheckbox(
-      "Highlight",
-      setting.highlight,
-      (state: boolean) => {
-        currentFirstSetting().highlight = state;
-        new ListFilter(list, currentSetting()).apply();
-      }
-    );
+    const highlightBox = wrapper.querySelector<HTMLInputElement>(
+      'input[name="highlight"]'
+    )!;
+    this.initCheckbox(highlightBox, setting.highlight, (state) => {
+      currentFirstSetting().highlight = state;
+      new ListFilter(list, currentSetting()).apply();
+    });
 
-    const grayOutBox = this.createCheckbox(
-      "GrayOut others",
-      setting.grayOut,
-      (state: boolean) => {
-        currentFirstSetting().grayOut = state;
-        new ListFilter(list, currentSetting()).apply();
-      }
-    );
+    const grayOutBox = wrapper.querySelector<HTMLInputElement>(
+      'input[name="grayout-others"]'
+    )!;
+    this.initCheckbox(grayOutBox, setting.grayOut, (state) => {
+      currentFirstSetting().grayOut = state;
+      new ListFilter(list, currentSetting()).apply();
+    });
 
-    const narrowBox = this.createCheckbox(
-      "Narrow others",
-      setting.narrow,
-      (state: boolean) => {
-        currentFirstSetting().narrow = state;
-        new ListFilter(list, currentSetting()).apply();
-      }
-    );
+    const narrowBox = wrapper.querySelector<HTMLInputElement>(
+      'input[name="narrow-others"]'
+    )!;
+    this.initCheckbox(narrowBox, setting.narrow, (state) => {
+      currentFirstSetting().narrow = state;
+      new ListFilter(list, currentSetting()).apply();
+    });
 
-    const hideBox = this.createCheckbox(
-      "Hide others",
-      setting.hide,
-      (state: boolean) => {
-        currentFirstSetting().hide = state;
-        new ListFilter(list, currentSetting()).apply();
-      }
-    );
+    const hideBox = wrapper.querySelector<HTMLInputElement>(
+      'input[name="hide-others"]'
+    )!;
+    this.initCheckbox(hideBox, setting.hide, (state) => {
+      currentFirstSetting().hide = state;
+      new ListFilter(list, currentSetting()).apply();
+    });
 
     const advancedBtn = wrapper.querySelector(
       '[name="listil-advanced-button"]'
@@ -1061,13 +1098,6 @@ class ControlFactory {
       ).open();
     });
 
-    const fieldset = wrapper.querySelector("fieldset")!;
-    fieldset.appendChild(markerBox);
-    fieldset.appendChild(highlightBox);
-    fieldset.appendChild(grayOutBox);
-    fieldset.appendChild(narrowBox);
-    fieldset.appendChild(hideBox);
-
     return wrapper;
 
     /**
@@ -1088,13 +1118,11 @@ class ControlFactory {
       }
       settingSelect.value = newCurrentKey;
       (invertBox as HTMLInputElement).checked = firstSetting.invertMatch;
-      (markerBox.firstChild as HTMLInputElement).checked = firstSetting.marker;
-      (highlightBox.firstChild as HTMLInputElement).checked =
-        firstSetting.highlight;
-      (grayOutBox.firstChild as HTMLInputElement).checked =
-        firstSetting.grayOut;
-      (narrowBox.firstChild as HTMLInputElement).checked = firstSetting.narrow;
-      (hideBox.firstChild as HTMLInputElement).checked = firstSetting.hide;
+      (markerBox as HTMLInputElement).checked = firstSetting.marker;
+      (highlightBox as HTMLInputElement).checked = firstSetting.highlight;
+      (grayOutBox as HTMLInputElement).checked = firstSetting.grayOut;
+      (narrowBox as HTMLInputElement).checked = firstSetting.narrow;
+      (hideBox as HTMLInputElement).checked = firstSetting.hide;
     }
   }
 }
