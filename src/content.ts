@@ -893,6 +893,22 @@ class ControlFactory {
       <div class="listil-controls">
         <fieldset class="listil-fieldset">
           <div class="listil-top-row">
+            <input name="listil-pattern-input"
+              form="not-exists"
+              placeholder="正規表現を入力..."
+              class="listil-regex-input"
+              style="margin-right: 10px;">
+            <span data-name="listil-pattern-error"
+              class="listil-validation-error" style="display: none;">
+                無効な正規表現です
+            </span>
+            <label style="margin-right:8px;">
+              <input type="checkbox" name="invert-matching"
+                form="not-exists"
+                class="listil-checkbox"
+                style="margin-right:4px;">
+              invert matching
+            </label>
             <button type="button" name="listil-save-button"
               form="not-exists"
               style="margin-left:10px;">
@@ -911,17 +927,16 @@ class ControlFactory {
 
     // [ ] TODO criterionも対象にする
     // 正規表現入力
-    const input = this.createPatternInput(
-      setting.regex?.source ?? setting.criterion
-    );
-    input.className = "listil-regex-input";
-    input.style.marginRight = "10px";
+    const input = wrapper.querySelector<HTMLInputElement>(
+      'input[name="listil-pattern-input"]'
+    )!;
+    input.value = setting.regex?.source ?? setting.criterion;
 
     // エラーメッセージ表示用
-    const errorMessage = document.createElement("span");
-    errorMessage.classList.add("listil-validation-error");
+    const errorMessage = wrapper.querySelector<HTMLSpanElement>(
+      '[data-name="listil-pattern-error"]'
+    )!;
     errorMessage.style.display = "none"; // 初期状態は非表示
-    errorMessage.textContent = "無効な正規表現です";
 
     input.addEventListener("change", (e) => {
       e.preventDefault();
@@ -964,14 +979,16 @@ class ControlFactory {
     });
 
     // マッチモードラジオボタン群
-    const invertBox = this.createCheckbox(
-      "invert matching",
-      setting.invertMatch,
-      (state: boolean) => {
-        currentFirstSetting().invertMatch = state;
-        new ListFilter(list, currentSetting()).apply();
-      }
-    );
+    const invertBox = wrapper.querySelector<HTMLInputElement>(
+      'input[name="invert-matching"]'
+    )!;
+    invertBox.checked = setting.invertMatch;
+    invertBox.addEventListener("change", (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      currentFirstSetting().invertMatch = invertBox.checked;
+      new ListFilter(list, currentSetting()).apply();
+    });
 
     const saveButton = wrapper.querySelector<HTMLButtonElement>(
       '[name="listil-save-button"]'
@@ -1005,11 +1022,6 @@ class ControlFactory {
     const currentFirstSetting = () => {
       return currentSetting().list[0];
     };
-
-    // input とラジオボタンを横並びにするラッパー
-    const topRow = wrapper.querySelector(".listil-top-row")!;
-
-    topRow.prepend(input, errorMessage, invertBox);
 
     // 他のチェックボックスはそのまま
     const markerBox = this.createCheckbox(
@@ -1078,7 +1090,6 @@ class ControlFactory {
     });
 
     const fieldset = wrapper.querySelector("fieldset")!;
-    fieldset.appendChild(topRow);
     fieldset.appendChild(markerBox);
     fieldset.appendChild(highlightBox);
     fieldset.appendChild(grayOutBox);
@@ -1104,8 +1115,7 @@ class ControlFactory {
         settingSelect.appendChild(option);
       }
       settingSelect.value = newCurrentKey;
-      (invertBox.firstChild as HTMLInputElement).checked =
-        firstSetting.invertMatch;
+      (invertBox as HTMLInputElement).checked = firstSetting.invertMatch;
       (markerBox.firstChild as HTMLInputElement).checked = firstSetting.marker;
       (highlightBox.firstChild as HTMLInputElement).checked =
         firstSetting.highlight;
