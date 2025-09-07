@@ -544,23 +544,36 @@ class AdvancedSettingsModal {
   }
 
   private createModal(): HTMLDivElement {
-    const modal = document.createElement("div");
-    modal.className = "listil-modal listil-root";
+    const modal = createElementByHtml<HTMLDivElement>(/*html*/ `
+      <div data-name="listil-modal" class="listil-modal listil-root">
+        <div data-name="listil-overlay" class="listil-overlay">
+        </div>
+        <div data-name="listil-modal-content" class="listil-modal-content">
+          <h3 class="listil-modal-title">Advanced Filter Settings</h3>
+          <div data-name="switch-setting-div">
+            <select name="setting-select"></select>
+            <input name="setting-name" type="text"
+              placeholder="設定名">
+            <button name="add-setting">＋設定をコピー</button>
+          </div>
+          <div data-name="listil-setting-list" class="listil-setting-list">
+            <!-- Add dynamically -->
+          </div>
+          <button name="add-filter">＋ Add Filter</button>
+          <button name="close">✖ Close</button>
+        </div>
+      </div>
+    `);
 
-    const overlay = document.createElement("div");
-    overlay.className = "listil-overlay";
+    const overlay = modal.querySelector<HTMLDivElement>(
+      '[data-name="listil-overlay"]'
+    )!;
     overlay.addEventListener("click", () => this.close());
 
-    const content = document.createElement("div");
-    content.className = "listil-modal-content";
-
-    const title = document.createElement("h3");
-    title.textContent = "Advanced Filter Settings";
-    title.className = "listil-modal-title";
-
-    const switchSetting = document.createElement("div");
     // ▼ 設定切り替え用セレクトボックス
-    const settingSelect = document.createElement("select");
+    const settingSelect = modal.querySelector<HTMLSelectElement>(
+      'select[name="setting-select"]'
+    )!;
     for (const key in this.listSetting.filterSettingSet) {
       const option = document.createElement("option");
       option.value = key;
@@ -575,13 +588,12 @@ class AdvancedSettingsModal {
       this.modal = newModal;
       this.onchange(this.currentSettingList(), this.currentKey);
     });
-    switchSetting.appendChild(settingSelect);
 
     // ▼ 設定名の変更フィールド
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
+    const nameInput = modal.querySelector<HTMLInputElement>(
+      '[name="setting-name"]'
+    )!;
     nameInput.value = this.currentSettingList().name ?? "";
-    nameInput.placeholder = "設定名";
     nameInput.addEventListener("change", (e) => {
       this.currentSettingList().name = nameInput.value;
       const newModal = this.createModal();
@@ -589,11 +601,11 @@ class AdvancedSettingsModal {
       this.modal = newModal;
       this.onchange(this.currentSettingList(), this.currentKey);
     });
-    switchSetting.appendChild(nameInput);
 
     // ▼ 追加ボタン
-    const addButton = document.createElement("button");
-    addButton.textContent = "＋設定をコピー";
+    const addButton = modal.querySelector<HTMLButtonElement>(
+      'button[name="add-setting"]'
+    )!;
     addButton.addEventListener("click", () => {
       const newKey = `setting_${Date.now()}`;
       const newFilterSettingList: FilterSettingList = {
@@ -609,18 +621,19 @@ class AdvancedSettingsModal {
       this.modal = newModal;
       this.onchange(this.currentSettingList(), this.currentKey);
     });
-    switchSetting.appendChild(addButton);
 
-    const listWrapper = document.createElement("div");
-    listWrapper.className = "listil-setting-list";
+    const listWrapper = modal.querySelector(
+      '[data-name="listil-setting-list"]'
+    )!;
 
     this.currentSettingList().list.forEach((setting, index) => {
       const item = this.createSettingEditor(setting, index);
       listWrapper.appendChild(item);
     });
 
-    const addBtn = document.createElement("button");
-    addBtn.textContent = "＋ Add Filter";
+    const addBtn = modal.querySelector<HTMLButtonElement>(
+      'button[name="add-filter"]'
+    )!;
     addBtn.addEventListener("click", () => {
       const newSetting = { ...defaultSetting };
       this.currentSettingList().list.push(newSetting);
@@ -631,17 +644,10 @@ class AdvancedSettingsModal {
       listWrapper.appendChild(item);
     });
 
-    const closeBtn = document.createElement("button");
-    closeBtn.textContent = "✖ Close";
+    const closeBtn = modal.querySelector<HTMLButtonElement>(
+      'button[name="close"]'
+    )!;
     closeBtn.addEventListener("click", () => this.close());
-
-    content.appendChild(title);
-    content.appendChild(switchSetting);
-    content.appendChild(listWrapper);
-    content.appendChild(addBtn);
-    content.appendChild(closeBtn);
-    modal.appendChild(overlay);
-    modal.appendChild(content);
 
     return modal;
   }
