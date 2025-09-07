@@ -655,23 +655,59 @@ class AdvancedSettingsModal {
         <h4 data-name="setting-no" class="listil-modal-setting-no"></h4>
         <fieldset data-name="control-set" class="listil-fieldset">
           <div data-name="top-row" class="listil-top-row" style="width:100%;">
-          <div class="listil-top-row">
-            <input name="listil-pattern-input"
-              form="not-exists"
-              placeholder="正規表現を入力..."
-              class="listil-modal-setting-input">
-            <span data-name="listil-pattern-error"
-              class="listil-validation-error" style="display: none;">
-                無効な正規表現です
-            </span>
-            <label style="margin-right:8px;">
-              <input type="checkbox" name="invert-matching"
+            <div class="listil-top-row">
+              <input name="listil-pattern-input"
                 form="not-exists"
-                class="listil-checkbox"
-                style="margin-right:4px;">
-              invert matching
-            </label>
+                placeholder="正規表現を入力..."
+                class="listil-modal-setting-input">
+              <span data-name="listil-pattern-error"
+                class="listil-validation-error" style="display: none;">
+                  無効な正規表現です
+              </span>
+              <label style="margin-right:8px;">
+                <input type="checkbox" name="invert-matching"
+                  form="not-exists"
+                  class="listil-checkbox"
+                  style="margin-right:4px;">
+                invert matching
+              </label>
+            </div>
           </div>
+          <label style="margin-right:8px;">
+            <input type="checkbox" name="marker"
+              form="not-exists"
+              class="listil-checkbox"
+              style="margin-right:4px;">
+            Marker
+          </label>
+          <label style="margin-right:8px;">
+            <input type="checkbox" name="highlight"
+              form="not-exists"
+              class="listil-checkbox"
+              style="margin-right:4px;">
+            Highlight
+          </label>
+          <label style="margin-right:8px;">
+            <input type="checkbox" name="grayout-others"
+              form="not-exists"
+              class="listil-checkbox"
+              style="margin-right:4px;">
+            GrayOut others
+          </label>
+          <label style="margin-right:8px;">
+            <input type="checkbox" name="narrow-others"
+              form="not-exists"
+              class="listil-checkbox"
+              style="margin-right:4px;">
+            Narrow others
+          </label>
+          <label style="margin-right:8px;">
+            <input type="checkbox" name="hide-others"
+              form="not-exists"
+              class="listil-checkbox"
+              style="margin-right:4px;">
+            Hide others
+          </label>
           </div>
         </fieldset>
       </div>
@@ -741,46 +777,50 @@ class AdvancedSettingsModal {
       this.onchange(this.currentSettingList(), this.currentKey);
     });
 
-    const markerCheckbox = new ControlFactory().createCheckbox(
-      "Marker",
-      setting.marker ?? false,
-      (checked) => {
-        setting.marker = checked;
-        this.onchange(this.currentSettingList(), this.currentKey);
-      }
-    );
-    const highlightCheckbox = new ControlFactory().createCheckbox(
-      "Highlight",
-      setting.highlight ?? false,
+    const controlFactory = new ControlFactory();
+    const markerCheckbox = wrapper.querySelector<HTMLInputElement>(
+      'input[name="marker"]'
+    )!;
+    controlFactory.initCheckbox(markerCheckbox, setting.marker, (checked) => {
+      setting.marker = checked;
+      this.onchange(this.currentSettingList(), this.currentKey);
+    });
+
+    const highlightCheckbox = wrapper.querySelector<HTMLInputElement>(
+      'input[name="highlight"]'
+    )!;
+    controlFactory.initCheckbox(
+      highlightCheckbox,
+      setting.highlight,
       (checked) => {
         setting.highlight = checked;
         this.onchange(this.currentSettingList(), this.currentKey);
       }
     );
-    const grayOutCheckbox = new ControlFactory().createCheckbox(
-      "GrayOut other",
-      setting.grayOut ?? false,
-      (checked) => {
-        setting.grayOut = checked;
-        this.onchange(this.currentSettingList(), this.currentKey);
-      }
-    );
-    const narrowCheckbox = new ControlFactory().createCheckbox(
-      "Narrow other",
-      setting.narrow ?? false,
-      (checked) => {
-        setting.narrow = checked;
-        this.onchange(this.currentSettingList(), this.currentKey);
-      }
-    );
-    const hidecheckbox = new ControlFactory().createCheckbox(
-      "Hide other",
-      setting.hide ?? false,
-      (checked) => {
-        setting.hide = checked;
-        this.onchange(this.currentSettingList(), this.currentKey);
-      }
-    );
+
+    const grayOutCheckbox = wrapper.querySelector<HTMLInputElement>(
+      'input[name="grayout-others"]'
+    )!;
+    controlFactory.initCheckbox(grayOutCheckbox, setting.grayOut, (checked) => {
+      setting.grayOut = checked;
+      this.onchange(this.currentSettingList(), this.currentKey);
+    });
+
+    const narrowCheckbox = wrapper.querySelector<HTMLInputElement>(
+      'input[name="narrow-others"]'
+    )!;
+    controlFactory.initCheckbox(narrowCheckbox, setting.narrow, (checked) => {
+      setting.narrow = checked;
+      this.onchange(this.currentSettingList(), this.currentKey);
+    });
+
+    const hidecheckbox = wrapper.querySelector<HTMLInputElement>(
+      'input[name="hide-others"]'
+    )!;
+    controlFactory.initCheckbox(hidecheckbox, setting.hide, (checked) => {
+      setting.hide = checked;
+      this.onchange(this.currentSettingList(), this.currentKey);
+    });
 
     const removeBtn = document.createElement("button");
     removeBtn.textContent = "🗑";
@@ -799,11 +839,6 @@ class AdvancedSettingsModal {
 
     const fieldset = wrapper.querySelector('[data-name="control-set"]')!;
 
-    fieldset.appendChild(markerCheckbox);
-    fieldset.appendChild(highlightCheckbox);
-    fieldset.appendChild(grayOutCheckbox);
-    fieldset.appendChild(narrowCheckbox);
-    fieldset.appendChild(hidecheckbox);
     fieldset.appendChild(removeBtn);
 
     return wrapper;
