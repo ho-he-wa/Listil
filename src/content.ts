@@ -735,7 +735,9 @@ class AdvancedSettingsModal {
               style="margin-right:4px;">
             Hide others
           </label>
-          </div>
+          <button name="remove-filter" title="Remove this filter">
+            🗑
+          </button>
         </fieldset>
       </div>
     `);
@@ -849,9 +851,9 @@ class AdvancedSettingsModal {
       this.onchange(this.currentSettingList(), this.currentKey);
     });
 
-    const removeBtn = document.createElement("button");
-    removeBtn.textContent = "🗑";
-    removeBtn.title = "Remove this filter";
+    const removeBtn = wrapper.querySelector<HTMLButtonElement>(
+      'button[name="remove-filter"]'
+    )!;
     removeBtn.addEventListener("click", () => {
       if (this.currentSettingList().list.length <= 1) {
         alert("2件以上ある場合のみ削除できます。");
@@ -863,10 +865,6 @@ class AdvancedSettingsModal {
       this.modal = this.createModal();
       this.open();
     });
-
-    const fieldset = wrapper.querySelector('[data-name="control-set"]')!;
-
-    fieldset.appendChild(removeBtn);
 
     return wrapper;
   }
