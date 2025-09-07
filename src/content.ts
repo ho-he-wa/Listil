@@ -1,13 +1,16 @@
+import { controlsRoot } from "@/Content/Views/controlsRoot";
+import { listilModal } from "@/Content/Views/listilModal";
+import { listilModalSettingEditor } from "@/Content/Views/listilModalSettingEditor";
+import { CriterionFactory } from "@/Criteria/CriterionFactory";
+import { createElementByHtml } from "@/Dom/createElementByHtml";
+import { extractAttributeMaps } from "@/Dom/extractAttributeMaps";
+import { extractValidFormElements } from "@/Dom/extractValidFormElements";
+import { getContentBoxSize } from "@/Dom/getContentBoxSize";
+import { getElementsByChildCount } from "@/Dom/getElementsByChildCount";
+import { querySelectorAllWithDepth } from "@/Dom/querySelectorAllWithDepth";
+import { GlobalSettingManager } from "@/GlobalSetting/GlobalSettingManager";
+import { PageSettingManager } from "@/PageSetting/PageSettingManager";
 import Mark from "mark.js";
-import { CriterionFactory } from "./Criteria/CriterionFactory";
-import { createElementByHtml } from "./Dom/createElementByHtml";
-import { extractAttributeMaps } from "./Dom/extractAttributeMaps";
-import { extractValidFormElements } from "./Dom/extractValidFormElements";
-import { getContentBoxSize } from "./Dom/getContentBoxSize";
-import { getElementsByChildCount } from "./Dom/getElementsByChildCount";
-import { querySelectorAllWithDepth } from "./Dom/querySelectorAllWithDepth";
-import { GlobalSettingManager } from "./GlobalSetting/GlobalSettingManager";
-import { PageSettingManager } from "./PageSetting/PageSettingManager";
 
 console.log("[DEBUG] Content script loaded (mark.js version)");
 
@@ -565,26 +568,7 @@ class AdvancedSettingsModal {
   }
 
   private createModal(): HTMLDivElement {
-    const modal = createElementByHtml<HTMLDivElement>(/*html*/ `
-      <div data-name="listil-modal" class="listil-modal listil-root">
-        <div data-name="listil-overlay" class="listil-overlay">
-        </div>
-        <div data-name="listil-modal-content" class="listil-modal-content">
-          <h3 class="listil-modal-title">Advanced Filter Settings</h3>
-          <div data-name="switch-setting-div">
-            <select name="setting-select"></select>
-            <input name="setting-name" type="text"
-              placeholder="設定名">
-            <button name="add-setting">＋設定をコピー</button>
-          </div>
-          <div data-name="listil-setting-list" class="listil-setting-list">
-            <!-- Add dynamically -->
-          </div>
-          <button name="add-filter">＋ Add Filter</button>
-          <button name="close">✖ Close</button>
-        </div>
-      </div>
-    `);
+    const modal = listilModal();
 
     const overlay = modal.querySelector<HTMLDivElement>(
       '[data-name="listil-overlay"]'
@@ -677,70 +661,7 @@ class AdvancedSettingsModal {
     setting: FilterSettingInterface,
     index: number
   ): HTMLElement {
-    const wrapper = createElementByHtml(/*html*/ `
-      <div class="listil-setting-editor">
-        <h4 data-name="setting-no" class="listil-modal-setting-no"></h4>
-        <fieldset data-name="control-set" class="listil-fieldset">
-          <div data-name="top-row" class="listil-top-row" style="width:100%;">
-            <div class="listil-top-row">
-              <input name="listil-pattern-input"
-                form="not-exists"
-                placeholder="正規表現を入力..."
-                class="listil-modal-setting-input">
-              <span data-name="listil-pattern-error"
-                class="listil-validation-error" style="display: none;">
-                  無効な正規表現です
-              </span>
-              <label style="margin-right:8px;">
-                <input type="checkbox" name="invert-matching"
-                  form="not-exists"
-                  class="listil-checkbox"
-                  style="margin-right:4px;">
-                invert matching
-              </label>
-            </div>
-          </div>
-          <label style="margin-right:8px;">
-            <input type="checkbox" name="marker"
-              form="not-exists"
-              class="listil-checkbox"
-              style="margin-right:4px;">
-            Marker
-          </label>
-          <label style="margin-right:8px;">
-            <input type="checkbox" name="highlight"
-              form="not-exists"
-              class="listil-checkbox"
-              style="margin-right:4px;">
-            Highlight
-          </label>
-          <label style="margin-right:8px;">
-            <input type="checkbox" name="grayout-others"
-              form="not-exists"
-              class="listil-checkbox"
-              style="margin-right:4px;">
-            GrayOut others
-          </label>
-          <label style="margin-right:8px;">
-            <input type="checkbox" name="narrow-others"
-              form="not-exists"
-              class="listil-checkbox"
-              style="margin-right:4px;">
-            Narrow others
-          </label>
-          <label style="margin-right:8px;">
-            <input type="checkbox" name="hide-others"
-              form="not-exists"
-              class="listil-checkbox"
-              style="margin-right:4px;">
-            Hide others
-          </label>
-          <button name="remove-filter" title="Remove this filter">
-            🗑
-          </button>
-        </fieldset>
-      </div>
-    `);
+    const wrapper = listilModalSettingEditor();
 
     const title = wrapper.querySelector('[data-name="setting-no"]')!;
     title.textContent = `#${index + 1}`;
@@ -1495,25 +1416,7 @@ function addListilControlsToLists(skipReload: boolean = false): void {
     });
     console.log(`[DEBUG]`, `Loaded setting`, restoredSettingList);
 
-    const rootDiv = createElementByHtml(/*html*/ `
-      <div class="listil-root">
-        <div class="listil-toggle-button-div">
-          <button type="button" name="listil-showhide-toggle"
-            form="not-exists"
-            class="listil-toggle-button"
-            style="margin-bottom:6px;">
-              Hide List
-          </button>
-          <button type="button" name="listil-onoff-toggle"
-            form="not-exists"
-            class="listil-toggle-button"
-            style="margin-bottom:6px;">
-              Show Controls
-          </button>
-        </div>
-        <!-- Add dynamically -->
-      </div>
-    `);
+    const rootDiv = controlsRoot();
 
     const controls = new ControlFactory().createFilterControls(
       list,
