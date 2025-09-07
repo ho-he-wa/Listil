@@ -845,49 +845,6 @@ class ControlFactory {
   }
 
   /**
-   * ラジオボタン作成
-   */
-  public createRadio(
-    name: string,
-    value: string,
-    checked: boolean,
-    onChange: (value: string) => void
-  ): HTMLElement {
-    const label = document.createElement("label");
-    label.style.marginRight = "8px";
-
-    const radio = document.createElement("input");
-    radio.type = "radio";
-    radio.className = "listil-radio";
-    radio.name = name;
-    radio.value = value;
-    radio.checked = checked;
-    radio.style.marginRight = "4px";
-
-    radio.addEventListener("change", (e) => {
-      if (radio.checked) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        onChange(value);
-      }
-    });
-
-    label.appendChild(radio);
-    label.appendChild(document.createTextNode(value));
-    return label;
-  }
-
-  public createPatternInput(value: string) {
-    const input = createElementByHtml<HTMLInputElement>(/*html*/ `
-      <input name="listil-pattern-input"
-        form="not-exists"
-        placeholder="正規表現を入力...">
-    `)!;
-    input.value = value;
-    return input;
-  }
-
-  /**
    * コントロール UI 作成
    *
    * @param list
