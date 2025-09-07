@@ -329,6 +329,11 @@ class ListFilter {
     }
     setDataAttr(item, "ignore", "no");
 
+    if (isInvisible(item)) {
+      // 既に非表示であれば表示の加工しても意味がないのでスキップ
+      return;
+    }
+
     // 表示リセット
     reset && this.resetItem(item);
 
