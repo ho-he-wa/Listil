@@ -1465,31 +1465,35 @@ function addListilControlsToLists(skipReload: boolean = false): void {
     });
     console.log(`[DEBUG]`, `Loaded setting`, restoredSettingList);
 
+    const rootDiv = createElementByHtml(/*html*/ `
+      <div class="listil-root">
+        <div class="listil-toggle-button-div">
+          <button type="button" name="listil-showhide-toggle"
+            form="not-exists"
+            class="listil-toggle-button"
+            style="margin-bottom:6px;">
+              Hide List
+          </button>
+          <button type="button" name="listil-onoff-toggle"
+            form="not-exists"
+            class="listil-toggle-button"
+            style="margin-bottom:6px;">
+              Show Controls
+          </button>
+        </div>
+        <!-- Add dynamically -->
+      </div>
+    `);
+
     const controls = new ControlFactory().createFilterControls(
       list,
       listSetting
     );
     controls.style.display = "none";
-
-    const toggleBtnDiv = createElementByHtml(/*html*/ `
-      <div class="listil-toggle-button-div">
-        <button type="button" name="listil-showhide-toggle"
-          form="not-exists"
-          class="listil-toggle-button"
-          style="margin-bottom:6px;">
-            Hide List
-        </button>
-        <button type="button" name="listil-onoff-toggle"
-          form="not-exists"
-          class="listil-toggle-button"
-          style="margin-bottom:6px;">
-            Show Controls
-        </button>
-      </div>
-    `);
+    rootDiv.appendChild(controls);
 
     let listVisible = true;
-    const toggleListBtn = toggleBtnDiv.querySelector(
+    const toggleListBtn = rootDiv.querySelector(
       '[name="listil-showhide-toggle"]'
     )!;
     toggleListBtn.addEventListener("click", (e) => {
@@ -1501,7 +1505,7 @@ function addListilControlsToLists(skipReload: boolean = false): void {
     });
 
     let controlsVisible = false;
-    const toggleControlsBtn = toggleBtnDiv.querySelector(
+    const toggleControlsBtn = rootDiv.querySelector(
       '[name="listil-onoff-toggle"]'
     )!;
     toggleControlsBtn.addEventListener("click", (e) => {
@@ -1513,13 +1517,6 @@ function addListilControlsToLists(skipReload: boolean = false): void {
         ? "Hide Controls"
         : "Show Controls";
     });
-
-    const rootDiv = createElementByHtml(/*html*/ `
-      <div class="listil-root">
-      </div>
-    `);
-    rootDiv.appendChild(toggleBtnDiv);
-    rootDiv.appendChild(controls);
 
     const parentOfList = list.parentNode!;
     parentOfList.insertBefore(rootDiv, list);
