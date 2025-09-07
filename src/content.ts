@@ -312,20 +312,22 @@ class ListFilter {
     // 表示リセット
     reset && this.resetItem(item);
 
+    let match = null;
     const text: string = item.innerText;
-    const textMatch = (): boolean => {
-      if (setting.regex) {
-        return text.match(setting.regex) !== null;
+    if (setting.regex) {
+      match = text.match(setting.regex) !== null;
+    }
+    const elementMatchedCriterion = (() => {
+      if (!setting.criterion) {
+        return undefined;
       }
-      if (setting.criterion) {
-        const criterion = new CriterionFactory().create(setting.criterion);
-        const matched = criterion.existsIn(item);
-        console.log("DEBUG", "criterion.existsIn:", matched, criterion);
-        return matched;
-      }
-      return false;
-    };
-    let match = textMatch();
+      const criterion = new CriterionFactory().create(setting.criterion);
+      const matchedElement = criterion.findIn(item);
+      return matchedElement;
+    })();
+    if (setting.criterion) {
+      match = !!elementMatchedCriterion;
+    }
     if (!match) {
       const formElements = extractValidFormElements(item, true);
       const formValueMatch = Array.from(formElements).some(
@@ -367,10 +369,22 @@ class ListFilter {
       if (setting.highlight) {
         this.applyHighlights(item);
       }
+      if (setting.marker && elementMatchedCriterion) {
+        elementMatchedCriterion.classList.add(
+          "listil-critorion-matched",
+          "listil-custom-mark-yellow"
+        );
+      }
     }
     if (isNotMatchedTarget) {
       if (setting.marker) {
         this.applyMarkers(item, setting, "listil-custom-mark-purple");
+      }
+      if (setting.marker && elementMatchedCriterion) {
+        elementMatchedCriterion.classList.add(
+          "listil-critorion-matched",
+          "listil-custom-mark-purple"
+        );
       }
       if (setting.grayOut) {
         item.classList.add("listil-grayout");
@@ -469,6 +483,15 @@ class ListFilter {
 
     const instance = new Mark(this.list);
     instance.unmark();
+
+    // 特殊条件のマーカー用
+    this.list.querySelectorAll(".listil-critorion-matched").forEach((el) => {
+      el.classList.remove(
+        "listil-critorion-matched",
+        "listil-custom-mark-yellow",
+        "listil-custom-mark-purple"
+      );
+    });
   }
 
   /**

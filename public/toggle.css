@@ -91,7 +91,8 @@ input.listil-regex-input {
 }
 
 mark.listil-custom-mark,
-mark.listil-custom-mark-yellow {
+mark.listil-custom-mark-yellow,
+.listil-custom-mark-yellow {
   /**
    * yellow
    * - #FFFF00: Saturation 100, luminance 0.9278
@@ -102,7 +103,8 @@ mark.listil-custom-mark-yellow {
   color: black;
 }
 
-mark.listil-custom-mark-purple {
+mark.listil-custom-mark-purple,
+.listil-custom-mark-purple {
   /**
    * purple
    * - #8000FF: Saturation 100, luminance 0.1180919423 ... Too deep
