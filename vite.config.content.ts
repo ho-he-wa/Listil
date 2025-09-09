@@ -17,6 +17,7 @@ export default defineConfig({
         format: "iife",
       },
     },
+    sourcemap: true,
   },
   resolve: {
     alias: {

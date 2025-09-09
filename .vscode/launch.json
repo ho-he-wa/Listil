@@ -11,7 +11,8 @@
       "runtimeArgs": [
         "--load-extension=${workspaceFolder}/dist",
         "--user-data-dir=${workspaceFolder}/.vscode/chrome-user-data"
-      ]
+      ],
+      "sourceMaps": true,
     }
   ]
 }
