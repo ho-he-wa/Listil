@@ -6,10 +6,10 @@
       "request": "launch",
       "name": "Launch Chrome with Extension",
       "url": "https://www.google.com", // 任意のデバッグ対象ページ
-      "webRoot": "${workspaceFolder}",
-      "runtimeExecutable": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "webRoot": "${workspaceFolder}/src",
+      "runtimeExecutable": "C:\\Program Files\\Google\\chrome_for_testing\\chrome.exe",
       "runtimeArgs": [
-        "--load-extension=${workspaceFolder}/public",
+        "--load-extension=${workspaceFolder}/dist",
         "--user-data-dir=${workspaceFolder}/.vscode/chrome-user-data"
       ]
     }
