@@ -10,6 +10,7 @@ import { getElementsByChildCount } from "@/Dom/getElementsByChildCount";
 import { querySelectorAllWithDepth } from "@/Dom/querySelectorAllWithDepth";
 import { redrawOf } from "@/Dom/redrawOf";
 import { GlobalSettingManager } from "@/GlobalSetting/GlobalSettingManager";
+import { HtmlElementSummary } from "@/List/HtmlElementSummary";
 import { PageSettingManager } from "@/PageSetting/PageSettingManager";
 import Mark from "mark.js";
 
@@ -1122,7 +1123,7 @@ class ControlFactory {
 }
 
 /**
- * 事実上のリストにlist/listitemの識別タグを付加
+ * 実質リストにlist/listitemの識別タグを付加
  *
  * @param root - 探索の起点となるルート要素（デフォルトは document.body）
  */
@@ -1142,9 +1143,16 @@ function addPseudoType(root: Element = document.body): void {
   ];
   const elementsWithManyChildren = getElementsByChildCount(root, 20, exclude);
   elementsWithManyChildren.forEach((element) => {
+    const elementsSummary = new HtmlElementSummary(
+      Array.from(element.children).filter((el) => el instanceof HTMLElement)
+    );
     element.dataset.pseudotype = PseudoType.list;
     Array.from(element.children).map((child) => {
       if (!(child instanceof HTMLElement)) {
+        return;
+      }
+      // なるべくリスト要素ではない要素を除外する
+      if (!elementsSummary.maybeListItems().includes(child)) {
         return;
       }
       child.dataset.pseudotype = PseudoType.listitem;
