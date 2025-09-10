@@ -2,13 +2,15 @@ import { controlsRoot } from "@/Content/Views/controlsRoot";
 import { listilModal } from "@/Content/Views/listilModal";
 import { listilModalSettingEditor } from "@/Content/Views/listilModalSettingEditor";
 import { CriterionFactory } from "@/Criteria/CriterionFactory";
+import { addCssClass } from "@/Dom/addCssClass";
 import { createElementByHtml } from "@/Dom/createElementByHtml";
 import { extractAttributeMaps } from "@/Dom/extractAttributeMaps";
 import { extractValidFormElements } from "@/Dom/extractValidFormElements";
-import { getContentBoxSize } from "@/Dom/getContentBoxSize";
 import { getElementsByChildCount } from "@/Dom/getElementsByChildCount";
+import { isDisplayNone } from "@/Dom/isDisplayNone";
 import { querySelectorAllWithDepth } from "@/Dom/querySelectorAllWithDepth";
 import { redrawOf } from "@/Dom/redrawOf";
+import { setDataAttr } from "@/Dom/setDataAttr";
 import { GlobalSettingManager } from "@/GlobalSetting/GlobalSettingManager";
 import { HtmlElementSummary } from "@/List/HtmlElementSummary";
 import { PageSettingManager } from "@/PageSetting/PageSettingManager";
@@ -215,46 +217,6 @@ class ListFinder {
 
     return false;
   }
-}
-
-/**
- * 要素は非表示か否か。計算後の状態は評価しない。DocumentFragment上でも機能する。
- */
-function isDisplayNone(el: HTMLElement): boolean {
-  const style = window.getComputedStyle(el);
-  const invisible = style.display === "none";
-  return invisible;
-}
-
-/**
- * 要素は非表示か否か。計算後の状態で評価。DocumentFragment上では期待通りには機能しない。
- */
-function isComputedInvisible(el: HTMLElement): boolean {
-  const style = window.getComputedStyle(el);
-  const size = getContentBoxSize(el);
-  const invisible =
-    style.display === "none" || size.width === 0 || size.height === 0;
-  return invisible;
-}
-
-/**
- * データ属性を更新。ただし既に設定済の場合は何もしない。
- */
-function setDataAttr(el: HTMLElement, key: string, value: string) {
-  if ((el.dataset[key] ?? undefined) === value) {
-    return;
-  }
-  el.dataset[key] = value;
-}
-
-/**
- * クラス属性を更新。ただし既に設定済の場合は何もしない。
- */
-function addCssClass(el: HTMLElement, token: string) {
-  if (el.classList.contains(token)) {
-    return;
-  }
-  el.classList.add(token);
 }
 
 /**
