@@ -269,7 +269,7 @@ class ListFilter {
    * リストにフィルターを適用
    */
   public apply(): void {
-    const items = this.findListItems();
+    const items = ListFilter.findListItems(this.list);
     this.clear();
 
     items.forEach((item: HTMLElement) => {
@@ -284,7 +284,7 @@ class ListFilter {
    * リストのフィルターをクリア
    */
   public clear(): void {
-    const items = this.findListItems();
+    const items = ListFilter.findListItems(this.list);
     this.removeMarkers();
     this.removeHighlights();
     items.forEach((item: HTMLElement) => {
@@ -295,22 +295,22 @@ class ListFilter {
   /**
    * リスト項目を抽出する
    */
-  private findListItems() {
+  private static findListItems(list: HTMLElement) {
     let items: HTMLElement[];
-    if (this.list.matches(`[data-pseudotype="${PseudoType.list}"]`)) {
+    if (list.matches(`[data-pseudotype="${PseudoType.list}"]`)) {
       items = querySelectorAllWithDepth(
-        this.list,
+        list,
         `[data-pseudotype="${PseudoType.listitem}"]`,
         1
       );
     } else {
-      const tag = this.list.tagName.toLowerCase();
+      const tag = list.tagName.toLowerCase();
       items =
         tag === "table"
-          ? querySelectorAllWithDepth<HTMLElement>(this.list, "tr", 2).filter(
-              (tr) => !this.shouldExcludeTableRow(tr)
+          ? querySelectorAllWithDepth<HTMLElement>(list, "tr", 2).filter(
+              (tr) => !ListFilter.shouldExcludeTableRow(tr)
             )
-          : querySelectorAllWithDepth(this.list, "li", 1);
+          : querySelectorAllWithDepth(list, "li", 1);
     }
     return items;
   }
@@ -472,7 +472,7 @@ class ListFilter {
    * @param tr 対象の <tr> 要素
    * @returns boolean 除外すべき場合 true、そうでなければ false
    */
-  private shouldExcludeTableRow(tr: HTMLElement): boolean {
+  private static shouldExcludeTableRow(tr: HTMLElement): boolean {
     if (
       tr.closest("thead") ||
       tr.closest("tfoot") ||
