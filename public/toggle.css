@@ -133,7 +133,8 @@ mark.listil-custom-mark-purple,
 }
 
 .listil-narrow,
-.listil-narrow>td>* {
+.listil-narrow>td>*,
+table.listil-narrow tr>td>* {
   max-height: 3.0rem !important;
   overflow: hidden !important;
 }
