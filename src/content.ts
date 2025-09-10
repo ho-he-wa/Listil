@@ -1085,21 +1085,25 @@ function addPseudoType(root: Element = document.body): void {
     "datalist",
   ];
   const elementsWithManyChildren = getElementsByChildCount(root, 20, exclude);
-  elementsWithManyChildren.forEach((element) => {
-    const elementsSummary = new HtmlElementSummary(
-      Array.from(element.children).filter((el) => el instanceof HTMLElement)
-    );
-    element.dataset.pseudotype = PseudoType.list;
-    Array.from(element.children).map((child) => {
-      if (!(child instanceof HTMLElement)) {
-        return;
-      }
-      // なるべくリスト要素ではない要素を除外する
-      if (!elementsSummary.maybeListItems().includes(child)) {
-        return;
-      }
-      child.dataset.pseudotype = PseudoType.listitem;
-    });
+  elementsWithManyChildren.forEach((elementWithManyChildren) => {
+    redrawOf(elementWithManyChildren)
+      .run((element) => {
+        const elementsSummary = new HtmlElementSummary(
+          Array.from(element.children).filter((el) => el instanceof HTMLElement)
+        );
+        element.dataset.pseudotype = PseudoType.list;
+        Array.from(element.children).map((child) => {
+          if (!(child instanceof HTMLElement)) {
+            return;
+          }
+          // なるべくリスト要素ではない要素を除外する
+          if (!elementsSummary.maybeListItems().includes(child)) {
+            return;
+          }
+          child.dataset.pseudotype = PseudoType.listitem;
+        });
+      })
+      .show();
   });
   // 子要素のリスト要素候補で評価
   const candidateItems = Array.from(
@@ -1128,10 +1132,14 @@ function addPseudoType(root: Element = document.body): void {
     if (items.length < 5) {
       continue;
     }
-    list.dataset.pseudotype = PseudoType.list;
-    for (const item of items) {
-      item.dataset.pseudotype = PseudoType.listitem;
-    }
+    redrawOf(list)
+      .run((list) => {
+        list.dataset.pseudotype = PseudoType.list;
+        for (const item of items) {
+          item.dataset.pseudotype = PseudoType.listitem;
+        }
+      })
+      .show();
   }
 }
 
