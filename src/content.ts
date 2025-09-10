@@ -773,28 +773,8 @@ class AdvancedSettingsModal {
 
 class ControlFactory {
   /**
-   * チェックボックス作成
+   * チェックボックス初期化
    */
-  public createCheckbox(
-    label: string,
-    checked: boolean,
-    onChange: (checked: boolean) => void
-  ): HTMLElement {
-    const wrapper = createElementByHtml<HTMLLabelElement>(/*html*/ `
-      <label
-        style="margin-right:8px;">
-        <input type="checkbox"
-          form="not-exists"
-          class="listil-checkbox"
-          style="margin-right:4px;"
-        >${label}</label>
-    `)!;
-
-    const checkbox = wrapper.querySelector<HTMLInputElement>("input")!;
-    this.initCheckbox(checkbox, checked, onChange);
-    return wrapper;
-  }
-
   public initCheckbox(
     checkbox: HTMLInputElement,
     checked: boolean,
