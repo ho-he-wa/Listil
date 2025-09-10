@@ -8,6 +8,7 @@ import { extractValidFormElements } from "@/Dom/extractValidFormElements";
 import { getContentBoxSize } from "@/Dom/getContentBoxSize";
 import { getElementsByChildCount } from "@/Dom/getElementsByChildCount";
 import { querySelectorAllWithDepth } from "@/Dom/querySelectorAllWithDepth";
+import { redrawOf } from "@/Dom/redrawOf";
 import { GlobalSettingManager } from "@/GlobalSetting/GlobalSettingManager";
 import { PageSettingManager } from "@/PageSetting/PageSettingManager";
 import Mark from "mark.js";
@@ -216,9 +217,18 @@ class ListFinder {
 }
 
 /**
- * 要素は非表示か否か
+ * 要素は非表示か否か。計算後の状態は評価しない。DocumentFragment上でも機能する。
  */
-function isInvisible(el: HTMLElement): boolean {
+function isDisplayNone(el: HTMLElement): boolean {
+  const style = window.getComputedStyle(el);
+  const invisible = style.display === "none";
+  return invisible;
+}
+
+/**
+ * 要素は非表示か否か。計算後の状態で評価。DocumentFragment上では期待通りには機能しない。
+ */
+function isComputedInvisible(el: HTMLElement): boolean {
   const style = window.getComputedStyle(el);
   const size = getContentBoxSize(el);
   const invisible =
@@ -269,15 +279,18 @@ class ListFilter {
    * リストにフィルターを適用
    */
   public apply(): void {
-    const items = ListFilter.findListItems(this.list);
-    this.clear();
-
-    items.forEach((item: HTMLElement) => {
-      this.settingList.list.forEach((setting, index) => {
-        // 前処理で表示リセット済なのでresetオプションは常にfalse
-        this.applyToItem(item, setting, false);
-      });
-    });
+    redrawOf(this.list)
+      .run((listElement) => {
+        const items = ListFilter.findListItems(listElement);
+        this.clear();
+        items.forEach((item: HTMLElement) => {
+          this.settingList.list.forEach((setting, index) => {
+            // 前処理で表示リセット済なのでresetオプションは常にfalse
+            this.applyToItem(item, setting, false);
+          });
+        });
+      })
+      .show();
   }
 
   /**
@@ -325,14 +338,14 @@ class ListFilter {
   ) {
     // 元々非表示な要素は無視
     const originallyHidden =
-      (item.dataset.ignore ?? null) == null && isInvisible(item);
+      (item.dataset.ignore ?? null) == null && isDisplayNone(item);
     if (originallyHidden || item.dataset.ignore === "yes") {
       setDataAttr(item, "ignore", "yes");
       return;
     }
     setDataAttr(item, "ignore", "no");
 
-    if (isInvisible(item)) {
+    if (isDisplayNone(item)) {
       // 既に非表示であれば表示の加工しても意味がないのでスキップ
       return;
     }
