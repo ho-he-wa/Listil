@@ -15,6 +15,7 @@ import { GlobalSettingManager } from "@/GlobalSetting/GlobalSettingManager";
 import { HtmlElementSummary } from "@/List/HtmlElementSummary";
 import { PageSettingManager } from "@/PageSetting/PageSettingManager";
 import Mark from "mark.js";
+import { findAncestorWithId } from "./Dom/findAncestorWithId";
 
 console.log("[DEBUG] Content script loaded (mark.js version)");
 
@@ -1158,22 +1159,6 @@ function assignIdToListElements(root: Element = document.body) {
     // idを設定
     el.id = newId;
   });
-}
-
-/**
- * idを持つ祖先要素を検索
- */
-function findAncestorWithId(el: HTMLElement) {
-  let parentWithId: HTMLElement | null = el.parentElement;
-  let ancestor = null;
-  while (parentWithId) {
-    if (parentWithId.id) {
-      ancestor = parentWithId;
-      break;
-    }
-    parentWithId = parentWithId.parentElement;
-  }
-  return ancestor;
 }
 
 const SavePrefix = {
