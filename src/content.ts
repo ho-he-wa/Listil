@@ -265,7 +265,7 @@ class ListFilter {
   public clear(): void {
     const items = ListFilter.findListItems(this.list);
     this.removeMarkers();
-    this.removeHighlights();
+    this.removeHighlights(items);
     items.forEach((item: HTMLElement) => {
       this.resetItem(item);
     });
@@ -510,10 +510,14 @@ class ListFilter {
   /**
    * ハイライトを削除
    */
-  private removeHighlights(): void {
+  private removeHighlights(items: HTMLElement[]): void {
     if (!this.listSettingId) return;
-    const items = this.list.querySelectorAll(".listil-highlight-item");
-    items.forEach((item) => item.classList.remove("listil-highlight-item"));
+    items.forEach((item) => {
+      if (!item.classList.contains("listil-highlight-item")) {
+        return;
+      }
+      item.classList.remove("listil-highlight-item");
+    });
   }
 }
 
