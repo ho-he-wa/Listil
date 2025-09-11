@@ -264,7 +264,9 @@ class ListFilter {
    */
   public clear(): void {
     const items = ListFilter.findListItems(this.list);
-    this.removeMarkers();
+    items.forEach((item) => {
+      this.removeMarkers(item);
+    });
     this.removeHighlights(items);
     items.forEach((item: HTMLElement) => {
       this.resetItem(item);
@@ -481,6 +483,7 @@ class ListFilter {
     setting: FilterSettingInterface,
     className: string = "listil-custom-mark"
   ): void {
+    addCssClass(element, "listil-has-marker");
     const instance = new Mark(element);
     if (setting.regex) {
       instance.markRegExp(setting.regex, {
@@ -492,14 +495,16 @@ class ListFilter {
   /**
    * マーカーを削除
    */
-  private removeMarkers(): void {
+  private removeMarkers(element: HTMLElement): void {
     if (!this.listSettingId) return;
 
-    const instance = new Mark(this.list);
-    instance.unmark();
+    if (element.classList.contains("listil-has-marker")) {
+      const instance = new Mark(element);
+      instance.unmark();
+    }
 
     // 特殊条件のマーカー用
-    this.list.querySelectorAll(".listil-critorion-matched").forEach((el) => {
+    element.querySelectorAll(".listil-critorion-matched").forEach((el) => {
       el.classList.remove(
         "listil-critorion-matched",
         "listil-custom-mark-yellow",
