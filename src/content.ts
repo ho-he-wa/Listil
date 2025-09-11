@@ -267,7 +267,9 @@ class ListFilter {
     items.forEach((item) => {
       this.removeMarkers(item);
     });
-    this.removeHighlights(items);
+    items.forEach((item) => {
+      this.removeHighlight(item);
+    });
     items.forEach((item: HTMLElement) => {
       this.resetItem(item);
     });
@@ -378,7 +380,7 @@ class ListFilter {
         this.applyMarkers(item, setting, "listil-custom-mark-yellow");
       }
       if (setting.highlight) {
-        this.applyHighlights(item);
+        this.applyHighlight(item);
       }
       if (setting.marker && elementMatchedCriterion) {
         addCssClass(elementMatchedCriterion, "listil-critorion-matched");
@@ -516,7 +518,7 @@ class ListFilter {
   /**
    * ハイライトを適用
    */
-  private applyHighlights(element: HTMLElement): void {
+  private applyHighlight(element: HTMLElement): void {
     // 枠線を追加
     addCssClass(element, "listil-highlight-item");
   }
@@ -524,14 +526,12 @@ class ListFilter {
   /**
    * ハイライトを削除
    */
-  private removeHighlights(items: HTMLElement[]): void {
+  private removeHighlight(element: HTMLElement): void {
     if (!this.listSettingId) return;
-    items.forEach((item) => {
-      if (!item.classList.contains("listil-highlight-item")) {
-        return;
-      }
-      item.classList.remove("listil-highlight-item");
-    });
+    if (!element.classList.contains("listil-highlight-item")) {
+      return;
+    }
+    element.classList.remove("listil-highlight-item");
   }
 }
 
