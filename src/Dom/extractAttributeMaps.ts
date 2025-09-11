@@ -22,7 +22,6 @@ export function extractAttributeMaps(
           attr.name.startsWith("data-") || targetAttributes.includes(attr.name)
       )
       .forEach((attr) => {
-        console.log("DEBUG attribute:", attr);
         item.set(attr.name, attr.value); // e.g., "data-role" => "admin"
       });
     if (item.size > 0) {

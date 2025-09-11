@@ -172,7 +172,6 @@ class ListFinder {
    */
   private isEligibleList(el: HTMLElement): boolean {
     const tag = el.tagName.toLowerCase();
-    console.log("[DEBUG] " + (el.dataset.pseudotype ?? "-"));
 
     // 対象外の要素配下か
     if (el.closest(this.excludeSelector)) return false;
@@ -184,7 +183,6 @@ class ListFinder {
     } else if (tag === "ul" || tag === "ol") {
       return querySelectorAllWithDepth(el, "li", 1).length >= 10;
     } else if (el.dataset.pseudotype === PseudoType.list) {
-      console.log("[DEBUG] pseudo listitem");
       return (
         querySelectorAllWithDepth(
           el,
@@ -347,7 +345,6 @@ class ListFilter {
         }
       );
       match = formValueMatch;
-      console.log("DEBUG", "formValueMatch:", formValueMatch);
     }
     if (!match) {
       const attributeMaps = extractAttributeMaps(item);
@@ -357,7 +354,6 @@ class ListFilter {
         });
       });
       match = attributeMatch;
-      console.log("DEBUG", "attributeMatch:", attributeMatch);
     }
     const regexOrCriterion = setting.regex || setting.criterion;
     const isMatchedTarget = regexOrCriterion
