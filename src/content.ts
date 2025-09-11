@@ -693,7 +693,7 @@ class AdvancedSettingsModal {
         return;
       }
       try {
-        setting.regex = new RegExp(str, "gi");
+        setting.regex = new RegExp(str, "i");
         setting.criterion = "";
         // 正常な場合：装飾をリセット
         input.style.borderColor = "";
@@ -930,7 +930,7 @@ class ControlFactory {
         return;
       }
       try {
-        currentFirstSetting().regex = new RegExp(str, "gi");
+        currentFirstSetting().regex = new RegExp(str, "i");
         currentFirstSetting().criterion = "";
         // 正常な場合：装飾をリセット
         input.style.borderColor = "";
