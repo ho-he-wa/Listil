@@ -302,6 +302,10 @@ class ListFilter {
     setting: FilterSettingInterface,
     reset: boolean = true
   ) {
+    if (!setting.regex && !setting.criterion) {
+      return;
+    }
+
     // 元々非表示な要素は無視
     const originallyHidden =
       (item.dataset.ignore ?? null) == null && isDisplayNone(item);
@@ -311,7 +315,7 @@ class ListFilter {
     }
     setDataAttr(item, "ignore", "no");
 
-    if (isDisplayNone(item)) {
+    if (item.classList.contains("listil-hide") || isDisplayNone(item)) {
       // 既に非表示であれば表示の加工しても意味がないのでスキップ
       return;
     }
