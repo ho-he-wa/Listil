@@ -242,7 +242,7 @@ class ListFilter {
    */
   public apply(): void {
     redrawOf(this.list)
-      .run((listElement) => {
+      .edit((listElement) => {
         console.time("ListFilter.apply()");
         const items = ListFilter.findListItems(listElement);
         console.timeLog("ListFilter.apply()");
@@ -1104,7 +1104,7 @@ function addPseudoType(root: Element = document.body): void {
   const elementsWithManyChildren = getElementsByChildCount(root, 20, exclude);
   elementsWithManyChildren.forEach((elementWithManyChildren) => {
     redrawOf(elementWithManyChildren)
-      .run((element) => {
+      .edit((element) => {
         const elementsSummary = new HtmlElementSummary(
           Array.from(element.children).filter((el) => el instanceof HTMLElement)
         );
@@ -1150,7 +1150,7 @@ function addPseudoType(root: Element = document.body): void {
       continue;
     }
     redrawOf(list)
-      .run((list) => {
+      .edit((list) => {
         list.dataset.pseudotype = PseudoType.list;
         for (const item of items) {
           item.dataset.pseudotype = PseudoType.listitem;

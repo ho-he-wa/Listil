@@ -14,13 +14,13 @@ export function redrawOf(element: HTMLElement) {
   const nextSibling = element.nextSibling;
   parent.removeChild(element);
   const api: {
-    run: (callback: (el: HTMLElement) => void) => typeof api;
+    edit: (callback: (el: HTMLElement) => void) => typeof api;
     show: () => void;
   } = {
     /**
      * DOM要素への処理
      */
-    run: (callback: (el: HTMLElement) => void): typeof api => {
+    edit: (callback: (el: HTMLElement) => void): typeof api => {
       try {
         callback(element);
       } catch (e) {
