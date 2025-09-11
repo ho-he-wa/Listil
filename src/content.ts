@@ -424,6 +424,9 @@ class ListFilter {
    * 高さ制限を適用
    */
   private applyNarrow(item: HTMLElement) {
+    if (item.classList.contains("listil-narrow")) {
+      return;
+    }
     addCssClass(item, "listil-narrow");
     // trの高さ制限
     if (item.tagName.toLowerCase() === "tr") {
