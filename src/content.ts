@@ -404,20 +404,26 @@ class ListFilter {
   }
 
   public resetItem(item: HTMLElement) {
-    item.classList.remove("listil-grayout", "listil-hide", "listil-narrow");
     // trの高さ制限用ラッパーを削除
-    if (item.tagName.toLowerCase() === "tr") {
-      item.querySelectorAll(".listil-td-inner").forEach((tdInner) => {
-        const parent = tdInner.parentNode;
-        if (!parent) {
-          return;
+    if (
+      item.classList.contains("listil-narrow") &&
+      item.tagName.toLowerCase() === "tr"
+    ) {
+      // (tr > td > *)なので最大2階層
+      querySelectorAllWithDepth(item, ".listil-td-inner", 2).forEach(
+        (tdInner) => {
+          const parent = tdInner.parentNode;
+          if (!parent) {
+            return;
+          }
+          while (tdInner.firstChild) {
+            parent.insertBefore(tdInner.firstChild, tdInner);
+          }
+          parent.removeChild(tdInner);
         }
-        while (tdInner.firstChild) {
-          parent.insertBefore(tdInner.firstChild, tdInner);
-        }
-        parent.removeChild(tdInner);
-      });
+      );
     }
+    item.classList.remove("listil-grayout", "listil-hide", "listil-narrow");
   }
 
   /**
