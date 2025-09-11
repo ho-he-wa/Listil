@@ -245,14 +245,18 @@ class ListFilter {
   public apply(): void {
     redrawOf(this.list)
       .run((listElement) => {
+        console.time("ListFilter.apply()");
         const items = ListFilter.findListItems(listElement);
+        console.timeLog("ListFilter.apply()");
         this.clear();
+        console.timeLog("ListFilter.apply()");
         items.forEach((item: HTMLElement) => {
           this.settingList.list.forEach((setting, index) => {
             // 前処理で表示リセット済なのでresetオプションは常にfalse
             this.applyToItem(item, setting, false);
           });
         });
+        console.timeEnd("ListFilter.apply()");
       })
       .show();
   }
