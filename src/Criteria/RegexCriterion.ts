@@ -15,7 +15,7 @@ export class RegexCriterion implements CriterionInterface {
   }
 
   public findIn(element: HTMLElement): HTMLElement | undefined {
-    const text = element.innerText;
+    const text = element.textContent;
     const textMatched = text.match(this.regex) !== null;
     return textMatched ? element : undefined;
   }

@@ -42,7 +42,7 @@ export class SelectorCriterion {
       (el) => el instanceof HTMLElement
     );
     const found = Array.from(elements).filter((element) => {
-      return this.matchValue(element.innerText);
+      return this.matchValue(element.textContent);
     });
     return found.length > 0 ? found[0] : undefined;
   }
