@@ -324,7 +324,7 @@ class ListFilter {
     reset && this.resetItem(item);
 
     let match = null;
-    const text: string = item.innerText;
+    const text: string = item.textContent;
     if (setting.regex) {
       match = text.match(setting.regex) !== null;
     }
