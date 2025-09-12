@@ -2,17 +2,73 @@
  * マーカー。Mark.jsの代替。
  */
 export class MarkLite {
-  private highlights = new Map();
-  constructor(private rootElement: HTMLElement) {}
+  private highlights = new Map<string, Highlight>();
+  private crossNode: boolean;
 
-  markRegExp(
-    regExp: RegExp,
-    option: { className: string | undefined } = { className: undefined }
+  constructor(
+    private rootElement: HTMLElement,
+    options?: { crossNode?: boolean }
   ) {
+    this.crossNode = options?.crossNode ?? false;
+  }
+
+  markRegExp(regExp: RegExp, option: { className?: string } = {}) {
+    const className = option.className ?? "default";
+    if (this.crossNode) {
+      this.markRegExpCrossNode(regExp, className);
+    } else {
+      this.markRegExpSingleNode(regExp, className);
+    }
+  }
+
+  /**
+   * ノードをまたがずに文字列にマーカーをひく。軽量。
+   */
+  private markRegExpSingleNode(regExp: RegExp, className: string) {
+    const ranges: Range[] = [];
+
+    // 1. DOM を走査しテキストを抽出する
+    const walker = document.createTreeWalker(
+      this.rootElement,
+      NodeFilter.SHOW_TEXT,
+      null
+    );
+
+    // 2. 正規表現にマッチした Range のリストを作る。各 TextNode に対して正規表現を適用（Mark.js に近い）
+    let node: Text | null;
+    const regExpWk = new RegExp(regExp.source, addFlags(regExp.flags, "g"));
+    while ((node = walker.nextNode() as Text | null)) {
+      const text = node.textContent ?? "";
+      let match: RegExpExecArray | null;
+      regExpWk.lastIndex = 0;
+
+      while ((match = regExpWk.exec(text)) !== null) {
+        // 3. 開始と終了インデックスに対応する TextNode + offset を探して Range を作る
+        const start = match.index;
+        const end = start + match[0].length;
+
+        const range = new Range();
+        range.setStart(node, start);
+        range.setEnd(node, end);
+        ranges.push(range);
+      }
+    }
+
+    // 4. Highlight を登録
+    this._registerHighlight(className, ranges);
+  }
+
+  /**
+   * ノードをまたいで文字列にマーカーをひく。処理が重たいので注意。
+   */
+  private markRegExpCrossNode(regExp: RegExp, className: string) {
+    /** テキストノードのリスト(出現順) */
     const textNodes: Node[] = [];
+    /** テキストノードのテキスト全体での開始位置・終了位置のリスト(出現順) */
     const nodeRanges: [number, number][] = []; // 各 TextNode の [startOffsetInFlatText, endOffset)
 
     // 1. TextNode をすべて集め、仮想テキストを構築
+    /** テキストノードのテキストのリスト(出現順) */
     const fullTextParts: string[] = [];
     /**
      * Note : この関数はDOMを木構造の上から順に（深さ優先）たどって TextNode を収集する。そのためtextNodes[]はDOM出現順、nodeRangesはstart昇順となる。
@@ -20,8 +76,9 @@ export class MarkLite {
     const collectTextNodes = (node: Node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const start = fullTextParts.join("").length;
-        fullTextParts.push(node.textContent ?? "");
-        const end = fullTextParts.join("").length;
+        const text = node.textContent ?? "";
+        fullTextParts.push(text);
+        const end = start + text.length;
         textNodes.push(node);
         nodeRanges.push([start, end]);
       } else {
@@ -34,11 +91,11 @@ export class MarkLite {
     collectTextNodes(this.rootElement);
     const fullText = fullTextParts.join("");
 
-    // 2. 正規表現にマッチしたインデックスを探す
+    // 2. 正規表現にマッチした Range のリストを作る
     const ranges: Range[] = [];
     const regExpWk = new RegExp(regExp.source, addFlags(regExp.flags, "g"));
     regExpWk.lastIndex = 0;
-    let match;
+    let match: RegExpExecArray | null;
     while ((match = regExpWk.exec(fullText)) !== null) {
       const startIdx = match.index;
       const endIdx = match.index + match[0].length;
@@ -56,7 +113,7 @@ export class MarkLite {
     }
 
     // 4. Highlight を登録
-    this._registerHighlight(option.className ?? "default", ranges);
+    this._registerHighlight(className, ranges);
   }
 
   /**
