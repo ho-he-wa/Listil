@@ -8,6 +8,7 @@ import { extractAttributeMaps } from "@/Dom/extractAttributeMaps";
 import { extractValidFormElements } from "@/Dom/extractValidFormElements";
 import { getElementsByChildCount } from "@/Dom/getElementsByChildCount";
 import { isDisplayNone } from "@/Dom/isDisplayNone";
+import { MarkLite } from "@/Dom/MarkLite";
 import { querySelectorAllWithDepth } from "@/Dom/querySelectorAllWithDepth";
 import { redrawOf } from "@/Dom/redrawOf";
 import { setDataAttr } from "@/Dom/setDataAttr";
@@ -486,7 +487,8 @@ class ListFilter {
     className: string = "listil-custom-mark"
   ): void {
     addCssClass(element, "listil-has-marker");
-    const instance = new Mark(element);
+    //const instance = new Mark(element);
+    const instance = new MarkLite(element);
     if (setting.regex) {
       instance.markRegExp(setting.regex, {
         className: className,
@@ -501,7 +503,8 @@ class ListFilter {
     if (!this.listSettingId) return;
 
     if (element.classList.contains("listil-has-marker")) {
-      const instance = new Mark(element);
+      //const instance = new Mark(element);
+      const instance = new MarkLite(element);
       instance.unmark();
     }
 
