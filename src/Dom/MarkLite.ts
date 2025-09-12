@@ -13,15 +13,15 @@ export class MarkLite {
     const nodeRanges: [number, number][] = []; // 各 TextNode の [startOffsetInFlatText, endOffset)
 
     // 1. TextNode をすべて集め、仮想テキストを構築
-    let fullText = "";
+    const fullTextParts: string[] = [];
     /**
      * Note : この関数はDOMを木構造の上から順に（深さ優先）たどって TextNode を収集する。そのためtextNodes[]はDOM出現順、nodeRangesはstart昇順となる。
      */
     const collectTextNodes = (node: Node) => {
       if (node.nodeType === Node.TEXT_NODE) {
-        const start = fullText.length;
-        fullText += node.textContent;
-        const end = fullText.length;
+        const start = fullTextParts.join("").length;
+        fullTextParts.push(node.textContent ?? "");
+        const end = fullTextParts.join("").length;
         textNodes.push(node);
         nodeRanges.push([start, end]);
       } else {
@@ -32,6 +32,7 @@ export class MarkLite {
     };
 
     collectTextNodes(this.rootElement);
+    const fullText = fullTextParts.join("");
 
     // 2. 正規表現にマッチしたインデックスを探す
     const ranges: Range[] = [];
