@@ -1,3 +1,5 @@
+import { copyRegExp } from "@/RegExp/copyRegExp";
+
 /**
  * マーカー。Mark.jsの代替。
  */
@@ -36,7 +38,7 @@ export class MarkLite {
 
     // 2. 正規表現にマッチした Range のリストを作る。各 TextNode に対して正規表現を適用（Mark.js に近い）
     let node: Text | null;
-    const regExpWk = new RegExp(regExp.source, addFlags(regExp.flags, "g"));
+    const regExpWk = copyRegExp(regExp, { flagsToAdd: "g" });
     while ((node = walker.nextNode() as Text | null)) {
       const text = node.textContent ?? "";
       let match: RegExpExecArray | null;
@@ -93,7 +95,7 @@ export class MarkLite {
 
     // 2. 正規表現にマッチした Range のリストを作る
     const ranges: Range[] = [];
-    const regExpWk = new RegExp(regExp.source, addFlags(regExp.flags, "g"));
+    const regExpWk = copyRegExp(regExp, { flagsToAdd: "g" });
     regExpWk.lastIndex = 0;
     let match: RegExpExecArray | null;
     while ((match = regExpWk.exec(fullText)) !== null) {
@@ -189,15 +191,4 @@ export class MarkLite {
       typeof Highlight !== "undefined"
     );
   }
-}
-/**
- * 与えられた正規表現フラグ文字列に、追加のフラグを重複なく加える。
- *
- * @param originalFlags - 例: "i"
- * @param flagsToAdd - 例: "g"
- * @returns 新しいフラグ文字列。例: "gi"
- */
-function addFlags(originalFlags: string, flagsToAdd: string): string {
-  const combined = new Set([...originalFlags, ...flagsToAdd]);
-  return [...combined].sort().join(""); // フラグ順は推奨順にソート
 }
