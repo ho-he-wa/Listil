@@ -7,17 +7,19 @@ export function listilModal() {
         </div>
         <div data-name="listil-modal-content" class="listil-modal-content">
           <h3 class="listil-modal-title">Advanced Filter Settings</h3>
-          <div data-name="switch-setting-div">
+          <div data-name="switch-setting-div" data-dandd-ignore="on">
             <select name="setting-select"></select>
             <input name="setting-name" type="text"
               placeholder="設定名">
             <button name="add-setting">＋設定をコピー</button>
           </div>
-          <div data-name="listil-setting-list" class="listil-setting-list">
+          <div data-name="listil-setting-list" class="listil-setting-list" data-dandd-ignore="on">
             <!-- Add dynamically -->
           </div>
-          <button name="add-filter">＋ Add Filter</button>
-          <button name="close">✖ Close</button>
+          <div data-dandd-ignore="on">
+            <button name="add-filter">＋ Add Filter</button>
+            <button name="close">✖ Close</button>
+          </div>
         </div>
       </div>
     `);

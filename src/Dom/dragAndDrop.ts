@@ -8,6 +8,17 @@ export function dragAndDrop(dAndDElement: HTMLElement) {
   let offsetY = 0;
 
   const onMouseDown = (e: MouseEvent) => {
+    // ドラッグ・アンド・ドロップ抑制要素配下であれば何もしない
+    const ignoreElements = Array.from(
+      dAndDElement.querySelectorAll('[data-dandd-ignore="on"]')
+    );
+    if (
+      e.target instanceof Node &&
+      ignoreElements.some((ignore) => ignore.contains(e.target as Node))
+    ) {
+      return;
+    }
+
     isDragging = true;
     dAndDElement.style.cursor = "grabbing";
 
