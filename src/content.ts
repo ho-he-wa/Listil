@@ -17,6 +17,7 @@ import { HtmlElementSummary } from "@/List/HtmlElementSummary";
 import { cleanUrl } from "@/Misc/MyURL";
 import { PageSettingManager } from "@/PageSetting/PageSettingManager";
 import Mark from "mark.js";
+import { dragAndDrop } from "./Dom/dragAndDrop";
 import { findAncestorWithId } from "./Dom/findAncestorWithId";
 
 console.log("[DEBUG] Content script loaded (mark.js version)");
@@ -538,7 +539,6 @@ class ListFilter {
     element.classList.remove("listil-highlight-item");
   }
 }
-
 /**
  * アドバンスド設定モーダル
  */
@@ -561,30 +561,10 @@ class AdvancedSettingsModal {
     this.modal = this.createModal();
     this.onchange = onchange;
 
-    const box = this.modal.querySelector<HTMLElement>(
+    const modalBody = this.modal.querySelector<HTMLElement>(
       '[data-name="listil-modal-content"]'
     )!;
-    let isDragging = false;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    box.addEventListener("mousedown", (e) => {
-      isDragging = true;
-      box.style.cursor = "grabbing";
-      offsetX = e.clientX - box.offsetLeft;
-      offsetY = e.clientY - box.offsetTop;
-    });
-
-    document.addEventListener("mousemove", (e) => {
-      if (!isDragging) return;
-      box.style.left = `${e.clientX - offsetX}px`;
-      box.style.top = `${e.clientY - offsetY}px`;
-    });
-
-    document.addEventListener("mouseup", () => {
-      isDragging = false;
-      box.style.cursor = "grab";
-    });
+    dragAndDrop(modalBody).apply();
   }
 
   private currentSettingList(): FilterSettingList {
