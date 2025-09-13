@@ -1,3 +1,4 @@
+import { TextNodeCollector } from "@/Dom/TextNodeCollector";
 import { copyRegExp } from "@/RegExp/copyRegExp";
 
 /**
@@ -64,34 +65,9 @@ export class MarkLite {
    * ノードをまたいで文字列にマーカーをひく。処理が重たいので注意。
    */
   private markRegExpCrossNode(regExp: RegExp, className: string) {
-    /** テキストノードのリスト(出現順) */
-    const textNodes: Node[] = [];
-    /** テキストノードのテキスト全体での開始位置・終了位置のリスト(出現順) */
-    const nodeRanges: [number, number][] = []; // 各 TextNode の [startOffsetInFlatText, endOffset)
-
     // 1. TextNode をすべて集め、仮想テキストを構築
-    /** テキストノードのテキストのリスト(出現順) */
-    const fullTextParts: string[] = [];
-    /**
-     * Note : この関数はDOMを木構造の上から順に（深さ優先）たどって TextNode を収集する。そのためtextNodes[]はDOM出現順、nodeRangesはstart昇順となる。
-     */
-    const collectTextNodes = (node: Node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const start = fullTextParts.join("").length;
-        const text = node.textContent ?? "";
-        fullTextParts.push(text);
-        const end = start + text.length;
-        textNodes.push(node);
-        nodeRanges.push([start, end]);
-      } else {
-        for (const child of node.childNodes as any) {
-          collectTextNodes(child);
-        }
-      }
-    };
-
-    collectTextNodes(this.rootElement);
-    const fullText = fullTextParts.join("");
+    const collector = new TextNodeCollector(this.rootElement);
+    const { textNodes, nodeRanges, fullText } = collector.collect();
 
     // 2. 正規表現にマッチした Range のリストを作る
     const ranges: Range[] = [];
