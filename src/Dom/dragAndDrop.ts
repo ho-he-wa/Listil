@@ -10,8 +10,11 @@ export function dragAndDrop(dAndDElement: HTMLElement) {
   const onMouseDown = (e: MouseEvent) => {
     isDragging = true;
     dAndDElement.style.cursor = "grabbing";
-    offsetX = e.clientX - dAndDElement.offsetLeft;
-    offsetY = e.clientY - dAndDElement.offsetTop;
+
+    // NOTE : getBoundingClientRect() ... offsetLeft参照の代わり。スタイルやレイアウトの影響を受けにくく、より正確な位置を取得できる
+    const rect = dAndDElement.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
   };
 
   const onMouseMove = (e: MouseEvent) => {
@@ -33,6 +36,8 @@ export function dragAndDrop(dAndDElement: HTMLElement) {
       // ドラッグ中・終了はドキュメント全体で検知（ドラッグ中にカーソルが外に出ても検出可能）
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
+      // 初期カーソルを設定
+      dAndDElement.style.cursor ||= "grab";
     },
   };
 }
