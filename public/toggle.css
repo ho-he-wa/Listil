@@ -100,8 +100,8 @@ mark.listil-custom-mark-yellow,
    * - #FFFF3F: Saturation  75, luminance 0.9313888141
    * - #FFFF7F: Saturation  50, luminance 0.9431230607
    */
-  background-color: #FFFF3F;
-  color: black;
+  background-color: #FFFF3F !important;
+  color: black !important;
 }
 
 mark.listil-custom-mark-purple,
@@ -115,8 +115,8 @@ mark.listil-custom-mark-purple,
    * - #EBD8FF: Saturation  15, luminance 0.7399390113
    * - #EFE0FF: Saturation  12, luminance 0.7888203142 ... Too pale
    */
-  background-color:#EBD8FF;
-  color: black;
+  background-color:#EBD8FF !important;
+  color: black !important;
 }
 
 .listil-highlight-item {
