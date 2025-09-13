@@ -14,6 +14,7 @@ import { redrawOf } from "@/Dom/redrawOf";
 import { setDataAttr } from "@/Dom/setDataAttr";
 import { GlobalSettingManager } from "@/GlobalSetting/GlobalSettingManager";
 import { HtmlElementSummary } from "@/List/HtmlElementSummary";
+import { cleanUrl } from "@/Misc/MyURL";
 import { PageSettingManager } from "@/PageSetting/PageSettingManager";
 import Mark from "mark.js";
 import { findAncestorWithId } from "./Dom/findAncestorWithId";
@@ -1202,11 +1203,8 @@ const SavePrefix = {
 /**
  * 保存キー生成
  */
-function createStorageKey(
-  listId: string,
-  _url: string = location.href
-): string {
-  const wkUrl = SavePrefix.listSettings + location.href.replace(/[#?].*$/, "");
+function createStorageKey(listId: string): string {
+  const wkUrl = SavePrefix.listSettings + cleanUrl(location.href);
   return `${wkUrl}#${listId}`;
 }
 
@@ -1470,7 +1468,9 @@ const pageSettingManager = new PageSettingManager();
  */
 async function initialize(skipReload: boolean = false) {
   const globalSetting = await globalSettingManager.load();
-  const pageSetting = await pageSettingManager.findByUrl(location.href);
+  const pageSetting = await pageSettingManager.findByUrl(
+    cleanUrl(location.href)
+  );
   console.log("DEBUG", "loaded globalSetting: ", globalSetting);
   console.log("DEBUG", "loaded pageSetting: ", pageSetting);
   if (pageSetting?.enabled ?? globalSetting.enabled ?? true) {

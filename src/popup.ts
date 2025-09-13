@@ -1,5 +1,6 @@
 // popup.ts
 
+import { cleanUrl } from "@/Misc/MyURL";
 import { GlobalSettingManager } from "./GlobalSetting/GlobalSettingManager";
 import { PageSettingKeyManager } from "./PageSetting/PageSettingKeyManager";
 import { PageSettingManager } from "./PageSetting/PageSettingManager";
@@ -117,7 +118,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const pageSettingManager = new PageSettingManager();
-    const currentUrl = await getCurrentTabUrl();
+    const currentUrl = cleanUrl(await getCurrentTabUrl());
     const matchedSettings = await pageSettingManager.findAllByUrl(currentUrl);
     const matchedSetting = await pageSettingManager.findByUrl(currentUrl);
 
@@ -148,7 +149,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       // 保存
       const keyToSave = newUrlPattern
         ? createKey(newUrlPattern)
-        : createKey(currentUrl);
+        : createKey(cleanUrl(currentUrl));
       pageSettingManager.remove(
         createKey(thisDocument.oldPatternHidden().value)
       );
