@@ -9,11 +9,11 @@ export function listilModalSettingEditor() {
             <div class="listil-top-row">
               <input name="listil-pattern-input"
                 form="not-exists"
-                placeholder="正規表現を入力..."
+                placeholder="Enter search criteria..."
                 class="listil-modal-setting-input">
               <span data-name="listil-pattern-error"
                 class="listil-validation-error" style="display: none;">
-                  無効な正規表現です
+                  Invalid regular expression.
               </span>
               <label style="margin-right:8px;">
                 <input type="checkbox" name="invert-matching"

@@ -10,8 +10,8 @@ export function listilModal() {
           <div data-name="switch-setting-div" data-dandd-ignore="on">
             <select name="setting-select"></select>
             <input name="setting-name" type="text"
-              placeholder="設定名">
-            <button name="add-setting">＋設定をコピー</button>
+              placeholder="Setting Name">
+            <button name="add-setting">＋Copy Setting</button>
           </div>
           <div data-name="listil-setting-list" class="listil-setting-list" data-dandd-ignore="on">
             <!-- Add dynamically -->
