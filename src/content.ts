@@ -11,15 +11,14 @@ import { extractValidFormElements } from "@/Dom/extractValidFormElements";
 import { findAncestorWithId } from "@/Dom/findAncestorWithId";
 import { getElementsByChildCount } from "@/Dom/getElementsByChildCount";
 import { isDisplayNone } from "@/Dom/isDisplayNone";
-import { MarkLite } from "@/Dom/MarkLite";
 import { querySelectorAllWithDepth } from "@/Dom/querySelectorAllWithDepth";
 import { redrawOf } from "@/Dom/redrawOf";
 import { setDataAttr } from "@/Dom/setDataAttr";
 import { GlobalSettingManager } from "@/GlobalSetting/GlobalSettingManager";
 import { HtmlElementSummary } from "@/List/HtmlElementSummary";
+import { MarkLite } from "@/Mark/MarkLite";
 import { cleanUrl } from "@/Misc/MyURL";
 import { PageSettingManager } from "@/PageSetting/PageSettingManager";
-import Mark from "mark.js";
 
 console.log("[DEBUG] Content script loaded (mark.js version)");
 
@@ -497,8 +496,10 @@ class ListFilter {
     className: string = "listil-custom-mark"
   ): void {
     addCssClass(element, "listil-has-marker");
-    //const instance = new Mark(element);
-    const instance = new MarkLite(element);
+    const instance = MarkLite.create(element, {
+      crossNode: false,
+      proven: false,
+    });
     if (setting.regex) {
       instance.markRegExp(setting.regex, {
         className: className,
@@ -513,8 +514,10 @@ class ListFilter {
     if (!this.listSettingId) return;
 
     if (element.classList.contains("listil-has-marker")) {
-      //const instance = new Mark(element);
-      const instance = new MarkLite(element);
+      const instance = MarkLite.create(element, {
+        crossNode: false,
+        proven: false,
+      });
       instance.unmark();
     }
 

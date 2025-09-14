@@ -1,18 +1,40 @@
 import { TextNodeCollector } from "@/Dom/TextNodeCollector";
+import { MarkInterface } from "@/Mark/MarkInterface";
 import { copyRegExp } from "@/RegExp/copyRegExp";
+import { MarkProven } from "./MarkProven";
+
+type MarkOption = {
+  /** ノードをまたぐか否か */
+  crossNode?: boolean;
+};
+
+type MarkLiteCreateOption = {
+  /** 実績のあるライブラリを使うか */
+  proven?: boolean;
+} & MarkOption;
 
 /**
  * マーカー。Mark.jsの代替。
  */
-export class MarkLite {
+export class MarkLite implements MarkInterface {
   private highlights = new Map<string, Highlight>();
   private crossNode: boolean;
 
-  constructor(
-    private rootElement: HTMLElement,
-    options?: { crossNode?: boolean }
-  ) {
+  constructor(private rootElement: HTMLElement, options?: MarkOption) {
     this.crossNode = options?.crossNode ?? false;
+  }
+
+  /**
+   * static factory. オプションによっては実績のあるライブラリを用いる。
+   */
+  public static create(
+    rootElement: HTMLElement,
+    options?: MarkLiteCreateOption
+  ) {
+    if (options?.proven) {
+      return new MarkProven(rootElement);
+    }
+    return new MarkLite(rootElement, options);
   }
 
   markRegExp(regExp: RegExp, option: { className?: string } = {}) {
