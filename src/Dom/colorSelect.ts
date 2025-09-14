@@ -4,14 +4,14 @@ import { createElementByHtml } from "./createElementByHtml";
  * カラー(CSSクラス)の選択
  */
 export function colorClassSelect(
-  colorSelect: HTMLDivElement,
+  colorInput: HTMLInputElement,
   value: string,
   onchange: (value: string) => void
 ) {
   return {
     apply: () => {
-      const colorSelectWk = createElementByHtml(/*html*/ `
-        <div>
+      const colorSelectWrapper = createElementByHtml(/*html*/ `
+        <div data-name="marker-color-select" class="listil-select">
           <div class="listil-selected">&nbsp;</div>
           <div class="listil-options">
             <div class="listil-option" data-value="listil-custom-mark-red">
@@ -33,25 +33,22 @@ export function colorClassSelect(
               <div class="listil-custom-mark-purple">&nbsp;</div>
             </div>
           </div>
-          <input type="hidden" name="marker-color" />
+          <div data-name="replace-input"></div>
         </div>
         `);
-      const selected = colorSelectWk.querySelector(
+      const selected = colorSelectWrapper.querySelector(
         ".listil-selected"
       )! as HTMLElement;
-      const options = colorSelectWk.querySelector(
+      const options = colorSelectWrapper.querySelector(
         ".listil-options"
       )! as HTMLElement;
-      const markerColor = colorSelectWk.querySelector(
-        '[name="marker-color"]'
-      )! as HTMLInputElement;
       selected.addEventListener("click", (e) => {
         e.stopPropagation();
         options.style.display =
           options.style.display === "block" ? "none" : "block";
       });
       const colorOptions = Array.from(
-        colorSelectWk.querySelectorAll(".listil-option")
+        colorSelectWrapper.querySelectorAll(".listil-option")
       ) as HTMLElement[];
       colorOptions.forEach((option) => {
         option.addEventListener("click", () => {
@@ -60,12 +57,12 @@ export function colorClassSelect(
           if (!option.dataset.value) {
             throw new Error("Invalid marker color.");
           }
-          markerColor.value = option.dataset.value;
+          colorInput.value = option.dataset.value;
           onchange(option.dataset.value);
         });
       });
-      markerColor.value = value;
-      const initValue = markerColor.value;
+      colorInput.value = value;
+      const initValue = colorInput.value;
       // 初期値選択
       if (initValue) {
         const matchedOption = [...colorOptions].find(
@@ -75,9 +72,11 @@ export function colorClassSelect(
           selected.innerHTML = matchedOption.innerHTML;
         }
       }
-      Array.from(colorSelectWk.children).forEach((el) => {
-        colorSelect.appendChild(el);
-      });
+      const replaceInput = colorSelectWrapper.querySelector(
+        '[data-name="replace-input"]'
+      )!;
+      colorInput.after(colorSelectWrapper);
+      replaceInput.replaceWith(colorInput);
     },
   };
 }

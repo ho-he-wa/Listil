@@ -36,6 +36,7 @@ interface FilterSettingInterface {
   criterion: string;
   marker: boolean;
   markerColor: string;
+  invertMarkerColor: string;
   highlight: boolean;
   grayOut: boolean;
   hide: boolean;
@@ -52,6 +53,7 @@ interface SerializedFilterSettingInterface {
   criterion: string;
   marker: boolean;
   markerColor: string;
+  invertMarkerColor: string;
   highlight: boolean;
   grayOut: boolean;
   hide: boolean;
@@ -65,6 +67,7 @@ const defaultSetting: FilterSettingInterface = {
   criterion: "",
   marker: true,
   markerColor: "listil-custom-mark-yellow",
+  invertMarkerColor: "listil-custom-mark-purple",
   highlight: false,
   grayOut: false,
   hide: false,
@@ -397,11 +400,11 @@ class ListFilter {
     }
     if (isNotMatchedTarget) {
       if (setting.marker) {
-        this.applyMarkers(item, setting, "listil-custom-mark-purple");
+        this.applyMarkers(item, setting, setting.invertMarkerColor);
       }
       if (setting.marker && elementMatchedCriterion) {
         addCssClass(elementMatchedCriterion, "listil-critorion-matched");
-        addCssClass(elementMatchedCriterion, "listil-custom-mark-purple");
+        addCssClass(elementMatchedCriterion, setting.invertMarkerColor);
       }
       if (setting.grayOut) {
         addCssClass(item, "listil-grayout");
@@ -804,11 +807,18 @@ class AdvancedSettingsModal {
       this.open();
     });
 
-    const markerColorSelect = wrapper.querySelector(
-      '[data-name="marker-color-select"]'
-    )! as HTMLDivElement;
-    colorClassSelect(markerColorSelect, setting.markerColor, (v) => {
+    const markerColor = wrapper.querySelector(
+      'input[name="marker-color"]'
+    )! as HTMLInputElement;
+    colorClassSelect(markerColor, setting.markerColor, (v) => {
       setting.markerColor = v;
+      this.onchange(this.currentSettingList(), this.currentKey);
+    }).apply();
+    const invertMarkerColor = wrapper.querySelector(
+      'input[name="invert-marker-color"]'
+    )! as HTMLInputElement;
+    colorClassSelect(invertMarkerColor, setting.invertMarkerColor, (v) => {
+      setting.invertMarkerColor = v;
       this.onchange(this.currentSettingList(), this.currentKey);
     }).apply();
 
@@ -1320,6 +1330,7 @@ class ListSettingRepository {
       criterion: setting.criterion,
       marker: setting.marker,
       markerColor: setting.markerColor,
+      invertMarkerColor: setting.invertMarkerColor,
       highlight: setting.highlight,
       grayOut: setting.grayOut,
       hide: setting.hide,
@@ -1349,6 +1360,8 @@ class ListSettingRepository {
       criterion: serialized.criterion,
       marker: serialized.marker,
       markerColor: serialized.markerColor ?? defaultSetting.markerColor,
+      invertMarkerColor:
+        serialized.invertMarkerColor ?? defaultSetting.invertMarkerColor,
       highlight: serialized.highlight,
       grayOut: serialized.grayOut,
       hide: serialized.hide,
