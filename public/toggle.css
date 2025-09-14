@@ -80,7 +80,7 @@ input.listil-regex-input {
 .listil-fieldset {
   all: unset;
   display: inline-block;
-  overflow-x: auto;
+  overflow: visible; /* <- for custom select dropdown. If overflow is not visible (e.g., auto), the dropdown won't be able to extend outside of fieldset, causing layout bugs. */
   width: 100%;
 }
 
@@ -90,23 +90,46 @@ input.listil-regex-input {
   margin-left: 2px;
 }
 
-mark.listil-custom-mark,
-mark.listil-custom-mark-yellow,
-.listil-custom-mark-yellow,
-::highlight(listil-custom-mark-yellow) {
+.listil-root,
+[data-list-setting-id] {
+  /**
+   * red
+   * - #FF0000: Saturation 100, luminance 0.2126
+   * - #FF3F3F: Saturation  75, luminance 0.2517389501
+   * - #FF7F7F: Saturation  50, luminance 0.3797104984
+   */
+  --listil-mark-red: #FF7F7F;
   /**
    * yellow
    * - #FFFF00: Saturation 100, luminance 0.9278
    * - #FFFF3F: Saturation  75, luminance 0.9313888141
    * - #FFFF7F: Saturation  50, luminance 0.9431230607
    */
-  background-color: #FFFF3F !important;
-  color: black !important;
-}
-
-mark.listil-custom-mark-purple,
-.listil-custom-mark-purple,
-::highlight(listil-custom-mark-purple) {
+  --listil-mark-yellow: #FFFF3F;
+  /**
+   * green
+   * - #00FF00: Saturation 100, luminance 0.7152
+   * - #3FFF3F: Saturation  75, luminance 0.72935643
+   * - #7FFF7F: Saturation  50, luminance 0.7756433197
+   * - #BFFFBF: Saturation  25, luminance 0.8635795392
+   */
+  --listil-mark-green: #3FFF3F;
+  /**
+   * cyan
+   * - #00FFFF: Saturation 100, luminance 0.7874
+   * - #3FFFFF: Saturation  75, luminance 0.7979676159
+   * - #7FFFFF: Saturation  50, luminance 0.832520259
+   */
+  --listil-mark-cyan: #7FFFFF;
+  /**
+   * blue
+   * - #0000FF: Saturation 100, luminance 0.0722
+   * - #3F3FFF: Saturation  75, luminance 0.1183177519
+   * - #5E5EFF: Saturation  63, luminance 0.1760509065
+   * - #7F7FFF: Saturation  50, luminance 0.2691076967
+   * - #BFBFFF: Saturation  25, luminance 0.5555796928
+   */
+  --listil-mark-blue: #7F7FFF;
   /**
    * purple
    * - #8000FF: Saturation 100, luminance 0.1180919423 ... Too deep
@@ -115,7 +138,49 @@ mark.listil-custom-mark-purple,
    * - #EBD8FF: Saturation  15, luminance 0.7399390113
    * - #EFE0FF: Saturation  12, luminance 0.7888203142 ... Too pale
    */
-  background-color:#EBD8FF !important;
+  --listil-mark-purple: #DFBFFF;
+}
+
+mark.listil-custom-mark,
+mark.listil-custom-mark-yellow,
+.listil-custom-mark-yellow,
+::highlight(listil-custom-mark-yellow) {
+  background-color: var(--listil-mark-yellow) !important;
+  color: black !important;
+}
+
+mark.listil-custom-mark-purple,
+.listil-custom-mark-purple,
+::highlight(listil-custom-mark-purple) {
+  background-color:var(--listil-mark-purple) !important;
+  color: black !important;
+}
+
+mark.listil-custom-mark-cyan,
+.listil-custom-mark-cyan,
+::highlight(listil-custom-mark-cyan) {
+  background-color: var(--listil-mark-cyan) !important;
+  color: black !important;
+}
+
+mark.listil-custom-mark-red,
+.listil-custom-mark-red,
+::highlight(listil-custom-mark-red) {
+  background-color: var(--listil-mark-red) !important;
+  color: black !important;
+}
+
+mark.listil-custom-mark-blue,
+.listil-custom-mark-blue,
+::highlight(listil-custom-mark-blue) {
+  background-color: var(--listil-mark-blue) !important;
+  color: black !important;
+}
+
+mark.listil-custom-mark-green,
+.listil-custom-mark-green,
+::highlight(listil-custom-mark-green) {
+  background-color: var(--listil-mark-green) !important;
   color: black !important;
 }
 
@@ -141,6 +206,69 @@ table.listil-narrow tr>td>* {
   overflow: hidden !important;
 }
 
+
+/* Color Select */
+.listil-select {
+  position: relative;
+  display: inline-block;
+  width: fit-content;
+  font-family: sans-serif;
+  overflow: visible;
+  min-width: 8px;
+  border-radius: 6px;;
+}
+
+.listil-selected {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  background: white;
+}
+
+.listil-options {
+  display: none;
+  position: absolute;
+  top: 100%; /* selectedのすぐ下に配置 */
+  left: 0;
+  width: fit-content;
+  border: 1px solid #ccc;
+  background: white;
+  z-index: 1000; /* 上に出す */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.listil-option {
+  padding: 4px 2px;
+  width: fit-content;
+  height: fit-content;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.listil-option:hover {
+  background-color: #eee;
+}
+
+.listil-selected > *,
+.listil-option > * {
+  min-width: 12px;
+  max-width: 12px;
+  min-height: 12px;
+  max-height: 12px;
+  border-radius: 6px;
+}
+
+select.listil-color-select {
+  appearance: none;
+  width: 12px;
+  max-width: 12px;
+  height: 12px;
+  max-height: 12px;
+  color: transparent;
+  padding: auto;
+  font-size: 8px;
+}
 
 /**
  * 設定モーダル

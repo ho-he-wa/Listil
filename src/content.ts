@@ -3,9 +3,12 @@ import { listilModal } from "@/Content/Views/listilModal";
 import { listilModalSettingEditor } from "@/Content/Views/listilModalSettingEditor";
 import { CriterionFactory } from "@/Criteria/CriterionFactory";
 import { addCssClass } from "@/Dom/addCssClass";
+import { colorClassSelect } from "@/Dom/colorSelect";
 import { createElementByHtml } from "@/Dom/createElementByHtml";
+import { dragAndDrop } from "@/Dom/dragAndDrop";
 import { extractAttributeMaps } from "@/Dom/extractAttributeMaps";
 import { extractValidFormElements } from "@/Dom/extractValidFormElements";
+import { findAncestorWithId } from "@/Dom/findAncestorWithId";
 import { getElementsByChildCount } from "@/Dom/getElementsByChildCount";
 import { isDisplayNone } from "@/Dom/isDisplayNone";
 import { MarkLite } from "@/Dom/MarkLite";
@@ -17,8 +20,6 @@ import { HtmlElementSummary } from "@/List/HtmlElementSummary";
 import { cleanUrl } from "@/Misc/MyURL";
 import { PageSettingManager } from "@/PageSetting/PageSettingManager";
 import Mark from "mark.js";
-import { dragAndDrop } from "./Dom/dragAndDrop";
-import { findAncestorWithId } from "./Dom/findAncestorWithId";
 
 console.log("[DEBUG] Content script loaded (mark.js version)");
 
@@ -34,6 +35,7 @@ interface FilterSettingInterface {
   regex: RegExp | null;
   criterion: string;
   marker: boolean;
+  markerColor: string;
   highlight: boolean;
   grayOut: boolean;
   hide: boolean;
@@ -49,6 +51,7 @@ interface SerializedFilterSettingInterface {
   regexFlags: string | null;
   criterion: string;
   marker: boolean;
+  markerColor: string;
   highlight: boolean;
   grayOut: boolean;
   hide: boolean;
@@ -61,6 +64,7 @@ const defaultSetting: FilterSettingInterface = {
   regex: null,
   criterion: "",
   marker: true,
+  markerColor: "listil-custom-mark-yellow",
   highlight: false,
   grayOut: false,
   hide: false,
@@ -182,6 +186,7 @@ class ListFinder {
 
     if (tag === "table") {
       // NOTE : tbodyを挟む場合があるので深さ2を指定
+      // BUG : thead, tfootの行数もカウントしている
       return querySelectorAllWithDepth(el, "tr", 2).length >= 10;
     } else if (tag === "ul" || tag === "ol") {
       return querySelectorAllWithDepth(el, "li", 1).length >= 10;
@@ -380,14 +385,14 @@ class ListFilter {
 
     if (isMatchedTarget) {
       if (setting.marker) {
-        this.applyMarkers(item, setting, "listil-custom-mark-yellow");
+        this.applyMarkers(item, setting, setting.markerColor);
       }
       if (setting.highlight) {
         this.applyHighlight(item);
       }
       if (setting.marker && elementMatchedCriterion) {
         addCssClass(elementMatchedCriterion, "listil-critorion-matched");
-        addCssClass(elementMatchedCriterion, "listil-custom-mark-yellow");
+        addCssClass(elementMatchedCriterion, setting.markerColor);
       }
     }
     if (isNotMatchedTarget) {
@@ -514,7 +519,11 @@ class ListFilter {
     element.querySelectorAll(".listil-critorion-matched").forEach((el) => {
       el.classList.remove(
         "listil-critorion-matched",
+        "listil-custom-mark-red",
         "listil-custom-mark-yellow",
+        "listil-custom-mark-green",
+        "listil-custom-mark-cyan",
+        "listil-custom-mark-blue",
         "listil-custom-mark-purple"
       );
     });
@@ -794,6 +803,14 @@ class AdvancedSettingsModal {
       this.modal = this.createModal();
       this.open();
     });
+
+    const markerColorSelect = wrapper.querySelector(
+      '[data-name="marker-color-select"]'
+    )! as HTMLDivElement;
+    colorClassSelect(markerColorSelect, setting.markerColor, (v) => {
+      setting.markerColor = v;
+      this.onchange(this.currentSettingList(), this.currentKey);
+    }).apply();
 
     return wrapper;
   }
@@ -1302,6 +1319,7 @@ class ListSettingRepository {
       regexFlags: setting.regex ? setting.regex.flags : null,
       criterion: setting.criterion,
       marker: setting.marker,
+      markerColor: setting.markerColor,
       highlight: setting.highlight,
       grayOut: setting.grayOut,
       hide: setting.hide,
@@ -1330,6 +1348,7 @@ class ListSettingRepository {
       regex,
       criterion: serialized.criterion,
       marker: serialized.marker,
+      markerColor: serialized.markerColor ?? defaultSetting.markerColor,
       highlight: serialized.highlight,
       grayOut: serialized.grayOut,
       hide: serialized.hide,

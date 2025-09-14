@@ -32,6 +32,12 @@ export function listilModalSettingEditor() {
             Marker
           </label>
           <label style="margin-right:8px;">
+            <!-- Select Color -->
+            <div data-name="marker-color-select" class="listil-select">
+              <!-- Add dynamically -->
+            </div>
+          </label>
+          <label style="margin-right:8px;">
             <input type="checkbox" name="highlight"
               form="not-exists"
               class="listil-checkbox"
