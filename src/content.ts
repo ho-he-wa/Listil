@@ -12,6 +12,7 @@ import {
   FilterSettingList,
   ListSettingInterface,
 } from "@/ListFilter/Interface";
+import { KeyPrefix } from "@/ListFilter/KeyPrefix";
 import { ListFilter } from "@/ListFilter/ListFilter";
 import { ListFinder } from "@/ListFilter/ListFinder";
 import { ListSettingRepository } from "@/ListFilter/ListSettingRepository";
@@ -663,11 +664,6 @@ function assignIdToListElements(root: Element = document.body) {
   });
 }
 
-const SavePrefix = {
-  global: "global:",
-  listSettings: "listSettings:",
-};
-
 /**
  * 保存キー生成。
  *
@@ -678,7 +674,7 @@ async function createStorageKey(listId: string): Promise<string> {
   const pageSettingManager = new PageSettingManager();
   const pageSetting = await pageSettingManager.findByUrl(currentUrl);
   const wkUrl =
-    SavePrefix.listSettings + (pageSetting?.urlPattern ?? cleanUrl(currentUrl));
+    KeyPrefix.listSettings + (pageSetting?.urlPattern ?? cleanUrl(currentUrl));
   return `${wkUrl}#${listId}`;
 }
 
