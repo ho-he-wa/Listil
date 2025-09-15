@@ -364,10 +364,10 @@ class ControlFactory {
    * @param list
    * @param settingList
    */
-  public createFilterControls(
+  public async createFilterControls(
     list: HTMLElement,
     listSetting: ListSettingInterface<FilterSettingInterface>
-  ): HTMLElement {
+  ): Promise<HTMLElement> {
     let currentKey = "setting1";
     // [x] TODO : settingとsettingListの2つあるのは冗長なので整理する
     if (listSetting.filterSettingSet[currentKey].list.length <= 0) {
@@ -514,10 +514,13 @@ class ControlFactory {
     const saveButton = wrapper.querySelector<HTMLButtonElement>(
       '[name="listil-save-button"]'
     )!;
-    saveButton.addEventListener("click", (e) => {
+    saveButton.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopImmediatePropagation();
-      new ListSettingRepository().save(createStorageKey(list.id), listSetting);
+      new ListSettingRepository().save(
+        await createStorageKey(list.id),
+        listSetting
+      );
     });
 
     const settingSelect = wrapper.querySelector<HTMLSelectElement>(
@@ -666,10 +669,16 @@ const SavePrefix = {
 };
 
 /**
- * 保存キー生成
+ * 保存キー生成。
+ *
+ * - 現在のページのURLパターンを用いて保存する。ページのURLパターンが設定されていない場合は現在URLをそのままURLパターンとして用いる。
  */
-function createStorageKey(listId: string): string {
-  const wkUrl = SavePrefix.listSettings + cleanUrl(location.href);
+async function createStorageKey(listId: string): Promise<string> {
+  const currentUrl = location.href;
+  const pageSettingManager = new PageSettingManager();
+  const pageSetting = await pageSettingManager.findByUrl(currentUrl);
+  const wkUrl =
+    SavePrefix.listSettings + (pageSetting?.urlPattern ?? cleanUrl(currentUrl));
   return `${wkUrl}#${listId}`;
 }
 
@@ -681,7 +690,7 @@ const listSettings = new Map<
 /**
  * トグルボタンとUI追加
  */
-function addListilControlsToLists(skipReload: boolean = false): void {
+async function addListilControlsToLists(skipReload: boolean = false) {
   const timerName = "[DEBUG] addListilControlsToLists";
   console.time(timerName);
   injectStyles();
@@ -703,7 +712,7 @@ function addListilControlsToLists(skipReload: boolean = false): void {
     list.dataset.listSettingId = listSettingId;
 
     // listSettingsに設定がなければデータを追加。リロードはオプション次第
-    const key = createStorageKey(list.id);
+    const key = await createStorageKey(list.id);
     if (listSettings.get(key) == null || !skipReload) {
       // ストレージから復元。0件であればデフォルト設定を使う。
       const wkListSetting = (await new ListSettingRepository().restore(
@@ -736,7 +745,7 @@ function addListilControlsToLists(skipReload: boolean = false): void {
 
     const rootDiv = controlsRoot();
 
-    const controls = new ControlFactory().createFilterControls(
+    const controls = await new ControlFactory().createFilterControls(
       list,
       listSetting
     );
@@ -813,7 +822,7 @@ async function initialize(skipReload: boolean = false) {
   console.log("DEBUG", "loaded globalSetting: ", globalSetting);
   console.log("DEBUG", "loaded pageSetting: ", pageSetting);
   if (pageSetting?.enabled ?? globalSetting.enabled ?? true) {
-    addListilControlsToLists(skipReload);
+    await addListilControlsToLists(skipReload);
   }
 }
 
