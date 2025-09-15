@@ -56,5 +56,6 @@ export interface ListSettingInterface<
     | SerializedFilterSettingInterface = FilterSettingInterface
 > {
   name?: string;
+  listId: string;
   filterSettingSet: FilterSettingSet<T>;
 }

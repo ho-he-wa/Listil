@@ -57,6 +57,7 @@ export class ListSettingRepository {
     }
     return {
       name: setting.name,
+      listId: setting.listId,
       filterSettingSet: serializedFilterSettingSet,
     };
   }
@@ -78,7 +79,7 @@ export class ListSettingRepository {
       };
     }
     return {
-      name: serialized.name,
+      ...serialized,
       filterSettingSet: deserializedFilterSettingSet,
     };
   }

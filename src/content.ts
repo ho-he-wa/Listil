@@ -715,10 +715,9 @@ async function addListilControlsToLists(skipReload: boolean = false) {
     const key = await createStorageKey(list.id);
     if (listSettings.get(key) == null || !skipReload) {
       // ストレージから復元。0件であればデフォルト設定を使う。
-      const wkListSetting = (await new ListSettingRepository().restore(
-        key
-      )) ?? {
+      const defaultListSetting = {
         name: "xxxxx",
+        listId: list.id,
         filterSettingSet: {
           setting1: {
             name: "setting1",
@@ -726,7 +725,11 @@ async function addListilControlsToLists(skipReload: boolean = false) {
           },
         },
       };
-      listSettings.set(key, wkListSetting);
+      const wkListSetting = await new ListSettingRepository().restore(key);
+      listSettings.set(key, {
+        ...defaultListSetting,
+        ...(wkListSetting ?? {}),
+      });
     }
     const listSetting = listSettings.get(key);
     if (listSetting == null) {
