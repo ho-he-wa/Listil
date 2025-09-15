@@ -16,6 +16,13 @@ import { redrawOf } from "@/Dom/redrawOf";
 import { setDataAttr } from "@/Dom/setDataAttr";
 import { GlobalSettingManager } from "@/GlobalSetting/GlobalSettingManager";
 import { HtmlElementSummary } from "@/List/HtmlElementSummary";
+import {
+  FilterSettingInterface,
+  FilterSettingList,
+  FilterSettingSet,
+  ListSettingInterface,
+  SerializedFilterSettingInterface,
+} from "@/ListFilter/Interface";
 import { MarkLite } from "@/Mark/MarkLite";
 import { cleanUrl } from "@/Misc/MyURL";
 import { PageSettingManager } from "@/PageSetting/PageSettingManager";
@@ -26,39 +33,6 @@ const PseudoType = {
   list: "list",
   listitem: "listitem",
 } as const;
-
-/**
- * フィルタ設定インタフェース
- */
-interface FilterSettingInterface {
-  regex: RegExp | null;
-  criterion: string;
-  marker: boolean;
-  markerColor: string;
-  invertMarkerColor: string;
-  highlight: boolean;
-  grayOut: boolean;
-  hide: boolean;
-  invertMatch: boolean;
-  narrow: boolean;
-}
-
-/**
- * フィルタ設定インタフェース(シリアライズド)
- */
-interface SerializedFilterSettingInterface {
-  regexSource: string | null;
-  regexFlags: string | null;
-  criterion: string;
-  marker: boolean;
-  markerColor: string;
-  invertMarkerColor: string;
-  highlight: boolean;
-  grayOut: boolean;
-  hide: boolean;
-  invertMatch: boolean;
-  narrow: boolean;
-}
 
 // 初期デフォルト設定
 const defaultSetting: FilterSettingInterface = {
@@ -73,39 +47,6 @@ const defaultSetting: FilterSettingInterface = {
   invertMatch: false,
   narrow: false,
 };
-
-interface FilterSettingList<
-  T extends
-    | FilterSettingInterface
-    | SerializedFilterSettingInterface = FilterSettingInterface
-> {
-  name?: string;
-  list: T[];
-}
-
-/**
- * フィルタ設定セット
- */
-type FilterSettingSet<
-  T extends
-    | FilterSettingInterface
-    | SerializedFilterSettingInterface = FilterSettingInterface
-> = {
-  [key: string]: FilterSettingList<T>;
-};
-
-/**
- * リスト設定インタフェース
- */
-interface ListSettingInterface<
-  T extends
-    | FilterSettingInterface
-    | SerializedFilterSettingInterface = FilterSettingInterface
-> {
-  name?: string;
-  filterSettingSet: FilterSettingSet<T>;
-}
-
 /**
  * スタイル追加（mark.js用、表示制御用）
  */
