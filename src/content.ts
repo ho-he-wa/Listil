@@ -6,6 +6,7 @@ import { createElementByHtml } from "@/Dom/createElementByHtml";
 import { dragAndDrop } from "@/Dom/dragAndDrop";
 import { findAncestorWithId } from "@/Dom/findAncestorWithId";
 import { GlobalSettingManager } from "@/GlobalSetting/GlobalSettingManager";
+import { defaultSetting } from "@/ListFilter/defaultSetting";
 import {
   FilterSettingInterface,
   FilterSettingList,
@@ -21,19 +22,6 @@ import { PageSettingManager } from "@/PageSetting/PageSettingManager";
 
 console.log("[DEBUG] Content script loaded (mark.js version)");
 
-// 初期デフォルト設定
-const defaultSetting: FilterSettingInterface = {
-  regex: null,
-  criterion: "",
-  marker: true,
-  markerColor: "listil-custom-mark-yellow",
-  invertMarkerColor: "listil-custom-mark-purple",
-  highlight: false,
-  grayOut: false,
-  hide: false,
-  invertMatch: false,
-  narrow: false,
-};
 /**
  * スタイル追加（mark.js用、表示制御用）
  */
