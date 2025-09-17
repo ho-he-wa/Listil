@@ -2,6 +2,7 @@
 
 import { cleanUrl } from "@/Misc/MyURL";
 import { GlobalSettingManager } from "./GlobalSetting/GlobalSettingManager";
+import { ListSettingRepository } from "./ListFilter/ListSettingRepository";
 import { PageSettingKeyManager } from "./PageSetting/PageSettingKeyManager";
 import { PageSettingManager } from "./PageSetting/PageSettingManager";
 import { PageSettingType } from "./PageSetting/PageSettingType";
@@ -137,8 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     patternInput.disabled =
       Object.values(matchedSettings).length > 1 ? true : false;
     patternInput.addEventListener("change", () => {
-      const newUrlPattern = patternInput.value.trim();
-      if (!validateUrlPattern(currentUrl, newUrlPattern)) {
+      if (!validateUrlPattern(currentUrl, patternInput.value.trim())) {
         statusDisplay.textContent =
           "Bad. This url pattern is not matched the current url.";
         statusDisplay.style.color = "red";
@@ -147,13 +147,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       statusDisplay.textContent = "OK";
       statusDisplay.style.color = "green";
       // 保存
-      const keyToSave = newUrlPattern
-        ? createKey(newUrlPattern)
-        : createKey(cleanUrl(currentUrl));
+      const newUrlPattern = patternInput.value.trim() || cleanUrl(currentUrl);
+      const keyToSave = createKey(newUrlPattern);
       pageSettingManager.remove(
         createKey(thisDocument.oldPatternHidden().value)
       );
       pageSettingManager.save(keyToSave, thisDocument.formValues());
+      // リスト設定のキーを変更する
+      const listRepo = new ListSettingRepository();
+      listRepo.changeKeys(thisDocument.oldPatternHidden().value, newUrlPattern);
       // 旧パターンを隠しフィールドに格納
       thisDocument.oldPatternHidden().value = newUrlPattern;
     });

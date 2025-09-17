@@ -5,6 +5,8 @@ import {
   ListSettingInterface,
   SerializedFilterSettingInterface,
 } from "@/ListFilter/Interface";
+import { KeyPrefix } from "@/ListFilter/KeyPrefix";
+import { mergeListSettings } from "@/ListFilter/mergeListSettings";
 
 export class ListSettingRepository {
   /**
@@ -135,5 +137,76 @@ export class ListSettingRepository {
       invertMatch: serialized.invertMatch,
       narrow: serialized.narrow,
     };
+  }
+
+  public async changeKeys(oldUrlPattern: string, newUrlPattern: string) {
+    const oldUrlRegex = new RegExp(oldUrlPattern);
+    const entries = await this.getEntriesByPredicate((key, value) => {
+      return key.match(oldUrlRegex) !== null;
+    });
+    if (entries.length === 0) {
+      console.warn(`No keys matched for pattern: "${oldUrlPattern}"`);
+      return;
+    }
+    for (const [oldKey, value] of entries) {
+      const newKey = oldKey.replace(oldUrlPattern, newUrlPattern);
+      // キー重複時はデータを統合する
+      if (await this.exists(newKey)) {
+        const oldRecord = await this.get(oldKey);
+        const newRecord = await this.get(newKey);
+        const merged = mergeListSettings(oldRecord[oldKey], newRecord[newKey]);
+        await chrome.storage.local.remove(oldKey);
+        await chrome.storage.local.set({ [newKey]: merged });
+        return;
+      }
+      this.replaceKey(oldKey, newKey);
+    }
+  }
+
+  public static createKey(urlOrUrlPattern: string) {
+    const key = `${KeyPrefix.listSettings}${urlOrUrlPattern}`;
+    return key;
+  }
+
+  private async getEntriesByPredicate(
+    predicate: (key: string, value?: any) => boolean
+  ) {
+    const record: Record<string, ListSettingInterface> =
+      await chrome.storage.local.get();
+    // entriesで[key, value]を取得して、キーだけfilterして配列化
+    return Object.entries(record)
+      .filter(([key, _]) => key.startsWith(KeyPrefix.listSettings))
+      .filter(([key, value]) => predicate(key, value));
+  }
+
+  private async replaceKey(oldKey: string, newKey: string): Promise<void> {
+    const record = await this.get(oldKey);
+    if (!(oldKey in record)) {
+      console.warn("The key is not found in a storage.", oldKey, record);
+      throw new Error(`The key"${oldKey}" is not found.`);
+    }
+    const value = record[oldKey];
+    await chrome.storage.local.remove(oldKey);
+    await chrome.storage.local.set({ [newKey]: value });
+  }
+
+  /**
+   * 指定したキーがchrome.storage.localに存在するかチェックする関数
+   * @param key チェックしたいキー名
+   * @returns 存在すればtrue、なければfalseを返す
+   */
+  private async exists(key: string): Promise<boolean> {
+    const record = await this.get(key);
+    return key in record;
+  }
+
+  private async get(key: string) {
+    if (!key.startsWith(KeyPrefix.listSettings)) {
+      // リスト設定以外のキーであれば無視
+      return {};
+    }
+    const record: Record<string, ListSettingInterface> =
+      await chrome.storage.local.get(key);
+    return record;
   }
 }
