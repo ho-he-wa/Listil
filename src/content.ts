@@ -814,6 +814,7 @@ const pageSettingManager = new PageSettingManager();
  * 初期化。設定を読み込み、コントロールを追加する。
  */
 async function initialize(skipReload: boolean = false) {
+  console.time("[DEBUG] initialize");
   const globalSetting = await globalSettingManager.load();
   const pageSetting = await pageSettingManager.findByUrl(
     cleanUrl(location.href)
@@ -823,6 +824,7 @@ async function initialize(skipReload: boolean = false) {
   if (pageSetting?.enabled ?? globalSetting.enabled ?? true) {
     await addListilControlsToLists(skipReload);
   }
+  console.timeEnd("[DEBUG] initialize");
 }
 
 // --- 実行 ---
