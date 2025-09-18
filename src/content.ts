@@ -683,30 +683,15 @@ const listSettings = new Map<
   ListSettingInterface<FilterSettingInterface>
 >();
 
-/**
- * トグルボタンとUI追加
- */
-async function addListilControlsToLists(skipReload: boolean = false) {
-  const timerName = "[DEBUG] addListilControlsToLists";
+async function loadListSettings(skipReload: boolean = false) {
+  const timerName = "[DEBUG] loadListSettings";
   console.time(timerName);
-  injectStyles();
-  console.timeLog(timerName);
   const contentContainers = findContentContainers();
-  contentContainers.forEach((container) => {
-    addPseudoType(container);
-  });
-  contentContainers.forEach((container) => {
-    assignIdToListElements(container);
-  });
-  console.timeLog(timerName);
   const finder = new ListFinder(contentContainers);
   const lists = finder.findLists();
-  console.timeLog(timerName);
+  console.timeEnd(timerName);
 
-  lists.forEach(async (list: HTMLElement, index: number) => {
-    const listSettingId = `list-${index}`;
-    list.dataset.listSettingId = listSettingId;
-
+  for (const list of lists) {
     // listSettingsに設定がなければデータを追加。リロードはオプション次第
     const key = await createStorageKey(list.id);
     if (listSettings.get(key) == null || !skipReload) {
@@ -727,6 +712,37 @@ async function addListilControlsToLists(skipReload: boolean = false) {
         ...(wkListSetting ?? {}),
       });
     }
+  }
+}
+
+/**
+ * トグルボタンとUI追加
+ */
+async function addListilControlsToLists(skipReload: boolean = false) {
+  const timerName = "[DEBUG] addListilControlsToLists";
+  console.time(timerName);
+  injectStyles();
+  console.timeLog(timerName);
+  const contentContainers = findContentContainers();
+  contentContainers.forEach((container) => {
+    addPseudoType(container);
+  });
+  contentContainers.forEach((container) => {
+    assignIdToListElements(container);
+  });
+  console.timeLog(timerName);
+  const finder = new ListFinder(contentContainers);
+  const lists = finder.findLists();
+  console.timeLog(timerName);
+
+  await loadListSettings(skipReload);
+
+  lists.forEach(async (list: HTMLElement, index: number) => {
+    const listSettingId = `list-${index}`;
+    list.dataset.listSettingId = listSettingId;
+
+    // listSettingsに設定がなければデータを追加。リロードはオプション次第
+    const key = await createStorageKey(list.id);
     const listSetting = listSettings.get(key);
     if (listSetting == null) {
       throw new Error("the listSetting is undefined.");
