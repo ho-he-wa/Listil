@@ -91,9 +91,31 @@ function validateUrlPattern(
   url: string,
   urlPattern: string
 ): string | undefined {
+  if (urlPattern.trim() === "") {
+    return undefined;
+  }
+  const schemeHostMatch = urlPattern.match(/^([a-z][a-z0-9+.-]*):\/\/([^/]*)/i);
+  if (!schemeHostMatch) {
+    return "Bad. Invalid URL pattern format.";
+  }
+  const scheme = schemeHostMatch[1];
+  const host = schemeHostMatch[2];
+  if (scheme !== "file") {
+    const trimmedHost = host.trim();
+    const isOnlyWildcardHost = trimmedHost === "*" || trimmedHost === "*.";
+    if (isOnlyWildcardHost || trimmedHost === "") {
+      return "Bad. Host must not be only a wildcard or empty.";
+    }
+  }
   const likeExp = LikeExp.of(`*${urlPattern}*`);
   if (!url.match(likeExp.toRegExp())) {
     return "Bad. This url pattern is not matched the current url.";
+  }
+  const countSlashes = (str: string): number => (str.match(/\//g) || []).length;
+  const urlSlashCount = countSlashes(url);
+  const patternSlashCount = countSlashes(urlPattern);
+  if (urlSlashCount !== patternSlashCount) {
+    return `Bad. The number of "/" in pattern (${patternSlashCount}) does not match the URL (${urlSlashCount}).`;
   }
   return undefined;
 }
