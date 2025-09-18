@@ -19,6 +19,7 @@ import { ListSettingRepository } from "@/ListFilter/ListSettingRepository";
 import { addPseudoType, PseudoType } from "@/ListFilter/PseudoType";
 import { cleanUrl } from "@/Misc/MyURL";
 import { PageSettingManager } from "@/PageSetting/PageSettingManager";
+import { PageSettingType } from "@/PageSetting/PageSettingType";
 
 console.log("[DEBUG] Content script loaded (mark.js version)");
 
@@ -851,24 +852,30 @@ if (document.readyState === "loading") {
 }
 
 chrome.runtime.onMessage.addListener(
-  (
-    message: { type: string; data: { enabled: boolean } },
-    sender,
-    sendResponse
-  ) => {
+  (message: { type: string; data: PageSettingType }, sender, sendResponse) => {
     // NOTE: 非同期で応答する場合、リスナー内で return true; が必要
-    if (message.type === "enabled_changed") {
-      if (message.data.enabled) {
+    switch (message.type) {
+      case "enabled_changed":
+        if (message.data.enabled) {
+          (async () => {
+            await initialize();
+            sendResponse({ success: true, data: {} });
+          })();
+          // 非同期応答のために通信チャネルを維持
+          return true;
+        } else {
+          cleanListilControls();
+          sendResponse({ success: true, data: {} });
+        }
+        break;
+      case "url_pattern_changed":
         (async () => {
-          await initialize();
+          cleanListilControls();
+          // 初期化・コントロールを追加
+          await initialize(true);
           sendResponse({ success: true, data: {} });
         })();
-        // 非同期応答のために通信チャネルを維持
         return true;
-      } else {
-        cleanListilControls();
-        sendResponse({ success: true, data: {} });
-      }
     }
   }
 );

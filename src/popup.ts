@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     patternInput.value = urlPattern;
     patternInput.disabled =
       Object.values(matchedSettings).length > 1 ? true : false;
-    patternInput.addEventListener("change", () => {
+    patternInput.addEventListener("change", async () => {
       const valErr = validateUrlPattern(currentUrl, patternInput.value.trim());
       if (valErr) {
         statusDisplay.textContent = valErr;
@@ -165,6 +165,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       listRepo.changeKeys(thisDocument.oldPatternHidden().value, newUrlPattern);
       // 旧パターンを隠しフィールドに格納
       thisDocument.oldPatternHidden().value = newUrlPattern;
+      // タブにメッセージ送信
+      const chromeTab = await ChromeTab.asyncCurrentTab();
+      chromeTab.sendData(
+        "url_pattern_changed",
+        thisDocument.formValues(),
+        undefined,
+        (response, lastError) => {
+          console.error("送信失敗:", lastError.message);
+        }
+      );
     });
 
     const globalSettingManager = new GlobalSettingManager();
