@@ -1,6 +1,7 @@
 // popup.ts
 
 import { cleanUrl } from "@/Misc/MyURL";
+import { LikeExp } from "@/RegExp/LikeExp";
 import { GlobalSettingManager } from "./GlobalSetting/GlobalSettingManager";
 import { ListSettingRepository } from "./ListFilter/ListSettingRepository";
 import { PageSettingKeyManager } from "./PageSetting/PageSettingKeyManager";
@@ -86,11 +87,15 @@ class ThisDocument {
   }
 }
 
-function validateUrlPattern(url: string, urlPattern: string): boolean {
-  if (!url.match(new RegExp(urlPattern))) {
-    return false;
+function validateUrlPattern(
+  url: string,
+  urlPattern: string
+): string | undefined {
+  const likeExp = LikeExp.of(`*${urlPattern}*`);
+  if (!url.match(likeExp.toRegExp())) {
+    return "Bad. This url pattern is not matched the current url.";
   }
-  return true;
+  return undefined;
 }
 
 /**
@@ -138,9 +143,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     patternInput.disabled =
       Object.values(matchedSettings).length > 1 ? true : false;
     patternInput.addEventListener("change", () => {
-      if (!validateUrlPattern(currentUrl, patternInput.value.trim())) {
-        statusDisplay.textContent =
-          "Bad. This url pattern is not matched the current url.";
+      const valErr = validateUrlPattern(currentUrl, patternInput.value.trim());
+      if (valErr) {
+        statusDisplay.textContent = valErr;
         statusDisplay.style.color = "red";
         return;
       }

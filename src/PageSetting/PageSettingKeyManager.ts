@@ -1,3 +1,5 @@
+import { LikeExp } from "@/RegExp/LikeExp";
+
 export class PageSettingKeyManager {
   private keys: string[];
   public constructor(keys: string[]) {
@@ -15,7 +17,7 @@ export class PageSettingKeyManager {
     }
     for (const key of this.keys) {
       const patternInKey = key.replace(/^pageSetting:/, "");
-      if (url.match(new RegExp(patternInKey))) {
+      if (url.match(LikeExp.of(patternInKey).toRegExp())) {
         keys.push(key);
       }
     }

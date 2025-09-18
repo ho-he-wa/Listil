@@ -7,6 +7,7 @@ import {
 } from "@/ListFilter/Interface";
 import { KeyPrefix } from "@/ListFilter/KeyPrefix";
 import { mergeListSettings } from "@/ListFilter/mergeListSettings";
+import { LikeExp } from "@/RegExp/LikeExp";
 
 export class ListSettingRepository {
   /**
@@ -140,9 +141,11 @@ export class ListSettingRepository {
   }
 
   public async changeKeys(oldUrlPattern: string, newUrlPattern: string) {
-    const oldUrlRegex = new RegExp(oldUrlPattern);
+    const oldKeyRegex = LikeExp.of(
+      `${KeyPrefix.listSettings}${oldUrlPattern}#*`
+    ).toRegExp();
     const entries = await this.getEntriesByPredicate((key, value) => {
-      return key.match(oldUrlRegex) !== null;
+      return key.match(oldKeyRegex) !== null;
     });
     if (entries.length === 0) {
       console.warn(`No keys matched for pattern: "${oldUrlPattern}"`);
