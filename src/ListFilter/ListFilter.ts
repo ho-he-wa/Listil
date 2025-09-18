@@ -171,9 +171,6 @@ export class ListFilter {
       : false;
 
     if (isMatchedTarget) {
-      if (setting.marker) {
-        this.applyMarkers(item, setting, setting.markerColor);
-      }
       if (setting.highlight) {
         this.applyHighlight(item);
       }
@@ -181,11 +178,12 @@ export class ListFilter {
         addCssClass(elementMatchedCriterion, "listil-critorion-matched");
         addCssClass(elementMatchedCriterion, setting.markerColor);
       }
+      if (setting.marker) {
+        // NOTE : DOM構造が変化するフィルタはマーカーより前で行う必要あり。マーカー後にDOM構造が変化するとマーカーが正常に描画されない
+        this.applyMarkers(item, setting, setting.markerColor);
+      }
     }
     if (isNotMatchedTarget) {
-      if (setting.marker) {
-        this.applyMarkers(item, setting, setting.invertMarkerColor);
-      }
       if (setting.marker && elementMatchedCriterion) {
         addCssClass(elementMatchedCriterion, "listil-critorion-matched");
         addCssClass(elementMatchedCriterion, setting.invertMarkerColor);
@@ -198,6 +196,9 @@ export class ListFilter {
       }
       if (setting.narrow) {
         this.applyNarrow(item);
+      }
+      if (setting.marker) {
+        this.applyMarkers(item, setting, setting.invertMarkerColor);
       }
     }
   }
