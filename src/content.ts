@@ -835,10 +835,14 @@ if (document.readyState === "loading") {
 }
 
 chrome.runtime.onMessage.addListener(
-  (message: { type: string; enabled: boolean }, sender, sendResponse) => {
+  (
+    message: { type: string; data: { enabled: boolean } },
+    sender,
+    sendResponse
+  ) => {
     // NOTE: 非同期で応答する場合、リスナー内で return true; が必要
     if (message.type === "enabled_changed") {
-      if (message.enabled) {
+      if (message.data.enabled) {
         (async () => {
           await initialize();
           sendResponse({ success: true, data: {} });
