@@ -14,7 +14,9 @@ export const PseudoType = {
  */
 export function addPseudoType(root: Element = document.body): void {
   // 子要素要素数で評価
-  const exclude = [
+  const comExclud = ["link", "script", "noscript"];
+  const parExclude = [
+    ...comExclud,
     "table",
     "ol",
     "ul",
@@ -26,7 +28,13 @@ export function addPseudoType(root: Element = document.body): void {
     "optgroup",
     "datalist",
   ];
-  const elementsWithManyChildren = getElementsByChildCount(root, 20, exclude);
+  const chiExclude = [...comExclud];
+  const elementsWithManyChildren = getElementsByChildCount(
+    root,
+    20,
+    parExclude,
+    chiExclude
+  );
   elementsWithManyChildren.forEach((elementWithManyChildren) => {
     redrawOf(elementWithManyChildren)
       .edit((element) => {
