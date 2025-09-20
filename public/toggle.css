@@ -206,6 +206,10 @@ table.listil-narrow tr>td>* {
   overflow: hidden !important;
 }
 
+/* 強制的な非表示用 */
+.listil-force-hidden {
+  display: none !important;
+}
 
 /* Color Select */
 .listil-select {
