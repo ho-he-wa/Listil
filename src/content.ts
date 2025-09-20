@@ -684,6 +684,10 @@ const listSettings = new Map<
   ListSettingInterface<FilterSettingInterface>
 >();
 
+/**
+ * リスト設定のロード
+ * @param skipReload 設定リロードをスキップするか否か (true:スキップする、false:スキップしない(強制))
+ */
 async function loadListSettings(skipReload: boolean = false) {
   const timerName = "[DEBUG] loadListSettings";
   console.time(timerName);
@@ -693,7 +697,7 @@ async function loadListSettings(skipReload: boolean = false) {
   console.timeEnd(timerName);
 
   for (const list of lists) {
-    // listSettingsに設定がなければデータを追加。リロードはオプション次第
+    // 保存済のリスト設定をロードする。なければデフォルト設定を用いる。既にロードしている場合は基本的に設定リロードはスキップする(オプション次第)
     const key = await createStorageKey(list.id);
     if (listSettings.get(key) == null || !skipReload) {
       // ストレージから復元。0件であればデフォルト設定を使う。
