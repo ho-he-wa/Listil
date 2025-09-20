@@ -5,6 +5,7 @@ import { colorClassSelect } from "@/Dom/colorSelect";
 import { createElementByHtml } from "@/Dom/createElementByHtml";
 import { dragAndDrop } from "@/Dom/dragAndDrop";
 import { findAncestorWithId } from "@/Dom/findAncestorWithId";
+import { isComputedInvisible } from "@/Dom/isComputedInvisible";
 import { GlobalSettingManager } from "@/GlobalSetting/GlobalSettingManager";
 import { defaultSetting } from "@/ListFilter/defaultSetting";
 import {
@@ -933,15 +934,31 @@ monitorByMutationObserver &&
           if (!(node.firstChild instanceof HTMLElement)) {
             return;
           }
-          // 要素およびその子孫が無視条件にマッチするならば無視
+          if (isComputedInvisible(node)) {
+            // 非表示部分の変化は影響がないので無視
+            console.log("DEBUG", "This element is invisible.");
+            return;
+          }
           if (node.matches('[class*="listil-"]')) {
+            // Listil要素であれば無視
+            console.log("DEBUG", "This element is inside a Listil element.");
+            return;
+          }
+          if (node.closest("[data-list-setting-id]")) {
+            // コントロール設定済のListilリスト配下であれば無視
+            console.log(
+              "DEBUG",
+              "This element is inside a list element with Listil controls."
+            );
             return;
           }
           if (node.querySelector('[class*="listil-"]')) {
+            // [ ] この判定の理由不明。不要であれば削除する
+            console.log("DEBUG", "This element is ......................");
             return;
           }
           if (node.querySelector("[data-listil-checked]")) {
-            console.log("DEBUG", "This DOM Element has already checked.");
+            console.log("DEBUG", "This Element has already checked.");
             return;
           }
           node.firstChild.dataset.listilChecked = "checked";
