@@ -688,8 +688,10 @@ const listSettings = new Map<
  * リスト設定のロード
  * @param skipReload 設定リロードをスキップするか否か (true:スキップする、false:スキップしない(強制))
  */
-async function loadListSettings(skipReload: boolean = false) {
-  const timerName = "[DEBUG] loadListSettings";
+async function loadListSettings(
+  skipReload: boolean = false,
+  timerName = `[DEBUG][TIMER]${Math.random().toString(36)} loadListSettings`
+) {
   console.time(timerName);
   const contentContainers = findContentContainers();
   const finder = new ListFinder(contentContainers);
@@ -723,8 +725,12 @@ async function loadListSettings(skipReload: boolean = false) {
 /**
  * トグルボタンとUI追加
  */
-async function addListilControlsToLists(skipReload: boolean = false) {
-  const timerName = "[DEBUG] addListilControlsToLists";
+async function addListilControlsToLists(
+  skipReload: boolean = false,
+  timerName = `[DEBUG][TIMER]${Math.random().toString(
+    36
+  )} addListilControlsToLists`
+) {
   console.time(timerName);
   injectStyles();
   console.timeLog(timerName);
@@ -846,8 +852,11 @@ const pageSettingManager = new PageSettingManager();
 /**
  * 初期化。設定を読み込み、コントロールを追加する。
  */
-async function initialize(skipReload: boolean = false) {
-  console.time("[DEBUG] initialize");
+async function initialize(
+  skipReload: boolean = false,
+  timerName = `[DEBUG][TIMER]${Math.random().toString(36)} initialize`
+) {
+  console.time(timerName);
   const globalSetting = await globalSettingManager.load();
   const pageSetting = await pageSettingManager.findByUrl(
     cleanUrl(location.href)
@@ -857,7 +866,7 @@ async function initialize(skipReload: boolean = false) {
   if (pageSetting?.enabled ?? globalSetting.enabled ?? true) {
     await addListilControlsToLists(skipReload);
   }
-  console.timeEnd("[DEBUG] initialize");
+  console.timeEnd(timerName);
 }
 
 // --- 実行 ---

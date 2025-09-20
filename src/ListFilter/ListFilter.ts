@@ -35,21 +35,23 @@ export class ListFilter {
   /**
    * リストにフィルターを適用
    */
-  public apply(): void {
+  public apply(
+    timerName = `[DEBUG][TIMER]${Math.random().toString(36)} ListFilter.apply`
+  ): void {
     redrawOf(this.list)
       .edit((listElement) => {
-        console.time("ListFilter.apply()");
+        console.time(timerName);
         const items = ListFilter.findListItems(listElement);
-        console.timeLog("ListFilter.apply()");
+        console.timeLog(timerName);
         this.clear();
-        console.timeLog("ListFilter.apply()");
+        console.timeLog(timerName);
         items.forEach((item: HTMLElement) => {
           this.settingList.list.forEach((setting, index) => {
             // 前処理で表示リセット済なのでresetオプションは常にfalse
             this.applyToItem(item, setting, false);
           });
         });
-        console.timeEnd("ListFilter.apply()");
+        console.timeEnd(timerName);
       })
       .show();
   }
