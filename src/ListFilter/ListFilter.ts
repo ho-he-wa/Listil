@@ -38,7 +38,11 @@ export class ListFilter {
   public apply(
     timerName = `[DEBUG][TIMER]${Math.random().toString(36)} ListFilter.apply`
   ): void {
-    redrawOf(this.list)
+    const redrawOption = {
+      // scriptがある場合はエラー回避のためremoveオプションをOFF
+      remove: this.list.querySelector("script") == null,
+    };
+    redrawOf(this.list, redrawOption)
       .edit((listElement) => {
         console.time(timerName);
         const items = ListFilter.findListItems(listElement);
