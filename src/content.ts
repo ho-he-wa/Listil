@@ -739,6 +739,18 @@ async function addListilControlsToLists(skipReload: boolean = false) {
   await loadListSettings(skipReload);
 
   lists.forEach(async (list: HTMLElement, index: number) => {
+    // listil-root作成済であればスキップする。ただし設定リロードありの場合はスキップなし。スキップはMutationObserverによる再描画を想定したものである。
+    const existingListSettingId = list.dataset.listSettingId;
+    if (skipReload && existingListSettingId) {
+      const prev = list.previousElementSibling;
+      if (prev && prev.classList.contains("listil-root")) {
+        console.log(
+          `Skipped creation of listil-root: a listil-root element has already been created for ${existingListSettingId}.`
+        );
+        return;
+      }
+    }
+
     const listSettingId = `list-${index}`;
     list.dataset.listSettingId = listSettingId;
 
