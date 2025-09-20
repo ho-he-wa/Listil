@@ -55,7 +55,6 @@ export function redrawOf(
           parent.appendChild(element);
         }
       }
-      console.log("DEBUG", "再表示を行いました。");
     },
   };
   return api;
