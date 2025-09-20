@@ -46,9 +46,10 @@ export class ListFilter {
         this.clear();
         console.timeLog(timerName);
         items.forEach((item: HTMLElement) => {
+          const textContent = item.textContent;
           this.settingList.list.forEach((setting, index) => {
             // 前処理で表示リセット済なのでresetオプションは常にfalse
-            this.applyToItem(item, setting, false);
+            this.applyToItem(item, textContent, setting, false);
           });
         });
         console.timeEnd(timerName);
@@ -100,6 +101,7 @@ export class ListFilter {
    */
   public applyToItem(
     item: HTMLElement,
+    text: string,
     setting: FilterSettingInterface,
     reset: boolean = true
   ) {
@@ -125,7 +127,6 @@ export class ListFilter {
     reset && this.resetItem(item);
 
     let match = null;
-    const text: string = item.textContent;
     if (setting.regex) {
       match = text.match(setting.regex) !== null;
     }
