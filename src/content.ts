@@ -888,7 +888,7 @@ chrome.runtime.onMessage.addListener(
         (async () => {
           cleanListilControls();
           // 初期化・コントロールを追加
-          await initialize(true);
+          await initialize();
           sendResponse({ success: true, data: {} });
         })();
         return true;
