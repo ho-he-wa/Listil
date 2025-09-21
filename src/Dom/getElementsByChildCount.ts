@@ -1,4 +1,6 @@
 type getElementsByChildCountOptions = {
+  /** 空を除外するか */
+  excludeEmpty?: boolean;
   /** 除外要素タグ(親) */
   parExclude?: string[];
   /** 除外要素タグ(子) */
@@ -19,14 +21,23 @@ export function getElementsByChildCount(
   minChildrenNum: number,
   options: getElementsByChildCountOptions = {}
 ): HTMLElement[] {
-  const { parExclude = [], chiExclude = [], chiFilter = () => true } = options;
+  const {
+    excludeEmpty = true,
+    parExclude = [],
+    chiExclude = [],
+    chiFilter = () => true,
+  } = options;
   const allElements = Array.from(root.querySelectorAll<HTMLElement>("*"))
     // 除外タグを除外
-    .filter((element) => !parExclude.includes(element.tagName.toLowerCase()));
+    .filter((element) => !parExclude.includes(element.tagName.toLowerCase()))
+    // 空を除外
+    .filter((element) => (excludeEmpty ? element.firstChild : true));
   return allElements.filter((element) => {
     const childElements = (Array.from(element.children) as HTMLElement[])
       // 除外タグを除外
       .filter((element) => !chiExclude.includes(element.tagName.toLowerCase()))
+      // 空を除外
+      .filter((element) => (excludeEmpty ? element.firstChild : true))
       // カスタム追加フィルタで除外
       .filter(chiFilter);
     return childElements.length >= minChildrenNum;
