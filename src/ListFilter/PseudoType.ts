@@ -1,4 +1,5 @@
 import { getElementsByChildCount } from "@/Dom/getElementsByChildCount";
+import { isComputedInvisible } from "@/Dom/isComputedInvisible";
 import { isDisplayNone } from "@/Dom/isDisplayNone";
 import { redrawOf } from "@/Dom/redrawOf";
 import { HtmlElementSummary } from "@/List/HtmlElementSummary";
@@ -53,7 +54,7 @@ export function addPseudoType(root: Element = document.body): void {
   const elementsWithManyChildren = getElementsByChildCount(root, 20, {
     parExclude: parExclude,
     chiExclude: chiExclude,
-    chiFilter: (el) => !isDisplayNone(el),
+    chiFilter: (el) => !isComputedInvisible(el),
   });
   elementsWithManyChildren.forEach((elementWithManyChildren) => {
     redrawOf(elementWithManyChildren)
