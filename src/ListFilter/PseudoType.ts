@@ -1,4 +1,5 @@
 import { getElementsByChildCount } from "@/Dom/getElementsByChildCount";
+import { isDisplayNone } from "@/Dom/isDisplayNone";
 import { redrawOf } from "@/Dom/redrawOf";
 import { HtmlElementSummary } from "@/List/HtmlElementSummary";
 
@@ -49,12 +50,11 @@ export function addPseudoType(root: Element = document.body): void {
     "datalist",
   ];
   const chiExclude = [...comExclud, "tr", "td", "th", "li", "option"];
-  const elementsWithManyChildren = getElementsByChildCount(
-    root,
-    20,
-    parExclude,
-    chiExclude
-  );
+  const elementsWithManyChildren = getElementsByChildCount(root, 20, {
+    parExclude: parExclude,
+    chiExclude: chiExclude,
+    chiFilter: (el) => !isDisplayNone(el),
+  });
   elementsWithManyChildren.forEach((elementWithManyChildren) => {
     redrawOf(elementWithManyChildren)
       .edit((element) => {
