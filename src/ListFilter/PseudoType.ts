@@ -59,7 +59,10 @@ export function addPseudoType(root: Element = document.body): void {
     redrawOf(elementWithManyChildren)
       .edit((element) => {
         const elementsSummary = new HtmlElementSummary(
-          Array.from(element.children).filter((el) => el instanceof HTMLElement)
+          Array.from(element.children)
+            .filter((el) => el instanceof HTMLElement)
+            // サマリでは非表示を無視する。非表示要素が多いとその非表示要素のタグとクラスがリスト要素の条件となってしまうため
+            .filter((el) => !isDisplayNone(el))
         );
         element.dataset.pseudotype = PseudoType.list;
         Array.from(element.children).map((child) => {
