@@ -944,12 +944,22 @@ monitorByMutationObserver &&
             console.log("DEBUG", "This element is inside a Listil element.");
             return;
           }
-          if (node.closest("[data-list-setting-id]")) {
-            // コントロール設定済のListilリスト配下であれば無視
+          if (node.closest("[data-ignore]")) {
+            // コントロール設定済のListilリストの要素配下であれば無視
             console.log(
               "DEBUG",
               "This element is inside a list element with Listil controls."
             );
+            return;
+          }
+          const closestList = node.closest("data-list-setting-id");
+          if (closestList) {
+            // コントロール設定済のListilリストの追加要素配下であればpseudoTypeを設定
+            console.log(
+              "DEBUG",
+              "This element is inside a list element with Listil controls. But inside a new list element."
+            );
+            addPseudoType(closestList.parentElement!);
             return;
           }
           if (node.querySelector('[class*="listil-"]')) {

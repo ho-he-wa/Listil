@@ -73,6 +73,10 @@ export class HtmlElementSummary {
       tagCount[tag] = (tagCount[tag] || 0) + 1;
       // クラス名ごとのカウント
       el.classList.forEach((className: string) => {
+        if (className.includes("listil-")) {
+          // Listil系クラスは無視。あくまで元のページ要素で評価するため
+          return;
+        }
         classCount[className] = (classCount[className] || 0) + 1;
       });
     });
