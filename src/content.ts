@@ -18,6 +18,7 @@ import { ListFilter } from "@/ListFilter/ListFilter";
 import { ListFinder } from "@/ListFilter/ListFinder";
 import { ListSettingRepository } from "@/ListFilter/ListSettingRepository";
 import { addPseudoType, PseudoType } from "@/ListFilter/PseudoType";
+import { AsyncQueue } from "@/Misc/AsyncQueue";
 import { cleanUrl } from "@/Misc/MyURL";
 import { PageSettingManager } from "@/PageSetting/PageSettingManager";
 import { PageSettingType } from "@/PageSetting/PageSettingType";
@@ -935,75 +936,83 @@ if (monitorByMutationObserver) {
   window.addEventListener("load", () => {
     let cnt = 0;
     document.body.dataset.listilCnt = `${cnt}`;
-    const observer = new MutationObserver(async (mutationsList) => {
-      let shouldRefresh = false;
-      for (const mutation of mutationsList) {
-        console.log("DEBUG", "mutation", mutation.target.nodeName, mutation);
-        const preFiltered = Array.from(mutation.addedNodes)
-          .filter((node) => node instanceof HTMLElement)
-          .filter((node) => node.nodeType === Node.ELEMENT_NODE)
-          .filter((node) => node.firstChild);
-        for (const node of preFiltered) {
-          console.log("DEBUG", "mutation node", node.nodeName, node);
-          if (!(node.firstChild instanceof HTMLElement)) {
-            continue;
-          }
-          if (isComputedInvisible(node)) {
-            // 非表示部分の変化は影響がないので無視
-            console.log("DEBUG", "This element is invisible.");
-            continue;
-          }
-          if (isListilElement(node)) {
-            // Listil要素であれば無視
-            console.log("DEBUG", "This element is inside a Listil element.");
-            continue;
-          }
-          if (insideOfListilListItem(node)) {
-            // コントロール設定済のListilリストの要素配下であれば無視
+    const queue = new AsyncQueue();
+    const mutationCallback = async (mutationsList: MutationRecord[]) =>
+      queue.run(async () => {
+        let shouldRefresh = false;
+        for (const mutation of mutationsList) {
+          console.log("DEBUG", "mutation", mutation.target.nodeName, mutation);
+          const preFiltered = Array.from(mutation.addedNodes)
+            .filter((node) => node instanceof HTMLElement)
+            .filter((node) => node.nodeType === Node.ELEMENT_NODE)
+            .filter((node) => node.firstChild);
+          for (const node of preFiltered) {
+            console.log("DEBUG", "mutation node", node.nodeName, node);
+            if (!(node.firstChild instanceof HTMLElement)) {
+              continue;
+            }
+            if (isComputedInvisible(node)) {
+              // 非表示部分の変化は影響がないので無視
+              console.log("DEBUG", "This element is invisible.");
+              continue;
+            }
+            if (isListilElement(node)) {
+              // Listil要素であれば無視
+              console.log("DEBUG", "This element is inside a Listil element.");
+              continue;
+            }
+            if (insideOfListilListItem(node)) {
+              // コントロール設定済のListilリストの要素配下であれば無視
+              console.log(
+                "DEBUG",
+                "This element is inside a list item element with Listil controls."
+              );
+              continue;
+            }
+            const closestList = insideOfListilList(node);
+            if (closestList) {
+              // コントロール設定済のListilリストの追加要素配下であればpseudoTypeを設定
+              console.log(
+                "DEBUG",
+                "This element is inside a list element with Listil controls. But inside a new list element."
+              );
+              addPseudoType(closestList.parentElement!);
+              continue;
+            }
+            if (node.querySelector('[class*="listil-"]')) {
+              // [ ] この判定の理由不明。不要であれば削除する
+              console.log("DEBUG", "This element is ......................");
+              continue;
+            }
+            if (node.querySelector("[data-listil-checked]")) {
+              console.log("DEBUG", "This Element has already checked.");
+              continue;
+            }
             console.log(
               "DEBUG",
-              "This element is inside a list item element with Listil controls."
+              "This element requires a refresh.",
+              node.tagName
             );
-            continue;
+            node.firstChild.dataset.listilChecked = "checked";
+            shouldRefresh = true;
+            break;
           }
-          const closestList = insideOfListilList(node);
-          if (closestList) {
-            // コントロール設定済のListilリストの追加要素配下であればpseudoTypeを設定
-            console.log(
-              "DEBUG",
-              "This element is inside a list element with Listil controls. But inside a new list element."
-            );
-            addPseudoType(closestList.parentElement!);
-            continue;
-          }
-          if (node.querySelector('[class*="listil-"]')) {
-            // [ ] この判定の理由不明。不要であれば削除する
-            console.log("DEBUG", "This element is ......................");
-            continue;
-          }
-          if (node.querySelector("[data-listil-checked]")) {
-            console.log("DEBUG", "This Element has already checked.");
-            continue;
-          }
-          node.firstChild.dataset.listilChecked = "checked";
-          shouldRefresh = true;
-          break;
         }
-      }
-      if (shouldRefresh && document.body.dataset.listilCnt === `${cnt}`) {
-        cnt++;
-        // コントロールを削除
-        console.log(
-          "DEBUG",
-          " DOM change detected. Executing cleanup and re-add controls...",
-          cnt
-        );
-        cleanListilControls();
-        // 初期化・コントロールを追加
-        await initialize(true);
-        document.body.dataset.listilCnt = `${cnt}`;
-      }
-    });
+        if (shouldRefresh && document.body.dataset.listilCnt === `${cnt}`) {
+          cnt++;
+          // コントロールを削除
+          console.log(
+            "DEBUG",
+            " DOM change detected. Executing cleanup and re-add controls...",
+            cnt
+          );
+          cleanListilControls();
+          // 初期化・コントロールを追加
+          await initialize(true);
+          document.body.dataset.listilCnt = `${cnt}`;
+        }
+      });
+    const observer = new MutationObserver(mutationCallback);
     observer.observe(document.body, {
       /** 子要素の追加・削除を監視 (true:監視する) */
       childList: true,
