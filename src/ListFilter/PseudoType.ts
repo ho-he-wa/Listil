@@ -13,8 +13,28 @@ export const PseudoType = {
  * @param root - 探索の起点となるルート要素（デフォルトは document.body）
  */
 export function addPseudoType(root: Element = document.body): void {
+  console.time(`[DEBUG][TIMER] addPseudoType`);
   // 子要素要素数で評価
-  const comExclud = ["link", "script", "noscript"];
+  const comExclud = [
+    "link",
+    "script",
+    "noscript",
+    "template",
+    // media
+    "img",
+    "audio",
+    "video",
+    "track",
+    "source",
+    // 埋め込み
+    "object",
+    "embed",
+    "iframe",
+    "canvas",
+    "picture",
+    "map",
+    "area",
+  ];
   const parExclude = [
     ...comExclud,
     "table",
@@ -28,7 +48,7 @@ export function addPseudoType(root: Element = document.body): void {
     "optgroup",
     "datalist",
   ];
-  const chiExclude = [...comExclud];
+  const chiExclude = [...comExclud, "tr", "td", "th", "li", "option"];
   const elementsWithManyChildren = getElementsByChildCount(
     root,
     20,
@@ -91,4 +111,5 @@ export function addPseudoType(root: Element = document.body): void {
       })
       .show();
   }
+  console.timeEnd(`[DEBUG][TIMER] addPseudoType`);
 }
