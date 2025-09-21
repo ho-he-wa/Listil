@@ -911,7 +911,27 @@ const monitorByMutationObserver = false;
 // NOTE : 試験的機能。今のところ実用的ではない。再描画に合わせてコントロールを再追加することはできているがまだ実用可能とはいえない。
 // BUG : フィルタ適用でコントロールが増殖したり、リスト全体が表示されなくなることがある
 // NOTE : manifest.jsonで `"run_at": "document_idle"` (Reactの初期レンダリングが完了した後にスクリプトを実行) を設定すること。
-monitorByMutationObserver &&
+if (monitorByMutationObserver) {
+  const isListilElement = (node: HTMLElement) => {
+    if (node.matches('[class*="listil-"]')) {
+      return true;
+    }
+    return false;
+  };
+  const insideOfListilListItem = (node: HTMLElement) => {
+    const closestListItem = node.closest("[data-ignore]");
+    if (closestListItem) {
+      return closestListItem;
+    }
+    return undefined;
+  };
+  const insideOfListilList = (node: HTMLElement) => {
+    const closestList = node.closest("data-list-setting-id");
+    if (closestList) {
+      return closestList;
+    }
+    return undefined;
+  };
   window.addEventListener("load", () => {
     let cnt = 0;
     document.body.dataset.listilCnt = `${cnt}`;
@@ -919,40 +939,34 @@ monitorByMutationObserver &&
       let shouldRefresh = false;
       for (const mutation of mutationsList) {
         console.log("DEBUG", "mutation", mutation.target.nodeName, mutation);
-        let shouldBreak = false;
-        mutation.addedNodes.forEach((node) => {
+        const preFiltered = Array.from(mutation.addedNodes)
+          .filter((node) => node instanceof HTMLElement)
+          .filter((node) => node.nodeType === Node.ELEMENT_NODE)
+          .filter((node) => node.firstChild);
+        for (const node of preFiltered) {
           console.log("DEBUG", "mutation node", node.nodeName, node);
-          if (shouldBreak) {
-            return;
-          }
-          if (!(node instanceof HTMLElement)) {
-            return;
-          }
-          if (node.nodeType !== Node.ELEMENT_NODE) {
-            return;
-          }
           if (!(node.firstChild instanceof HTMLElement)) {
-            return;
+            continue;
           }
           if (isComputedInvisible(node)) {
             // 非表示部分の変化は影響がないので無視
             console.log("DEBUG", "This element is invisible.");
-            return;
+            continue;
           }
-          if (node.matches('[class*="listil-"]')) {
+          if (isListilElement(node)) {
             // Listil要素であれば無視
             console.log("DEBUG", "This element is inside a Listil element.");
-            return;
+            continue;
           }
-          if (node.closest("[data-ignore]")) {
+          if (insideOfListilListItem(node)) {
             // コントロール設定済のListilリストの要素配下であれば無視
             console.log(
               "DEBUG",
-              "This element is inside a list element with Listil controls."
+              "This element is inside a list item element with Listil controls."
             );
-            return;
+            continue;
           }
-          const closestList = node.closest("data-list-setting-id");
+          const closestList = insideOfListilList(node);
           if (closestList) {
             // コントロール設定済のListilリストの追加要素配下であればpseudoTypeを設定
             console.log(
@@ -960,21 +974,21 @@ monitorByMutationObserver &&
               "This element is inside a list element with Listil controls. But inside a new list element."
             );
             addPseudoType(closestList.parentElement!);
-            return;
+            continue;
           }
           if (node.querySelector('[class*="listil-"]')) {
             // [ ] この判定の理由不明。不要であれば削除する
             console.log("DEBUG", "This element is ......................");
-            return;
+            continue;
           }
           if (node.querySelector("[data-listil-checked]")) {
             console.log("DEBUG", "This Element has already checked.");
-            return;
+            continue;
           }
           node.firstChild.dataset.listilChecked = "checked";
           shouldRefresh = true;
-          shouldBreak = true;
-        });
+          break;
+        }
       }
       if (shouldRefresh && document.body.dataset.listilCnt === `${cnt}`) {
         cnt++;
@@ -999,3 +1013,4 @@ monitorByMutationObserver &&
       attributes: false,
     });
   });
+}
