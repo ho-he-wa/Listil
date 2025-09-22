@@ -10,8 +10,12 @@ export function isComputedInvisible(el: HTMLElement): boolean {
   }
   if (!el.isConnected) {
     // EXP : 試験的実装。DocumentFragment上でもサイズ評価を行う
-    const size = measureElementSize(el);
-    return size.width === 0 || size.height === 0;
+    // NOTE : Documentに接続してサイズを評価するとMutationObserverによる変更監視に影響が出る。監視内でaddPseudoType()していると変更検出＆変更の無限ループが発生した
+    // const size = measureElementSize(el);
+    // return size.width === 0 || size.height === 0;
+    console.log(
+      "isComputedInvisible() does not support elements that are not connected to the Document."
+    );
   }
   const size = getContentBoxSize(el);
   return size.width === 0 || size.height === 0;
